@@ -1,0 +1,103 @@
+#! /usr/bin/env bash
+
+PREFIX=$HOME/cedarlocal
+test $# -eq 1 && PREFIX=$1
+
+
+#test -d ktjet || svn co http://svn.hepforge.org/ktjet/trunk ktjet
+#svn co http://svn.hepforge.org/rivet/trunk rivet
+#svn co http://svn.hepforge.org/rivetgun/trunk rivetgun
+
+
+tar-rm() {
+    tar xzvf $1
+    rm -f $1
+}
+
+test -d clhep-2.0.2.3 || {
+    wget http://www.hepforge.org/archive/cedar/clhep-2.0.2.3.tgz
+    tar-rm clhep-2.0.2.3.tgz
+    mv 2.0.2.3/CLHEP clhep-2.0.2.3
+    rm 2.0.2.3
+}
+
+test -d log4cpp-0.3.5rc3 || {
+    wget http://www.hepforge.org/archive/cedar/log4cpp-0.3.5rc3.tar.gz
+    tar-rm log4cpp-0.3.5rc3.tar.gz
+}
+
+test -d lhapdf-5.2.3 || {
+    wget http://www.hepforge.org/archive/lhapdf/lhapdf-5.2.3.tar.gz
+    tar-rm lhapdf-5.2.3.tar.gz
+}
+
+test -d HepMC-2.00.00 || {
+    wget http://www.hepforge.org/archive/cedar/HepMC-2.00.00.tar.gz
+    tar-rm HepMC-2.00.00.tar.gz
+}
+
+test -d HepPDT-2.03.00 || {
+    wget http://lcgapp.cern.ch/project/simu/HepPDT/download/HepPDT-2.03.00.tar.gz
+    tar-rm HepPDT-2.03.00.tar.gz
+}
+
+test -d herwig-6.510 || {
+    wget http://www.hepforge.org/archive/cedar/herwig-6.510.tar.gz
+    tar-rm herwig-6.510.tar.gz
+}
+
+test -d pythia-6.326 || {
+    wget http://www.hepforge.org/archive/cedar/pythia-6.326.tar.gz
+    tar-rm pythia-6.326.tar.gz
+}
+
+test -d jimmy-4.31 || {
+    wget http://www.hepforge.org/archive/jimmy/jimmy-4.31.tar.gz
+    tar-rm jimmy-4.31.tar.gz
+}
+
+
+###############
+
+conf-mk-mkinst() {
+    if test -d $1; then 
+        (cd $1 && echo "./configure --prefix=$PREFIX" && ./configure --prefix=$PREFIX && make && make install)
+    else
+        echo "Couldn't find $1... exiting"
+        exit 1
+    fi
+}
+
+mkdir -p $PREFIX
+conf-mk-mkinst clhep-2.0.2.3
+conf-mk-mkinst log4cpp-0.3.5rc3
+conf-mk-mkinst HepMC-2.00.00 
+conf-mk-mkinst HepPDT-2.03.00 
+conf-mk-mkinst lhapdf-5.2.3 
+conf-mk-mkinst herwig-6.510 
+conf-mk-mkinst pythia-6.326
+conf-mk-mkinst jimmy-4.31 
+
+## KtJet
+if test -d ktjet; then
+    (cd ktjet && autoreconf -i)
+    conf-mk-mkinst ktjet 
+else
+    echo "KtJet build directory is not available"
+fi
+
+## Rivet
+if test -d rivet; then
+    (cd rivet && autoreconf -i)
+    conf-mk-mkinst rivet
+else
+    echo "Rivet build directory is not available"
+fi
+
+## RivetGun
+if test -d rivetgun; then
+    (cd rivetgun && autoreconf -i)
+    conf-mk-mkinst rivetgun 
+else
+    echo "RivetGun build directory is not available"
+fi

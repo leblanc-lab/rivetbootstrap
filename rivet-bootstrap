@@ -4,9 +4,14 @@ PREFIX=$HOME/cedarlocal
 test $# -eq 1 && PREFIX=$1
 
 
-#test -d ktjet || svn co http://svn.hepforge.org/ktjet/trunk ktjet
-#svn co http://svn.hepforge.org/rivet/trunk rivet
-#svn co http://svn.hepforge.org/rivetgun/trunk rivetgun
+## If we've got SVN and there are no already-checked out versions
+## of ktjet, rivet and rivetgun in this directory, then get the
+## SVN head versions using the HTTP access method
+if test -x "`which svn 2> /dev/null`"; then
+    test -d ktjet || svn co http://svn.hepforge.org/ktjet/trunk ktjet
+    test -d rivet || svn co http://svn.hepforge.org/rivet/trunk rivet
+    test -d rivetgun || svn co http://svn.hepforge.org/rivetgun/trunk rivetgun
+fi
 
 
 tar-rm() {
@@ -78,7 +83,7 @@ conf-mk-mkinst herwig-6.510
 conf-mk-mkinst pythia-6.326
 conf-mk-mkinst jimmy-4.31 
 
-## KtJet
+## KtJet (once version 1.8 is released, this can be a tarball)
 if test -d ktjet; then
     (cd ktjet && autoreconf -i)
     conf-mk-mkinst ktjet 

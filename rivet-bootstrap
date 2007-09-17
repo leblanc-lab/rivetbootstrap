@@ -3,66 +3,56 @@
 PREFIX=$HOME/cedarlocal
 test $# -eq 1 && PREFIX=$1
 
+## Function to unpack and delete a tarball
+wget-tar() {
+    wget --quiet $1 -O- | tar xzv
+}
+
+
+##############################
+
 
 ## If we've got SVN and there are no already-checked out versions
-## of ktjet, rivet and rivetgun in this directory, then checkout/update
+## rivet and rivetgun in this directory, then checkout/update
 ## the SVN head versions using the HTTP access method
 if test -x "`which svn 2> /dev/null`"; then
-    if test -d ktjet; then (cd ktjet; svn up); else svn co http://svn.hepforge.org/ktjet/trunk ktjet; fi
     if test -d rivet; then (cd rivet; svn up); else svn co http://svn.hepforge.org/rivet/trunk rivet; fi
     if test -d rivetgun; then (cd rivetgun; svn up); else svn co http://svn.hepforge.org/rivetgun/trunk rivetgun; fi
 fi
 
-
-## Function to unpack and delete a tarball
-tar-rm() {
-    tar xzvf $1
-    rm -f $1
-}
+CLHEPNAME=clhep-2.0.3.1
+HEPMCNAME=HepMC-2.01.06 
+HEPPDTNAME=HepPDT-3.02.01 
+KTJETNAME=KtJet-1.08
+LHAPDFNAME=lhapdf-5.3.0 
 
 ## Get CLHEP
-test -d clhep-2.0.2.3 || {
-    wget http://www.hepforge.org/archive/cedar/clhep-2.0.2.3.tgz
-    tar-rm clhep-2.0.2.3.tgz
-    mv 2.0.2.3/CLHEP clhep-2.0.2.3
-    rm 2.0.2.3
+test -d $CLHEPNAME || {
+    wget-tar http://www.hepforge.org/archive/cedar/clhep-2.0.3.1.tgz
+    mv 2.0.3.1/CLHEP clhep-2.0.3.1
+    rm 2.0.3.1
 }
 
 ## Get LHAPDF
-test -d lhapdf-5.2.3 || {
-    wget http://www.hepforge.org/archive/lhapdf/lhapdf-5.2.3.tar.gz
-    tar-rm lhapdf-5.2.3.tar.gz
-}
+test -d $LHAPDFNAME || wget-tar http://www.hepforge.org/archive/lhapdf/lhapdf-5.3.0.tar.gz
 
 ## Get HepMC
-test -d HepMC-2.00.00 || {
-    wget http://www.hepforge.org/archive/cedar/HepMC-2.00.00.tar.gz
-    tar-rm HepMC-2.00.00.tar.gz
-}
+test -d $HEPMCNAME || wget-tar http://lcgapp.cern.ch/project/simu/HepMC/download/HepMC-2.01.06.tar.gz
 
 ## Get HepPDT and HepPID
-test -d HepPDT-2.03.00 || {
-    wget http://lcgapp.cern.ch/project/simu/HepPDT/download/HepPDT-2.03.00.tar.gz
-    tar-rm HepPDT-2.03.00.tar.gz
-}
+test -d $HEPPDTNAME || wget-tar http://lcgapp.cern.ch/project/simu/HepPDT/download/HepPDT-3.02.01.tar.gz
+
+## Get KtJet
+test -d $KTJETNAME || wget-tar http://www.hepforge.org/archive/ktjet/KtJet-1.08.tar.gz
 
 ## Get Fortran Herwig
-test -d herwig-6.510 || {
-    wget http://www.hepforge.org/archive/cedar/herwig-6.510.tar.gz
-    tar-rm herwig-6.510.tar.gz
-}
+test -d herwig-6.510 || wget-tar http://www.hepforge.org/archive/cedar/herwig-6.510.tar.gz
 
 ## Get Fortran Pythia
-test -d pythia-6.326 || {
-    wget http://www.hepforge.org/archive/cedar/pythia-6.326.tar.gz
-    tar-rm pythia-6.326.tar.gz
-}
+test -d pythia-6.326 || wget-tar http://www.hepforge.org/archive/cedar/pythia-6.326.tar.gz
 
 ## Get Jimmy (needed for FHerwig)
-test -d jimmy-4.31 || {
-    wget http://www.hepforge.org/archive/jimmy/jimmy-4.31.tar.gz
-    tar-rm jimmy-4.31.tar.gz
-}
+test -d jimmy-4.31 || wget-tar http://www.hepforge.org/archive/jimmy/jimmy-4.31.tar.gz
 
 
 ###############
@@ -81,21 +71,13 @@ conf-mk-mkinst() {
 
 ## Build and install to the PREFIX location
 mkdir -p $PREFIX
-conf-mk-mkinst clhep-2.0.2.3
-conf-mk-mkinst HepMC-2.00.00 
-conf-mk-mkinst HepPDT-2.03.00 
-conf-mk-mkinst lhapdf-5.2.3 
-conf-mk-mkinst herwig-6.510 
+conf-mk-mkinst $CLHEPNAME
+conf-mk-mkinst $HEPMCNAME
+conf-mk-mkinst $HEPPDTNAME
+conf-mk-mkinst $LHAPDFNAME
+conf-mk-mkinst herwig-6.510
 conf-mk-mkinst pythia-6.326
-conf-mk-mkinst jimmy-4.31 
-
-## Build and install KtJet (once version 1.8 is released, this can be a tarball)
-if test -d ktjet; then
-    (cd ktjet && autoreconf -i)
-    conf-mk-mkinst ktjet 
-else
-    echo "KtJet build directory is not available"
-fi
+conf-mk-mkinst jimmy-4.31
 
 ## Build and install Rivet
 if test -d rivet; then

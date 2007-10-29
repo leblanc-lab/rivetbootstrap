@@ -46,10 +46,12 @@ test -d $HEPPDTNAME || wget-tar http://lcgapp.cern.ch/project/simu/HepPDT/downlo
 test -d $KTJETNAME || wget-tar http://www.hepforge.org/archive/ktjet/$KTJETNAME.tar.gz
 
 ## Get Fortran Herwig
+test -d herwig-6.507 || wget-tar http://www.hepforge.org/archive/cedar/herwig-6.507.tar.gz
 test -d herwig-6.510 || wget-tar http://www.hepforge.org/archive/cedar/herwig-6.510.tar.gz
 
 ## Get Fortran Pythia
 test -d pythia-6.326 || wget-tar http://www.hepforge.org/archive/cedar/pythia-6.326.tar.gz
+test -d pythia-6.411 || wget-tar http://www.hepforge.org/archive/cedar/pythia-6.411.tar.gz
 
 ## Get Jimmy (needed for FHerwig)
 test -d jimmy-4.31 || wget-tar http://www.hepforge.org/archive/jimmy/jimmy-4.31.tar.gz
@@ -76,7 +78,7 @@ conf-mk-mkinst $HEPMCNAME
 conf-mk-mkinst $HEPPDTNAME
 conf-mk-mkinst $LHAPDFNAME
 conf-mk-mkinst $KTJETNAME
-conf-mk-mkinst herwig-6.507
+#conf-mk-mkinst herwig-6.507
 conf-mk-mkinst herwig-6.510
 conf-mk-mkinst pythia-6.326
 conf-mk-mkinst pythia-6.411

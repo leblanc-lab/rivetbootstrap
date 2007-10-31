@@ -1,10 +1,12 @@
 #! /usr/bin/env bash
 
-PREFIX=$HOME/cedarlocal
-test $# -eq 1 && PREFIX=$1
 
 ## Function to unpack and delete a tarball
 wget-tar() {
+    if test ! -x "`which wget 2> /dev/null`"; then
+        echo "You need wget to download the $1 tarball" 1>&2
+        exit 1
+    fi
     wget --quiet $1 -O- | tar xzv
 }
 
@@ -18,6 +20,8 @@ wget-tar() {
 if test -x "`which svn 2> /dev/null`"; then
     if test -d rivet; then (cd rivet; svn up); else svn co http://svn.hepforge.org/rivet/trunk rivet; fi
     if test -d rivetgun; then (cd rivetgun; svn up); else svn co http://svn.hepforge.org/rivetgun/trunk rivetgun; fi
+else
+    echo "Couldn't get rivet and rivetgun by svn" 1>&2
 fi
 
 CLHEPNAME=clhep-2.0.3.1
@@ -53,7 +57,7 @@ test -d herwig-6.510 || wget-tar http://www.hepforge.org/archive/cedar/herwig-6.
 test -d pythia-6.326 || wget-tar http://www.hepforge.org/archive/cedar/pythia-6.326.tar.gz
 test -d pythia-6.411 || wget-tar http://www.hepforge.org/archive/cedar/pythia-6.411.tar.gz
 
-## Get Jimmy (needed for FHerwig)
+## Get Jimmy (for FHerwig)
 test -d jimmy-4.31 || wget-tar http://www.hepforge.org/archive/jimmy/jimmy-4.31.tar.gz
 
 
@@ -72,30 +76,36 @@ conf-mk-mkinst() {
 }
 
 ## Build and install to the PREFIX location
+PREFIX=$PWD/local
+test $# -eq 1 && PREFIX=$1
 mkdir -p $PREFIX
-conf-mk-mkinst $CLHEPNAME
-conf-mk-mkinst $HEPMCNAME
-conf-mk-mkinst $HEPPDTNAME
-conf-mk-mkinst $LHAPDFNAME
-conf-mk-mkinst $KTJETNAME
-#conf-mk-mkinst herwig-6.507
-conf-mk-mkinst herwig-6.510
-conf-mk-mkinst pythia-6.326
-conf-mk-mkinst pythia-6.411
-conf-mk-mkinst jimmy-4.31
+if test -w "$PREFIX" -a -d "$PREFIX"; then
+    conf-mk-mkinst $CLHEPNAME
+    conf-mk-mkinst $HEPMCNAME
+    conf-mk-mkinst $HEPPDTNAME
+    conf-mk-mkinst $LHAPDFNAME
+    conf-mk-mkinst $KTJETNAME
+    #conf-mk-mkinst herwig-6.507
+    conf-mk-mkinst herwig-6.510
+    conf-mk-mkinst pythia-6.326
+    conf-mk-mkinst pythia-6.411
+    conf-mk-mkinst jimmy-4.31
 
-## Build and install Rivet
-if test -d rivet; then
+    ## Build and install Rivet
+    if test -d rivet; then
     (cd rivet && autoreconf -i)
     conf-mk-mkinst rivet
+    else
+        echo "Rivet build directory is not available"
+    fi
+    
+    ## Build and install RivetGun
+    if test -d rivetgun; then
+        (cd rivetgun && autoreconf -i)
+        conf-mk-mkinst rivetgun 
+    else
+        echo "RivetGun build directory is not available"
+    fi
 else
-    echo "Rivet build directory is not available"
-fi
-
-## Build and install RivetGun
-if test -d rivetgun; then
-    (cd rivetgun && autoreconf -i)
-    conf-mk-mkinst rivetgun 
-else
-    echo "RivetGun build directory is not available"
+    echo "Problem! PREFIX directory ($PREFIX) is not writeable" 1>&2
 fi

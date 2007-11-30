@@ -2,12 +2,17 @@
 
 
 ## Function to unpack and delete a tarball
-wget-tar() {
-    if test ! -x "`which wget 2> /dev/null`"; then
-        echo "You need wget to download the $1 tarball" 1>&2
+wget-untargz() {
+    ## Try first using curl, and falling back to wget
+    WGETTER="curl --silent"
+    if test ! -x "`which curl 2> /dev/null`"; then
+        WGETTER="wget --quiet -O-"
+    elif test ! -x "`which wget 2> /dev/null`"; then
+        echo "You need curl or wget to download the $1 tarball" 1>&2
         exit 1
     fi
-    wget --quiet $1 -O- | tar xzv
+    ## Use whichever was present
+    $WGETTER $1 | tar xzv
 }
 
 
@@ -32,33 +37,33 @@ LHAPDFNAME=lhapdf-5.3.0
 
 ## Get CLHEP
 test -d $CLHEPNAME || {
-    wget-tar http://www.hepforge.org/archive/cedar/clhep-2.0.3.1.tgz
+    wget-untargz http://www.hepforge.org/archive/cedar/clhep-2.0.3.1.tgz
     mv 2.0.3.1/CLHEP clhep-2.0.3.1
     rm -r 2.0.3.1
 }
 
 ## Get LHAPDF
-test -d $LHAPDFNAME || wget-tar http://www.hepforge.org/archive/lhapdf/$LHAPDFNAME.tar.gz
+test -d $LHAPDFNAME || wget-untargz http://www.hepforge.org/archive/lhapdf/$LHAPDFNAME.tar.gz
 
 ## Get HepMC
-test -d $HEPMCNAME || wget-tar http://lcgapp.cern.ch/project/simu/HepMC/download/$HEPMCNAME.tar.gz
+test -d $HEPMCNAME || wget-untargz http://lcgapp.cern.ch/project/simu/HepMC/download/$HEPMCNAME.tar.gz
 
 ## Get HepPDT and HepPID
-test -d $HEPPDTNAME || wget-tar http://lcgapp.cern.ch/project/simu/HepPDT/download/$HEPPDTNAME.tar.gz
+test -d $HEPPDTNAME || wget-untargz http://lcgapp.cern.ch/project/simu/HepPDT/download/$HEPPDTNAME.tar.gz
 
 ## Get KtJet
-test -d $KTJETNAME || wget-tar http://www.hepforge.org/archive/ktjet/$KTJETNAME.tar.gz
+test -d $KTJETNAME || wget-untargz http://www.hepforge.org/archive/ktjet/$KTJETNAME.tar.gz
 
 ## Get Fortran Herwig
-test -d herwig-6.507 || wget-tar http://www.hepforge.org/archive/cedar/herwig-6.507.tar.gz
-test -d herwig-6.510 || wget-tar http://www.hepforge.org/archive/cedar/herwig-6.510.tar.gz
+test -d herwig-6.507 || wget-untargz http://www.hepforge.org/archive/cedar/herwig-6.507.tar.gz
+test -d herwig-6.510 || wget-untargz http://www.hepforge.org/archive/cedar/herwig-6.510.tar.gz
 
 ## Get Fortran Pythia
-test -d pythia-6.326 || wget-tar http://www.hepforge.org/archive/cedar/pythia-6.326.tar.gz
-test -d pythia-6.411 || wget-tar http://www.hepforge.org/archive/cedar/pythia-6.411.tar.gz
+test -d pythia-6.326 || wget-untargz http://www.hepforge.org/archive/cedar/pythia-6.326.tar.gz
+test -d pythia-6.411 || wget-untargz http://www.hepforge.org/archive/cedar/pythia-6.411.tar.gz
 
 ## Get Jimmy (for FHerwig)
-test -d jimmy-4.31 || wget-tar http://www.hepforge.org/archive/jimmy/jimmy-4.31.tar.gz
+test -d jimmy-4.31 || wget-untargz http://www.hepforge.org/archive/jimmy/jimmy-4.31.tar.gz
 
 
 ###############

@@ -20,13 +20,13 @@ wget-untargz() {
 
 
 ## If we've got SVN and there are no already-checked out versions
-## rivet and rivetgun in this directory, then checkout/update
+## of AGILe and Rivet in this directory, then check out/update
 ## the SVN head versions using the HTTP access method
 if test -x "`which svn 2> /dev/null`"; then
+    if test -d agile; then (cd agile; svn up); else svn co http://svn.hepforge.org/agile/trunk agile; fi
     if test -d rivet; then (cd rivet; svn up); else svn co http://svn.hepforge.org/rivet/trunk rivet; fi
-    if test -d rivetgun; then (cd rivetgun; svn up); else svn co http://svn.hepforge.org/rivetgun/trunk rivetgun; fi
 else
-    echo "Couldn't get rivet and rivetgun by svn" 1>&2
+    echo "Couldn't get AGILe and rivet via svn" 1>&2
 fi
 
 ## Get LHAPDF
@@ -83,20 +83,20 @@ if test -w "$PREFIX" -a -d "$PREFIX"; then
     conf-mk-mkinst pythia-6.411
     conf-mk-mkinst jimmy-4.31
 
+    ## Build and install RivetGun
+    if test -d agile; then
+        (cd agile && autoreconf -i)
+        conf-mk-mkinst agile 
+    else
+        echo "AGILe build directory is not available"
+    fi
+
     ## Build and install Rivet
     if test -d rivet; then
     (cd rivet && autoreconf -i)
     conf-mk-mkinst rivet
     else
         echo "Rivet build directory is not available"
-    fi
-    
-    ## Build and install RivetGun
-    if test -d rivetgun; then
-        (cd rivetgun && autoreconf -i)
-        conf-mk-mkinst rivetgun 
-    else
-        echo "RivetGun build directory is not available"
     fi
 else
     echo "Problem! PREFIX directory ($PREFIX) is not writeable" 1>&2

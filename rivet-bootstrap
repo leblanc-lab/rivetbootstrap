@@ -1,6 +1,20 @@
 #! /usr/bin/env bash
 
 
+## Build and install to the PREFIX location
+PREFIX=$PWD/local
+test $# -eq 1 && PREFIX=$1
+if test -z "$(echo $PREFIX | egrep '^/')"; then
+    PREFIX=$PWD/$PREFIX
+fi
+mkdir -p $PREFIX
+if ! test -w "$PREFIX"; then
+    echo "Can't write to installation directory, $PREFIX" 1>&2
+    echo "Exiting..." 1>&2
+    exit 1
+fi
+
+
 ## Function to unpack and delete a tarball
 wget-untargz() {
     ## Try first using wget, and falling back to trying curl (for Mac)
@@ -17,6 +31,20 @@ wget-untargz() {
 }
 
 
+## Function to enter an expanded tarball and run the usual
+## autotools ./configure, make, make install mantra
+conf-mk-mkinst() {
+    if test -d $1; then 
+        (cd $1 && echo "./configure --prefix=$PREFIX" && \
+            ./configure --prefix=$PREFIX --enable-shared && \
+            make && make install)
+    else
+        echo "Couldn't find $1... exiting"
+        exit 1
+    fi
+}
+
+
 ##############################
 
 
@@ -28,62 +56,58 @@ if test -x "`which svn 2> /dev/null`"; then
     if test -d rivet; then (cd rivet; svn up); else svn co http://svn.hepforge.org/rivet/trunk rivet; fi
 else
     echo "Couldn't get AGILe and rivet via svn" 1>&2
+    exit 1
 fi
 
-## Get LHAPDF
-LHAPDFNAME=lhapdf-5.3.0 
-test -d $LHAPDFNAME || wget-untargz http://www.hepforge.org/archive/lhapdf/$LHAPDFNAME.tar.gz
 
-## Get HepMC
-HEPMCNAME=HepMC-2.03.03
-test -d $HEPMCNAME || wget-untargz http://lcgapp.cern.ch/project/simu/HepMC/download/$HEPMCNAME.tar.gz
-
-## Get FastJet
-FASTJETNAME=fastjet-2.3.0
-test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz
-
-## Get Fortran Herwig
-test -d herwig-6.507 || wget-untargz http://www.hepforge.org/archive/cedar/herwig-6.507.tar.gz
-test -d herwig-6.510 || wget-untargz http://www.hepforge.org/archive/cedar/herwig-6.510.tar.gz
-
-## Get Fortran Pythia
-test -d pythia-6.326 || wget-untargz http://www.hepforge.org/archive/cedar/pythia-6.326.tar.gz
-test -d pythia-6.411 || wget-untargz http://www.hepforge.org/archive/cedar/pythia-6.411.tar.gz
-
-## Get Jimmy (for FHerwig)
-test -d jimmy-4.31 || wget-untargz http://www.hepforge.org/archive/jimmy/jimmy-4.31.tar.gz
+## AFS directory where LCG external packages are installed
+LCGDIR=/afs/cern.ch/sw/lcg/external
 
 
-###############
+## Are we able to use pre-built packages from CERN AFS? 
+if test -d "$LCGDIR"; then
+    echo "LCG AFS area available: using LCG packages"
+    ## TODO: calculate platform tag
+    LCGPLATFORM=slc4_amd64_gcc34
+    echo "Using LCG platform tag = $LCGPLATFORM"
 
+    ## First AGILe
+    cd agile
+    autoreconf -i
+    ./configure --prefix=$PREFIX --with-hepmc=$LCGDIR/HepMC/2.01.08/$LCGPLATFORM
+    make && make install
+    cd ..
 
-## Function to enter an expanded tarball and run the usual
-## autotools ./configure, make, make install mantra
-conf-mk-mkinst() {
-    if test -d $1; then 
-        (cd $1 && echo "./configure --enable-shared --prefix=$PREFIX" && \
-            ./configure --enable-shared --prefix=$PREFIX && make && make install)
-    else
-        echo "Couldn't find $1... exiting"
-        exit 1
-    fi
-}
+    ## Then Rivet + rivetgun
+    ./configure --prefix=$PREFIX \
+        --with-hepmc=$LCGDIR/HepMC/2.01.08/$LCGPLATFORM \
+        --with-fastjet=$LCGDIR/fastjet/2.3.0/$LCGPLATFORM \
+        --with-agile=$PREFIX
+    make && make install
+    cd ..
 
-## Build and install to the PREFIX location
-PREFIX=$PWD/local
-test $# -eq 1 && PREFIX=$1
-mkdir -p $PREFIX
-if test -w "$PREFIX" -a -d "$PREFIX"; then
-    conf-mk-mkinst $HEPMCNAME
+    echo "Done. Now set some variables:"
+    echo "  export PATH=$PREFIX/bin:\$PATH"
+    echo "  export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"
+    echo "  export AGILE_GEN_PATH=$LCGDIR/MCGenerators/.liblinks/$LCGPLATFORM"
+
+else
+    ## We don't have access to LCG AFS, so download the packages...
+
+    ## Get LHAPDF
+    LHAPDFNAME=lhapdf-5.3.0
+    test -d $LHAPDFNAME || wget-untargz http://www.hepforge.org/archive/lhapdf/$LHAPDFNAME.tar.gz
     conf-mk-mkinst $LHAPDFNAME
-    conf-mk-mkinst $FASTJETNAME
 
-    ## TODO: convert to Genser packages
-    #conf-mk-mkinst herwig-6.507
-    conf-mk-mkinst herwig-6.510
-    conf-mk-mkinst pythia-6.326
-    conf-mk-mkinst pythia-6.411
-    conf-mk-mkinst jimmy-4.31
+    ## Get HepMC
+    HEPMCNAME=HepMC-2.03.03
+    test -d $HEPMCNAME || wget-untargz http://lcgapp.cern.ch/project/simu/HepMC/download/$HEPMCNAME.tar.gz
+    conf-mk-mkinst $HEPMCNAME
+
+    ## Get FastJet
+    FASTJETNAME=fastjet-2.3.0
+    test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz
+    conf-mk-mkinst $FASTJETNAME
 
     ## Build and install RivetGun
     if test -d agile; then
@@ -95,11 +119,9 @@ if test -w "$PREFIX" -a -d "$PREFIX"; then
 
     ## Build and install Rivet
     if test -d rivet; then
-    (cd rivet && autoreconf -i)
-    conf-mk-mkinst rivet
+        (cd rivet && autoreconf -i)
+        conf-mk-mkinst rivet
     else
         echo "Rivet build directory is not available"
     fi
-else
-    echo "Problem! PREFIX directory ($PREFIX) is not writeable" 1>&2
 fi

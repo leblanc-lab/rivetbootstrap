@@ -60,6 +60,11 @@ else
 fi
 
 
+LHAPDF_VERSION=5.3.0 
+FASTJET_VERSION=2.3.0
+HEPMC_VERSION=2.03.04
+
+
 ## AFS directory where LCG external packages are installed
 LCGDIR=/afs/cern.ch/sw/lcg/external
 
@@ -72,44 +77,52 @@ if test -d "$LCGDIR"; then
     echo "Using LCG platform tag = $LCGPLATFORM"
 
     ## First AGILe
+    echo "Building AGILe"
     cd agile
+    echo "In $PWD"
     autoreconf -i
-    ./configure --prefix=$PREFIX --with-hepmc=$LCGDIR/HepMC/2.01.08/$LCGPLATFORM
+    ./configure --prefix=$PREFIX --with-hepmc=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM
     make && make install
     cd ..
 
     ## Then Rivet + rivetgun
+    echo "In $PWD"
+    echo "Building Rivet"
+    cd rivet
+    echo "In $PWD"
     ./configure --prefix=$PREFIX \
-        --with-hepmc=$LCGDIR/HepMC/2.01.08/$LCGPLATFORM \
-        --with-fastjet=$LCGDIR/fastjet/2.3.0/$LCGPLATFORM \
+        --with-hepmc=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM \
+        --with-fastjet=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM \
         --with-agile=$PREFIX
     make && make install
     cd ..
+    echo "In $PWD"
 
-    echo "Done. Now set some variables:"
-    echo "  export PATH=$PREFIX/bin:\$PATH"
-    echo "  export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"
-    echo "  export AGILE_GEN_PATH=$LCGDIR/MCGenerators/.liblinks/$LCGPLATFORM"
+    echo
+    echo "All done. Now set some variables:"
+    echo "export PATH=$PREFIX/bin:\$PATH"
+    echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"
+    echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/.liblinks/$LCGPLATFORM"
 
 else
     ## We don't have access to LCG AFS, so download the packages...
 
     ## Get LHAPDF
-    LHAPDFNAME=lhapdf-5.3.0
+    LHAPDFNAME=lhapdf-$LHAPDF_VERSION
     test -d $LHAPDFNAME || wget-untargz http://www.hepforge.org/archive/lhapdf/$LHAPDFNAME.tar.gz
     conf-mk-mkinst $LHAPDFNAME
 
     ## Get HepMC
-    HEPMCNAME=HepMC-2.03.03
+    HEPMCNAME=HepMC-$HEPMC_VERSION
     test -d $HEPMCNAME || wget-untargz http://lcgapp.cern.ch/project/simu/HepMC/download/$HEPMCNAME.tar.gz
     conf-mk-mkinst $HEPMCNAME
 
     ## Get FastJet
-    FASTJETNAME=fastjet-2.3.0
+    FASTJETNAME=fastjet-$FASTJET_VERSION
     test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz
     conf-mk-mkinst $FASTJETNAME
 
-    ## Build and install RivetGun
+    ## Build and install AGILe
     if test -d agile; then
         (cd agile && autoreconf -i)
         conf-mk-mkinst agile 

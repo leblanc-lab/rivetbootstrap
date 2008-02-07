@@ -72,37 +72,77 @@ LCGDIR=/afs/cern.ch/sw/lcg/external
 ## Are we able to use pre-built packages from CERN AFS? 
 if test -d "$LCGDIR"; then
     echo "LCG AFS area available: using LCG packages"
-    ## TODO: calculate platform tag
-    LCGPLATFORM=slc4_amd64_gcc34
+
+    ## Platform tag: get distribution
+    distribution=$(uname)
+    if test -s "/etc/redhat-release"; then
+        distribution="redhat"
+        sltest=$(lsb_release -ds | grep "Scientific Linux")
+        if test "$sltest"; then
+            slc_major=$(lsb_release -rs | cut -f1 -d.)
+            distribution="slc${slc_major}"
+        fi
+    fi
+
+    ## Platform tag: get architecture
+    machine32=$(uname -m | grep -E "i[3456]86") 
+    machine64=$(uname -m | grep "x86_64")
+    if test "$machine32"; then machine="ia32"; fi 
+    if test "$machine64"; then machine="amd64"; fi
+
+    ## Platform tag: get GCC version
+    gcc_version=$(g++ --version | head -1 | cut -d" " -f3)
+    gcc_major=$(echo $gcc_version | cut -d. -f1)
+    gcc_minor=$(echo $gcc_version | cut -d. -f2)
+    gcc_micro=$(echo $gcc_version | cut -d. -f30) 
+    gcc_code="gcc${gcc_major}${gcc_minor}"
+
+    LCGPLATFORM="${distribution}_${machine}_${gcc_code}"
     echo "Using LCG platform tag = $LCGPLATFORM"
+
+    HEPMCPATH=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM 
+    FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM 
+    CGALPATH=$LCGDIR/cgal/3.3.1/$LCGPLATFORM 
 
     ## First AGILe
     echo "Building AGILe"
     cd agile
     echo "In $PWD"
-    autoreconf -i
-    ./configure --prefix=$PREFIX --with-hepmc=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM
-    make && make install
+    autoreconf -i || exit 2
+    ./configure --prefix=$PREFIX --with-hepmc=$HEPMCPATH || exit 2
+    make || exit 2
+    make install || exit 2
     cd ..
+    echo "In $PWD"
+    echo
 
     ## Then Rivet + rivetgun
-    echo "In $PWD"
     echo "Building Rivet"
     cd rivet
     echo "In $PWD"
+    autoreconf -i || exit 2
+    ## TODO: get FastJet to declare its CGAL dependency so that we don't have to resort to this hack
+    CGAL_LIBDIR="$CGALPATH/lib"
+    ## TODO: get Genser to link their Fortran generators using $(FC) rather than $(CXX), then we
+    ##   can get rid of this nasty, fragile hack...
+    LIB64=lib
+    (echo $LCGPLATFORM | grep 64 &> /dev/null) && LIB64=lib64 
+    GENSER_FC_STDLIBS="/usr/$LIB64/libgfortran.so.0 /usr/$LIB64/libg2c.so.0" 
+    ## Finally, run this messy, hacked configure...
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CGAL_LIBDIR"
     ./configure --prefix=$PREFIX \
-        --with-hepmc=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM \
-        --with-fastjet=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM \
-        --with-agile=$PREFIX
-    make && make install
+        --with-hepmc=$HEPMCPATH --with-fastjet=$FASTJETPATH --with-agile=$PREFIX \
+        LDFLAGS="-L$CGAL_LIBDIR -lCGAL $GENSER_FC_STDLIBS" || exit 2 
+    make || exit 2 
+    make install || exit 2
     cd ..
     echo "In $PWD"
 
     echo
     echo "All done. Now set some variables:"
     echo "export PATH=$PREFIX/bin:\$PATH"
-    echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"
-    echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/.liblinks/$LCGPLATFORM"
+    echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:\$LD_LIBRARY_PATH"
+    echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/.liblinks/$LCGPLATFORM/lib"
 
 else
     ## We don't have access to LCG AFS, so download the packages...
@@ -137,4 +177,14 @@ else
     else
         echo "Rivet build directory is not available"
     fi
+    
+    echo
+    echo "All done. Now set some variables:"
+    echo "export PATH=$PREFIX/bin:\$PATH"
+    echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"
+    echo 
+    echo "You'll also need to get a local copy of the Genser generators package"
+    echo "and add its 'liblinks' directory to the AGILE_GEN_PATH variable."
+    echo "The $PWD/agile/bin/mkGenserArea script can help you to do this."
+
 fi

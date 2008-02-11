@@ -54,9 +54,9 @@ RIVET_VERSION=1.0
 AGILE_NAME=AGILe-$AGILE_VERSION
 RIVET_NAME=Rivet-$RIVET_VERSION
 if true; then
-    wget http://www.hepforge.org/downloads/agile/$AGILE_NAME.tar.gz
+    wget-untargz http://www.hepforge.org/downloads/agile/$AGILE_NAME.tar.gz
     ln -s $AGILE_NAME agile
-    wget http://www.hepforge.org/downloads/rivet/$RIVET_NAME.tar.gz
+    wget-untargz http://www.hepforge.org/downloads/rivet/$RIVET_NAME.tar.gz
     ln -s $RIVET_NAME rivet
 fi
 

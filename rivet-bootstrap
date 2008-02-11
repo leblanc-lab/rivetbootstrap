@@ -48,18 +48,30 @@ conf-mk-mkinst() {
 ##############################
 
 
+## Get Rivet and AGILe tarballs (for non-developers)
+if true; then
+    wget http://www.hepforge.org/downloads/agile/AGILe-1.0.tar.gz
+    ln -s AGILe-1.0.tar.gz agile
+    wget http://www.hepforge.org/downloads/rivet/Rivet-1.0.tar.gz
+    ln -s Rivet-1.0.tar.gz rivet
+fi
+
+
 ## If we've got SVN and there are no already-checked out versions
 ## of AGILe and Rivet in this directory, then check out/update
 ## the SVN head versions using the HTTP access method
 if test -x "`which svn 2> /dev/null`"; then
     if test -d agile; then (cd agile; svn up); else svn co http://svn.hepforge.org/agile/trunk agile; fi
+    (cd agile && autoreconf -i)
     if test -d rivet; then (cd rivet; svn up); else svn co http://svn.hepforge.org/rivet/trunk rivet; fi
+    (cd rivet && autoreconf -i)
 else
     echo "Couldn't get AGILe and rivet via svn" 1>&2
     exit 1
 fi
 
 
+## Versions of required libraries
 LHAPDF_VERSION=5.3.0 
 FASTJET_VERSION=2.3.0
 HEPMC_VERSION=2.03.04
@@ -108,7 +120,6 @@ if test -d "$LCGDIR"; then
     echo "Building AGILe"
     cd agile
     echo "In $PWD"
-    autoreconf -i || exit 2
     ./configure --prefix=$PREFIX --with-hepmc=$HEPMCPATH || exit 2
     make || exit 2
     make install || exit 2
@@ -120,7 +131,6 @@ if test -d "$LCGDIR"; then
     echo "Building Rivet"
     cd rivet
     echo "In $PWD"
-    autoreconf -i || exit 2
     ## TODO: get FastJet to declare its CGAL dependency so that we don't have to resort to this hack
     CGAL_LIBDIR="$CGALPATH/lib"
     ## TODO: get Genser to link their Fortran generators using $(FC) rather than $(CXX), then we
@@ -163,20 +173,10 @@ else
     conf-mk-mkinst $FASTJETNAME
 
     ## Build and install AGILe
-    if test -d agile; then
-        (cd agile && autoreconf -i)
-        conf-mk-mkinst agile 
-    else
-        echo "AGILe build directory is not available"
-    fi
+    conf-mk-mkinst agile 
 
     ## Build and install Rivet
-    if test -d rivet; then
-        (cd rivet && autoreconf -i)
-        conf-mk-mkinst rivet
-    else
-        echo "Rivet build directory is not available"
-    fi
+    conf-mk-mkinst rivet
     
     echo
     echo "All done. Now set some variables:"
@@ -186,5 +186,4 @@ else
     echo "You'll also need to get a local copy of the Genser generators package"
     echo "and add its 'liblinks' directory to the AGILE_GEN_PATH variable."
     echo "The $PWD/agile/bin/mkGenserArea script can help you to do this."
-
 fi

@@ -49,11 +49,13 @@ conf-mk-mkinst() {
 
 
 ## Get Rivet and AGILe tarballs (for non-developers)
+AGILE_TARNAME=AGILe-1.0.tar.gz
+RIVET_TARNAME=Rivet-1.0.tar.gz
 if true; then
-    wget http://www.hepforge.org/downloads/agile/AGILe-1.0.tar.gz
-    ln -s AGILe-1.0.tar.gz agile
-    wget http://www.hepforge.org/downloads/rivet/Rivet-1.0.tar.gz
-    ln -s Rivet-1.0.tar.gz rivet
+    wget http://www.hepforge.org/downloads/agile/$AGILE_TARNAME
+    ln -s $AGILE_TARNAME agile
+    wget http://www.hepforge.org/downloads/rivet/$RIVET_TARNAME
+    ln -s $RIVET_TARNAME rivet
 fi
 
 
@@ -61,12 +63,17 @@ fi
 ## of AGILe and Rivet in this directory, then check out/update
 ## the SVN head versions using the HTTP access method
 if test -x "`which svn 2> /dev/null`"; then
-    if test -d agile; then (cd agile; svn up); else svn co http://svn.hepforge.org/agile/trunk agile; fi
-    (cd agile && autoreconf -i)
-    if test -d rivet; then (cd rivet; svn up); else svn co http://svn.hepforge.org/rivet/trunk rivet; fi
-    (cd rivet && autoreconf -i)
+    if test ! -e agile; then 
+        svn co http://svn.hepforge.org/agile/trunk agile
+        (cd agile && autoreconf -i)
+    fi
+
+    if test ! -e rivet; then 
+        svn co http://svn.hepforge.org/rivet/trunk rivet
+        (cd rivet && autoreconf -i) 
+    fi
 else
-    echo "Couldn't get AGILe and rivet via svn" 1>&2
+    echo "Couldn't get AGILe and Rivet via svn" 1>&2
     exit 1
 fi
 

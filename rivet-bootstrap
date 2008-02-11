@@ -129,7 +129,7 @@ if test -d "$LCGDIR"; then
     (echo $LCGPLATFORM | grep 64 &> /dev/null) && LIB64=lib64 
     GENSER_FC_STDLIBS="/usr/$LIB64/libgfortran.so.0 /usr/$LIB64/libg2c.so.0" 
     ## Finally, run this messy, hacked configure...
-    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CGAL_LIBDIR"
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CGAL_LIBDIR" \
     ./configure --prefix=$PREFIX \
         --with-hepmc=$HEPMCPATH --with-fastjet=$FASTJETPATH --with-agile=$PREFIX \
         LDFLAGS="-L$CGAL_LIBDIR -lCGAL $GENSER_FC_STDLIBS" || exit 2 

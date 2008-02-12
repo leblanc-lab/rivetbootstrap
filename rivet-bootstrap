@@ -94,7 +94,7 @@ HEPMC_VERSION=2.03.04
 LCGDIR=/afs/cern.ch/sw/lcg/external
 
 
-## Are we able to use pre-built packages from CERN AFS? 
+## Are we able to use pre-built packages from CERN AFS?
 if test -d "$LCGDIR"; then
     echo "LCG AFS area available: using LCG packages"
 
@@ -127,7 +127,6 @@ if test -d "$LCGDIR"; then
 
     HEPMCPATH=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM 
     FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM 
-    CGALPATH=$LCGDIR/cgal/3.3.1/$LCGPLATFORM 
 
     ## First AGILe
     echo "Building AGILe"
@@ -144,18 +143,15 @@ if test -d "$LCGDIR"; then
     echo "Building Rivet"
     cd rivet
     echo "In $PWD"
-    ## TODO: get FastJet to declare its CGAL dependency so that we don't have to resort to this hack
-    CGAL_LIBDIR="$CGALPATH/lib"
-    ## TODO: get Genser to link their Fortran generators using $(FC) rather than $(CXX), then we
-    ##   can get rid of this nasty, fragile hack...
+    ## TODO: get Genser to link their Fortran generators using $(FC) rather than $(CXX), 
+    ## then we can get rid of this nasty, fragile hack...
     LIB64=lib
     (echo $LCGPLATFORM | grep 64 &> /dev/null) && LIB64=lib64 
     GENSER_FC_STDLIBS="/usr/$LIB64/libgfortran.so.0 /usr/$LIB64/libg2c.so.0" 
-    ## Finally, run this messy, hacked configure...
-    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CGAL_LIBDIR" \
+    ## Finally, run configure...
     ./configure --prefix=$PREFIX \
         --with-hepmc=$HEPMCPATH --with-fastjet=$FASTJETPATH --with-agile=$PREFIX \
-        LDFLAGS="-L$CGAL_LIBDIR -lCGAL $GENSER_FC_STDLIBS" || exit 2 
+        LDFLAGS="$GENSER_FC_STDLIBS" || exit 2 
     make || exit 2 
     make install || exit 2
     cd ..

@@ -2,6 +2,11 @@
 
 DEVELOPERMODE="no"
 
+## Versions of required libraries
+LHAPDF_VERSION=5.3.1 
+FASTJET_VERSION=2.3.1
+HEPMC_VERSION=2.03.06
+
 ## Build and install to the PREFIX location
 PREFIX=$PWD/local
 test $# -eq 1 && PREFIX=$1
@@ -84,12 +89,6 @@ else
         exit 1
     fi
 fi
-
-
-## Versions of required libraries
-LHAPDF_VERSION=5.3.1 
-FASTJET_VERSION=2.3.0
-HEPMC_VERSION=2.03.04
 
 
 ## AFS directory where LCG external packages are installed

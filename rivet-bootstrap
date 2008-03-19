@@ -195,5 +195,6 @@ else
     echo 
     echo "You'll also need to get a local copy of the Genser generators package"
     echo "and add its 'liblinks' directory to the AGILE_GEN_PATH variable."
-    echo "The $PWD/agile/bin/mkGenserArea script can help you to do this."
+    echo "The mkGenserArea script can help you to do this: you can get it from"
+    echo "http://svn.hepforge.org/agile/trunk/bin/mkGenserArea"
 fi

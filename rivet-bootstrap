@@ -1,10 +1,10 @@
 #! /usr/bin/env bash
 
-DEVELOPERMODE="no"
+DEVELOPERMODE="yes"
 
 ## Versions of required libraries
 LHAPDF_VERSION=5.3.1 
-FASTJET_VERSION=2.3.1
+FASTJET_VERSION=2.3.3 
 HEPMC_VERSION=2.03.06
 
 ## Build and install to the PREFIX location
@@ -127,7 +127,9 @@ if test -d "$LCGDIR"; then
     echo "Using LCG platform tag = $LCGPLATFORM"
 
     HEPMCPATH=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM 
+    echo "HepMC path: $HEPMCPATH"
     FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM 
+    echo "FastJet path: $FASTJETPATH"
 
     ## First AGILe
     echo "Building AGILe"

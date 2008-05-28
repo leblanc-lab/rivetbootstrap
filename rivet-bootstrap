@@ -164,7 +164,7 @@ if test -d "$LCGDIR"; then
     echo "All done. Now set some variables:"
     echo "export PATH=$PREFIX/bin:\$PATH"
     echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:\$LD_LIBRARY_PATH"
-    echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/.liblinks/$LCGPLATFORM/lib"
+    echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/$LCGPLATFORM/lib"
 
 else
     ## We don't have access to LCG AFS, so download the packages...
@@ -196,7 +196,7 @@ else
     echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"
     echo 
     echo "You'll also need to get a local copy of the Genser generators package"
-    echo "and add its 'liblinks' directory to the AGILE_GEN_PATH variable."
+    echo "and add its root directory to the AGILE_GEN_PATH variable."
     echo "The mkGenserArea script can help you to do this: you can get it from"
     echo "http://svn.hepforge.org/agile/trunk/bin/mkGenserArea"
 fi

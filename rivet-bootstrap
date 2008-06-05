@@ -165,7 +165,7 @@ if test -d "$LCGDIR"; then
     echo "All done. Now set some variables:"
     echo "export PATH=$PREFIX/bin:\$PATH"
     echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:\$LD_LIBRARY_PATH"
-    echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/$LCGPLATFORM/lib"
+    #echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/$LCGPLATFORM/lib"
 
 else
     ## We don't have access to LCG AFS, so download the packages...

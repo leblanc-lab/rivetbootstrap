@@ -131,6 +131,9 @@ if test -d "$LCGDIR"; then
     echo "HepMC path: $HEPMCPATH"
     FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM 
     echo "FastJet path: $FASTJETPATH"
+    LHAPDFPATH=$LCGDIR/lhapdf/$LHAPDF_VERSION/$LCGPLATFORM
+    echo "Lhapdf path: $LHAPDFPATH"
+
 
     ## First AGILe
     echo "Building AGILe"
@@ -164,7 +167,7 @@ if test -d "$LCGDIR"; then
     echo
     echo "All done. Now set some variables:"
     echo "export PATH=$PREFIX/bin:\$PATH"
-    echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:\$LD_LIBRARY_PATH"
+    echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:$LHAPDFPATH/lib:\$LD_LIBRARY_PATH"
     #echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/$LCGPLATFORM/lib"
 
 else

@@ -2,6 +2,11 @@
 
 ## Choose to use stable tarballs or SVN versions of Rivet & AGILe
 DEVELOPERMODE="no"
+
+## Use this flag to always bootstrap from source, even if AFS is found
+IGNORE_AFS="no"
+
+## Versions of AGILe and Rivet (if not in developer mode)
 AGILE_VERSION=1.1.0
 RIVET_VERSION=1.1.0
 
@@ -97,7 +102,7 @@ LCGDIR=/afs/cern.ch/sw/lcg/external
 
 
 ## Are we able to use pre-built packages from CERN AFS?
-if test -d "$LCGDIR"; then
+if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     echo "LCG AFS area available: using LCG packages"
 
     ## Platform tag: get distribution

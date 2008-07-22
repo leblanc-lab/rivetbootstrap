@@ -10,6 +10,9 @@ IGNORE_AFS="no"
 AGILE_VERSION=1.1.1
 RIVET_VERSION=1.1.0
 
+## Specify path to boost include dir if not found automatically
+#BOOSTFLAGS=--with-boost-incpath=/usr/local/boost_1_35/include
+
 ## Versions of required libraries
 LHAPDF_VERSION=5.3.1 
 FASTJET_VERSION=2.3.3 
@@ -144,7 +147,7 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     echo "Building AGILe"
     cd agile
     echo "In $PWD"
-    ./configure --prefix=$PREFIX --with-hepmc=$HEPMCPATH || exit 2
+    ./configure --prefix=$PREFIX --with-hepmc=$HEPMCPATH $BOOSTFLAGS || exit 2
     make || exit 2
     make install || exit 2
     cd ..
@@ -162,7 +165,10 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     GENSER_FC_STDLIBS="/usr/$LIB64/libgfortran.so.0 /usr/$LIB64/libg2c.so.0" 
     ## Finally, run configure...
     ./configure --prefix=$PREFIX \
-        --with-hepmc=$HEPMCPATH --with-fastjet=$FASTJETPATH --with-agile=$PREFIX \
+        --with-hepmc=$HEPMCPATH \
+        --with-fastjet=$FASTJETPATH \
+        --with-agile=$PREFIX \
+        $BOOSTFLAGS \
         LDFLAGS="$GENSER_FC_STDLIBS" || exit 2
     make || exit 2
     make install || exit 2

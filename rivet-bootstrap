@@ -88,10 +88,16 @@ else
         if test ! -e agile; then 
             svn co http://svn.hepforge.org/agile/trunk agile || exit 2
             (cd agile && autoreconf -i) || exit 2
+
+	else
+	    svn update agile
         fi
         if test ! -e rivet; then 
             svn co http://svn.hepforge.org/rivet/trunk rivet || exit 2
             (cd rivet && autoreconf -i) || exit 2
+
+	else
+	    svn update rivet
         fi
     else
         echo "Couldn't get AGILe and Rivet via svn" 1>&2

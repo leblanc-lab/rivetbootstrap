@@ -7,8 +7,8 @@ DEVELOPERMODE="no"
 IGNORE_AFS="no"
 
 ## Versions of AGILe and Rivet (if not in developer mode)
-AGILE_VERSION=1.1.1
-RIVET_VERSION=1.1.0
+AGILE_VERSION=1.1.2
+RIVET_VERSION=1.1.1
 
 ## configure options for AGILe
 #AGILE_CONFIGURE_FLAGS=" --disable-ccherwig --disable-ccpythia --disable-sherpa"

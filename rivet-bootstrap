@@ -251,5 +251,5 @@ else
     echo "You'll also need to get a local copy of the Genser generators package"
     echo "and add its root directory to the AGILE_GEN_PATH variable."
     echo "The mkGenserArea script can help you to do this: you can get it from"
-    echo "http://svn.hepforge.org/agile/trunk/bin/mkGenserArea"
+    echo "http://svn.hepforge.org/agile/genser/agile-genser-bootstrap"
 fi

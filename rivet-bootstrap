@@ -18,9 +18,9 @@ AGILE_CONFIGURE_PATH="$PATH"
 #BOOSTFLAGS=--with-boost-incpath=/usr/local/boost_1_35/include
 
 ## Versions of required libraries
-LHAPDF_VERSION=5.4.1
-FASTJET_VERSION=2.3.3 
-HEPMC_VERSION=2.03.09
+LHAPDF_VERSION=5.6.0
+FASTJET_VERSION=2.3.4 
+HEPMC_VERSION=2.04.00
 
 ## Build and install to the PREFIX location
 PREFIX=$PWD/local
@@ -57,7 +57,7 @@ wget-untargz() {
 conf-mk-mkinst() {
     if test -d $1; then
         (cd $1 && echo "./configure --prefix=$PREFIX" && \
-            ./configure --prefix=$PREFIX --enable-shared && \
+            ./configure --prefix=$PREFIX --enable-shared $2 && \
             make && make install) || exit 2
     else
         echo "Couldn't find $1... exiting"
@@ -218,7 +218,7 @@ else
     ## Get HepMC
     HEPMCNAME=HepMC-$HEPMC_VERSION
     test -d $HEPMCNAME || wget-untargz http://lcgapp.cern.ch/project/simu/HepMC/download/$HEPMCNAME.tar.gz || exit 2
-    conf-mk-mkinst $HEPMCNAME || exit 2
+    conf-mk-mkinst $HEPMCNAME "--with-momentum=GEV --with-length=MM" || exit 2
 
     ## Get FastJet
     FASTJETNAME=fastjet-$FASTJET_VERSION

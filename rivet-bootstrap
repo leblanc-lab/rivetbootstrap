@@ -1,10 +1,16 @@
 #! /usr/bin/env bash
 
 ## Choose to use stable tarballs or SVN versions of Rivet & AGILe
-DEVELOPERMODE="no"
+## You can also call this script like "DEVELOPERMODE=yes rivet-bootstrap"
+if [[ -z "$DEVELOPERMODE" ]]; then
+    DEVELOPERMODE="no"
+fi
 
 ## Use this flag to always bootstrap from source, even if AFS is found
-IGNORE_AFS="no"
+## You can also call the script like "IGNORE_AFS=yes rivet-bootstrap"
+if [[ -z "$IGNORE_AFS" ]]; then
+    IGNORE_AFS="no"
+fi
 
 ## Versions of AGILe and Rivet (if not in developer mode)
 AGILE_VERSION=1.1.2
@@ -83,30 +89,41 @@ if test "$DEVELOPERMODE" != "yes"; then
     echo "Getting $RIVET_URL"
     wget-untargz $RIVET_URL
     ln -s $RIVET_NAME rivet || exit 2
+
 else
+
     ## DEVELOPER MODE
     ## If we've got SVN and there are no already-checked out versions
     ## of AGILe and Rivet in this directory, then check out/update
     ## the SVN head versions using the HTTP access method
-    if test -x "`which svn 2> /dev/null`"; then
-        if test ! -e agile; then 
-            svn co http://svn.hepforge.org/agile/trunk agile || exit 2
-            (cd agile && autoreconf -i) || exit 2
+    for pkg in svn autoconf autoreconf automake libtool; do
+        if test ! -x "`which $pkg 2> /dev/null`"; then
+            echo "You must have $pkg installed to bootstrap in developer mode" 1>&2
+            exit 1
+        fi
+    done
 
+
+    ## Package checks done, let's bootstrap AGILe...
+    if [[ ! -e agile ]]; then 
+        svn co http://svn.hepforge.org/agile/trunk agile || exit 2
 	else
 	    svn update agile
-        fi
-        if test ! -e rivet; then 
-            svn co http://svn.hepforge.org/rivet/trunk rivet || exit 2
-            (cd rivet && autoreconf -i) || exit 2
+    fi
+    if [[ -e agile && ! -e agile/configure ]]; then 
+        (cd agile && autoreconf -i) || exit 2
+    fi
 
+    ## ... and Rivet
+    if [[ ! -e rivet ]]; then 
+        svn co http://svn.hepforge.org/rivet/trunk rivet || exit 2        
 	else
 	    svn update rivet
-        fi
-    else
-        echo "Couldn't get AGILe and Rivet via svn" 1>&2
-        exit 1
     fi
+    if [[ -e rivet && ! -e rivet/configure ]]; then 
+        (cd rivet && autoreconf -i) || exit 2
+    fi
+
 fi
 
 

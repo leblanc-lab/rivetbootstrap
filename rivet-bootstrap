@@ -60,10 +60,12 @@ wget-untargz() {
 
 ## Function to enter an expanded tarball and run the usual
 ## autotools ./configure, make, make install mantra
+### FIXME: --disable-pyext should be removed when we move
+###        to the rivet python interface!!!!
 conf-mk-mkinst() {
     if test -d $1; then
         (cd $1 && echo "./configure --prefix=$PREFIX" && \
-            ./configure --prefix=$PREFIX --enable-shared $2 && \
+            ./configure --prefix=$PREFIX --enable-shared --disable-pyext $2 && \
             make && make install) || exit 2
     else
         echo "Couldn't find $1... exiting"

@@ -1,5 +1,8 @@
 #! /usr/bin/env bash
 
+## $Date$
+## $Revision$
+
 ## Choose to use stable tarballs or SVN versions of Rivet & AGILe
 ## You can also call this script like "DEVELOPERMODE=yes rivet-bootstrap"
 if [[ -z "$DEVELOPERMODE" ]]; then

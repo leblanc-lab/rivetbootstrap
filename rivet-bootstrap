@@ -24,7 +24,7 @@ RIVET_VERSION=1.1.1
 AGILE_CONFIGURE_PATH="$PATH"
 
 ## Specify path to boost include dir if not found automatically
-#BOOSTFLAGS=--with-boost-incpath=/usr/local/boost_1_35/include
+#BOOSTFLAGS=--with-boost=/usr/local/boost_1_35
 
 ## Versions of required libraries
 LHAPDF_VERSION=5.6.0
@@ -177,8 +177,11 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LHAPDFPATH/lib
     BOOST_VERSION=1.34.1
     BOOSTINCPATH=$LCGDIR/Boost/$BOOST_VERSION/$LCGPLATFORM
-
-    BOOSTFLAGS=--with-boost-incpath=$BOOSTINCPATH/include/boost-${BOOST_VERSION//./_}/boost
+    BOOSTFLAGS=--with-boost-incpath=$BOOSTINCPATH/include/boost-${BOOST_VERSION//./_}
+    ## TODO: remove this on release of Rivet 1.1.2 
+    if test "$DEVELOPERMODE" != "yes"; then
+        BOOSTFLAGS=$BOOSTFLAGS/boost
+    fi
     echo "compiling with: $BOOSTFLAGS"
 
     ## Enable C++ generators

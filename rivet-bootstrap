@@ -28,7 +28,10 @@ AGILE_CONFIGURE_PATH="$PATH"
 
 ## Versions of required libraries
 LHAPDF_VERSION=5.6.0
-FASTJET_VERSION=2.3.4 
+FASTJET_VERSION=2.3.4
+if [[ -z "$FASTJETJADE" ]]; then
+    FASTJETJADE="yes"
+fi
 HEPMC_VERSION=2.04.00
 
 ## Build and install to the PREFIX location
@@ -248,6 +251,13 @@ else
     ## Get FastJet
     FASTJETNAME=fastjet-$FASTJET_VERSION
     test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz || exit 2
+    if test "$FASTJETJADE" = "yes" -a -x "$(which autoreconf)"; then
+        cd $FASTJETNAME
+        wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
+        patch -p1 < fastjet-2.3.4-jade.patch || exit 2
+        autoreconf --install || exit 2
+        cd ..
+    fi;
     conf-mk-mkinst $FASTJETNAME || exit 2
 
     ## Build and install AGILe

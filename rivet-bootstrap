@@ -277,7 +277,8 @@ else
 
 
     ## Build and install Rivet
-    conf-mk-mkinst rivet || exit 2
+    test "$FASTJETJADE" = "yes" && RIVET_CONFIGURE_FLAGS=--enable-jade
+    conf-mk-mkinst rivet $RIVET_CONFIGURE_FLAGS || exit 2
     
     echo
     echo "All done. Now set some variables:"

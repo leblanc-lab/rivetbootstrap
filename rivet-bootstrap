@@ -3,10 +3,18 @@
 ## $Date$
 ## $Revision$
 
+## TODO: Make it possible to run without internet access if expanded tarballs are already in place
+
+
 ## Choose to use stable tarballs or SVN versions of Rivet & AGILe
 ## You can also call this script like "DEVELOPERMODE=yes rivet-bootstrap"
 if [[ -z "$DEVELOPERMODE" ]]; then
     DEVELOPERMODE="no"
+fi
+
+## Build Python interface? True unless disabled.
+if [[ -z "$USE_PYTHON" ]]; then
+   USE_PYTHON="yes"
 fi
 
 ## Use this flag to always bootstrap from source, even if AFS is found
@@ -33,6 +41,7 @@ if [[ -z "$FASTJETJADE" ]]; then
     FASTJETJADE="yes"
 fi
 HEPMC_VERSION=2.04.00
+PYHEPMC_VERSION=0.3.3
 
 ## Build and install to the PREFIX location
 PREFIX=$PWD/local
@@ -48,6 +57,22 @@ if ! test -w "$PREFIX"; then
 fi
 
 
+## Set up Python install area
+if test "$USE_PYTHON" == "yes"; then
+    echo "Setting up Python library install area: must exist and be in \$PYTHONPATH"
+    pyversion=$(python -c 'import sys; print "%d.%d" % (sys.version_info[0],sys.version_info[1])')
+    libname="lib"
+    if test "$(uname -m | grep "x86_64")"; then
+        libname="lib64"
+    fi
+    pylibdir="$PREFIX/$libname/python$pyversion/site-packages"
+    mkdir -p $pylibdir
+    export PYTHONPATH=$PYTHONPATH:$pylibdir
+    ## Flag to pass to AGILe and Rivet builds to enable Python extensions
+    PYEXTFLAGS=--enable-pyext
+fi
+
+
 ## Function to unpack and delete a tarball
 wget-untargz() {
     ## Try first using wget, and falling back to trying curl (for Mac)
@@ -60,13 +85,14 @@ wget-untargz() {
         fi
     fi
     ## Use whichever was present
+    echo "Downloading: $WGETTER $1 | tar xzv"
     ($WGETTER $1 | tar xzv) || exit 1
 }
 
 
 ## Function to enter an expanded tarball and run the usual
 ## autotools ./configure, make, make install mantra
-### FIXME: --disable-pyext should be removed when we move
+### TODO: --disable-pyext should be removed when we move
 ###        to the rivet python interface!!!!
 conf-mk-mkinst() {
     if test -d $1; then
@@ -84,6 +110,7 @@ conf-mk-mkinst() {
 
 
 ## Get AGILe and Rivet either from released tarballs or SVN
+## TODO: Remove AGILe from Rivet 1.1.3 onwards
 if test "$DEVELOPERMODE" != "yes"; then
     ## USER MODE
     ## Get Rivet and AGILe tarballs (for non-developers)
@@ -135,6 +162,17 @@ else
 fi
 
 
+## Build Python HepMC interface if required
+if test "$USE_PYTHON" == "yes"; then
+    echo "Building Python HepMC interface"
+    PYHEPMC_NAME=hepmc-python-$PYHEPMC_VERSION
+    PYHEPMC_URL=http://www.hepforge.org/archive/rivet/$PYHEPMC_NAME.tar.gz
+    echo "Getting $PYHEPMC_URL"
+    wget-untargz "$PYHEPMC_URL"
+    ln -s $PYHEPMC_NAME hepmc-python || exit 2
+fi
+
+
 ## AFS directory where LCG external packages are installed
 LCGDIR=/afs/cern.ch/sw/lcg/external
 
@@ -179,20 +217,29 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     echo "LHAPDF path: $LHAPDFPATH"
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LHAPDFPATH/lib
     BOOST_VERSION=1.34.1
-    BOOSTINCPATH=$LCGDIR/Boost/$BOOST_VERSION/$LCGPLATFORM
-    BOOSTFLAGS=--with-boost-incpath=$BOOSTINCPATH/include/boost-${BOOST_VERSION//./_}
-    ## TODO: remove this on release of Rivet 1.1.2 
-    if test "$DEVELOPERMODE" != "yes"; then
-        BOOSTFLAGS=$BOOSTFLAGS/boost
-    fi
-    echo "compiling with: $BOOSTFLAGS"
+    BOOSTPATH=$LCGDIR/Boost/$BOOST_VERSION/$LCGPLATFORM
+    BOOSTFLAGS=--with-boost-incpath=$BOOSTPATH/include/boost-${BOOST_VERSION//./_}
+    echo "Compiling with: $BOOSTFLAGS"
 
-    ## Enable C++ generators
-    AGILE_CONFIGURE_FLAGS=" --enable-ccherwig --enable-ccpythia --enable-sherpa"
+    ## Enable C++ Pythia
+    AGILE_CONFIGURE_FLAGS=" --enable-ccpythia"
     AGILE_CONFIGURE_FLAGS="$AGILE_CONFIGURE_FLAGS --with-pythia8=$LCGDIR/MCGenerators/pythia8/108/$LCGPLATFORM"
-    AGILE_CONFIGURE_FLAGS="$AGILE_CONFIGURE_FLAGS --with-thepeg=$LCGDIR/MCGenerators/thepeg/1.3.0/$LCGPLATFORM"
-    AGILE_CONFIGURE_PATH="$AGILE_CONFIGURE_PATH:$LCGDIR/MCGenerators/herwigpp/2.2.1/$LCGPLATFORM/bin"
-    AGILE_CONFIGURE_PATH="$AGILE_CONFIGURE_PATH:$LCGDIR/MCGenerators/sherpa/1.1.2/$LCGPLATFORM/bin"
+
+
+    ## Python interface
+    if test "$USE_PYTHON" == "yes"; then
+        echo "Building hepmc-python"
+        cd hepmc-python
+        echo "In $PWD"
+        ./configure --prefix=$PREFIX \
+            --with-hepmc=$HEPMCPATH || exit 2
+        make || exit 2
+        make install || exit 2
+        cd ..
+        echo "In $PWD"
+        echo
+    fi
+
 
     ## First AGILe
     echo "Building AGILe"
@@ -201,12 +248,15 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     cd agile
     echo "In $PWD"
     PATH=$AGILE_CONFIGURE_PATH ./configure --prefix=$PREFIX \
-        --with-hepmc=$HEPMCPATH $BOOSTFLAGS $AGILE_CONFIGURE_FLAGS || exit 2
+        --with-hepmc=$HEPMCPATH $BOOSTFLAGS $AGILE_CONFIGURE_FLAGS \
+        $PYEXTFLAGS \
+        || exit 2
     make || exit 2
     make install || exit 2
     cd ..
     echo "In $PWD"
     echo
+
 
     ## Then Rivet + rivetgun
     echo "Building Rivet"
@@ -223,6 +273,7 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
         --with-fastjet=$FASTJETPATH \
         --with-agile=$PREFIX \
         $BOOSTFLAGS \
+        $PYEXTFLAGS \
         LDFLAGS="$GENSER_FC_STDLIBS" || exit 2
     make || exit 2
     make install || exit 2
@@ -233,7 +284,11 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     echo "All done. Now set some variables:"
     echo "export PATH=$PREFIX/bin:\$PATH"
     echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:$LHAPDFPATH/lib:\$LD_LIBRARY_PATH"
+    if test "$USE_PYTHON" == "yes"; then
+        echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir"
+    fi
     #echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/$LCGPLATFORM/lib"
+
 
 else
     ## We don't have access to LCG AFS, so download the packages...
@@ -260,6 +315,23 @@ else
     fi;
     conf-mk-mkinst $FASTJETNAME || exit 2
 
+
+    ## Python interface
+    if test "$USE_PYTHON" == "yes"; then
+        #echo "Building hepmc-python"
+        #cd hepmc-python
+        #echo "In $PWD"
+        #./configure --prefix=$PREFIX \
+        #    --with-hepmc=$HEPMCPATH || exit 2
+        #make || exit 2
+        #make install || exit 2
+        #cd ..
+        #echo "In $PWD"
+        #echo
+        conf-mk-mkinst hepmc-python || exit 2
+    fi
+
+
     ## Build and install AGILe
     ##conf-mk-mkinst agile || exit 2
     echo "Building AGILe"
@@ -268,7 +340,7 @@ else
     cd agile
     echo "In $PWD"
     PATH=$AGILE_CONFIGURE_PATH ./configure --prefix=$PREFIX \
-        --with-hepmc=$HEPMCPATH $BOOSTFLAGS $AGILE_CONFIGURE_FLAGS || exit 2
+        --with-hepmc=$HEPMCPATH $BOOSTFLAGS $PYEXTFLAGS $AGILE_CONFIGURE_FLAGS || exit 2
     make || exit 2
     make install || exit 2
     cd ..
@@ -277,15 +349,18 @@ else
 
 
     ## Build and install Rivet
-    test "$FASTJETJADE" = "yes" && RIVET_CONFIGURE_FLAGS=--enable-jade
+    test "$FASTJETJADE" = "yes" && RIVET_CONFIGURE_FLAGS="--enable-jade $PYEXTFLAGS"
     conf-mk-mkinst rivet $RIVET_CONFIGURE_FLAGS || exit 2
     
     echo
     echo "All done. Now set some variables:"
     echo "export PATH=$PREFIX/bin:\$PATH"
     echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"
+    if test "$USE_PYTHON" == "yes"; then
+        echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir"
+    fi
     echo 
-    echo "You'll also need to get a local copy of the Genser generators package"
+    echo "You may also want to get a local copy of the Genser generators package"
     echo "and add its root directory to the AGILE_GEN_PATH variable."
     echo "The agile-genser-bootstrap script can help you to do this."
     echo "You can get it from"

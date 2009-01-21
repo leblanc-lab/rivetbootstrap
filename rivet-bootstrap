@@ -177,6 +177,18 @@ fi
 LCGDIR=/afs/cern.ch/sw/lcg/external
 
 
+## Choose names for env files and determine user's default shell
+SHENV=rivetenv.sh
+CSHENV=rivetenv.csh
+USERSHENV=$SHENV
+if test -n $(which finger &> /dev/null); then
+    USERSH=$(finger $USER | grep Shell | sed -e 's/.*Shell:\ *\(.*\)/\1/')
+    if $(echo "$USERSH" | grep -i "csh" &> /dev/null); then
+        USERSHENV=$CSHENV
+    fi
+fi
+
+
 ## Are we able to use pre-built packages from CERN AFS?
 if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     echo "LCG AFS area available: using LCG packages"
@@ -280,13 +292,22 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     cd ..
     echo "In $PWD"
 
-    echo
-    echo "All done. Now set some variables:"
-    echo "export PATH=$PREFIX/bin:\$PATH"
-    echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:$LHAPDFPATH/lib:\$LD_LIBRARY_PATH"
+    ## Write sh env file
+    > $SHENV
+    echo "export PATH=$PREFIX/bin:\$PATH" >> $SHENV
+    echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:$LHAPDFPATH/lib:\$LD_LIBRARY_PATH" >> $SHENV
     if test "$USE_PYTHON" == "yes"; then
-        echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir"
+        echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir" >> $SHENV
     fi
+
+    ## Write csh env file
+    > $CSHENV
+    echo "setenv PATH $PREFIX/bin:\$PATH" >> $CSHENV
+    echo "setenv LD_LIBRARY_PATH $PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:$LHAPDFPATH/lib:\$LD_LIBRARY_PATH" >> $CSHENV
+    if test "$USE_PYTHON" == "yes"; then
+        echo "setenv PYTHONPATH \$PYTHONPATH:$pylibdir" >> $CSHENV
+    fi
+
     #echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/$LCGPLATFORM/lib"
 
 
@@ -351,14 +372,39 @@ else
     ## Build and install Rivet
     test "$FASTJETJADE" = "yes" && RIVET_CONFIGURE_FLAGS="--enable-jade $PYEXTFLAGS"
     conf-mk-mkinst rivet $RIVET_CONFIGURE_FLAGS || exit 2
-    
-    echo
-    echo "All done. Now set some variables:"
-    echo "export PATH=$PREFIX/bin:\$PATH"
-    echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"
+
+    ## Write sh env file
+    > $SHENV
+    echo "export PATH=$PREFIX/bin:\$PATH" >> $SHENV
+    echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH" >> $SHENV
     if test "$USE_PYTHON" == "yes"; then
-        echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir"
+        echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir" >> $SHENV
     fi
+
+    ## Write csh env file
+    > $CSHENV
+    echo "setenv PATH $PREFIX/bin:\$PATH" >> $CSHENV
+    echo "setenv LD_LIBRARY_PATH $PREFIX/lib:\$LD_LIBRARY_PATH" >> $CSHENV
+    if test "$USE_PYTHON" == "yes"; then
+        echo "setenv PYTHONPATH \$PYTHONPATH:$pylibdir" >> $CSHENV
+    fi
+
+fi
+
+
+## Write environment variable information
+echo
+echo "All done. Now set some variables:"
+cat $USERSHENV
+echo "These variables are also written to $SHENV and $CSHENV, and"
+echo "can be used in sh or csh shells respectively by sourcing, e.g."
+echo ". $SHENV"
+echo "or"
+echo "source $CSHENV"
+
+
+## Mention the AGILe Genser bootstrap to users not using AFS
+if test ! -d "$LCGDIR" || test "$IGNORE_AFS" == "yes"; then
     echo 
     echo "You may also want to get a local copy of the Genser generators package"
     echo "and add its root directory to the AGILE_GEN_PATH variable."

@@ -9,7 +9,7 @@
 ## Choose to use stable tarballs or SVN versions of Rivet & AGILe
 ## You can also call this script like "DEVELOPERMODE=yes rivet-bootstrap"
 if [[ -z "$DEVELOPERMODE" ]]; then
-    DEVELOPERMODE="no"
+    DEVELOPERMODE="yes"
 fi
 
 ## Build Python interface? True unless disabled.
@@ -327,9 +327,11 @@ else
     test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz || exit 2
     if test "$FASTJETJADE" = "yes" -a -x "$(which autoreconf)"; then
         cd $FASTJETNAME
-        wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
-        patch -p1 < fastjet-2.3.4-jade.patch || exit 2
-        autoreconf --install || exit 2
+        if ! test -e "plugins/Jade"; then
+            wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
+            patch -p1 < fastjet-2.3.4-jade.patch || exit 2
+            autoreconf --install || exit 2
+        fi;
         cd ..
     fi;
     conf-mk-mkinst $FASTJETNAME || exit 2

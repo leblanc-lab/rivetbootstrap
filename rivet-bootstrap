@@ -31,9 +31,6 @@ RIVET_VERSION=1.1.2
 #AGILE_CONFIGURE_FLAGS=" --disable-ccherwig --disable-ccpythia --disable-sherpa"
 AGILE_CONFIGURE_PATH="$PATH"
 
-## Specify path to boost include dir if not found automatically
-#BOOSTFLAGS=--with-boost=/usr/local/boost_1_35
-
 ## Versions of required libraries
 LHAPDF_VERSION=5.6.0
 FASTJET_VERSION=2.3.4
@@ -42,6 +39,15 @@ if [[ -z "$FASTJETJADE" ]]; then
 fi
 HEPMC_VERSION=2.04.00
 PYHEPMC_VERSION=0.3.3
+
+## Specify path to boost include dir if not found automatically
+#BOOSTFLAGS=--with-boost=/usr/local/boost_1_35
+BOOSTFLAGS=--with-boost=$PWD/local
+## Uncomment this to download and install Boost locally:
+#INSTALL_BOOST=yes 
+## Version of Boost used for a local installation (assumes that final part of version string is "_0")
+#BOOST_VERSION=1_38
+
 
 ## Build and install to the PREFIX location
 PREFIX=$PWD/local
@@ -165,9 +171,12 @@ if test "$USE_PYTHON" == "yes"; then
     echo "Building Python HepMC interface"
     PYHEPMC_NAME=hepmc-python-$PYHEPMC_VERSION
     PYHEPMC_URL=http://www.hepforge.org/archive/rivet/$PYHEPMC_NAME.tar.gz
-    echo "Getting $PYHEPMC_URL"
-    wget-untargz "$PYHEPMC_URL"
-    ln -s $PYHEPMC_NAME hepmc-python || exit 2
+    if test ! -e $PYHEPMC_NAME; then
+        echo "Getting $PYHEPMC_URL"
+        wget-untargz "$PYHEPMC_URL"
+        rm -f hepmc-python
+        ln -s $PYHEPMC_NAME hepmc-python || exit 2
+    fi
 fi
 
 
@@ -184,6 +193,27 @@ if test -n $(which finger &> /dev/null); then
     if $(echo "$USERSH" | grep -i "csh" &> /dev/null); then
         USERSHENV=$CSHENV
     fi
+fi
+
+
+## Get Boost
+if [[ "$INSTALL_BOOST" == "yes" ]]; then
+    echo "Installing a local copy of Boost"
+    wget http://downloads.sourceforge.net/boost/boost_${BOOST_VERSION}_0.tar.gz?use_mirror=mesh -O- | tar xz
+    cd boost_${BOOST_VERSION}_0
+    echo "In $PWD"
+    ./configure --prefix=$PREFIX
+    make
+    make install
+    cd ..
+    echo "In $PWD"
+    cd $PREFIX/include
+    echo "In $PWD"
+    ln -s boost_${BOOST_VERSION}/boost boost
+    cd ../..
+    echo "In $PWD"
+    BOOSTFLAGS=--with-boost=$PREFIX
+    echo "Setting BOOSTFLAGS=$BOOSTFLAGS"
 fi
 
 

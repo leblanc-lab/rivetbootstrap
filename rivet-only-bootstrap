@@ -6,7 +6,7 @@
 ## TODO: Make it possible to run without internet access if expanded tarballs are already in place
 
 
-## Choose to use stable tarballs or SVN versions of Rivet & AGILe
+## Choose to use stable tarball or SVN version of Rivet
 ## You can also call this script like "DEVELOPERMODE=yes rivet-bootstrap"
 if [[ -z "$DEVELOPERMODE" ]]; then
     DEVELOPERMODE="no"
@@ -23,22 +23,16 @@ if [[ -z "$IGNORE_AFS" ]]; then
     IGNORE_AFS="no"
 fi
 
-## Versions of AGILe and Rivet (if not in developer mode)
-AGILE_VERSION=1.1.3
+## Version Rivet (if not in developer mode)
 RIVET_VERSION=1.1.2
 
-## configure options for AGILe
-#AGILE_CONFIGURE_FLAGS=" --disable-ccherwig --disable-ccpythia --disable-sherpa"
-AGILE_CONFIGURE_PATH="$PATH"
-
 ## Versions of required libraries
-LHAPDF_VERSION=5.6.0
 FASTJET_VERSION=2.3.4
 if [[ -z "$FASTJETJADE" ]]; then
     FASTJETJADE="yes"
 fi
 HEPMC_VERSION=2.04.00
-PYHEPMC_VERSION=0.3.3
+PYHEPMC_VERSION=0.3.4
 
 ## Specify path to boost include dir if not found automatically
 #BOOSTFLAGS=--with-boost=/usr/local/boost_1_35
@@ -74,7 +68,7 @@ if test "$USE_PYTHON" == "yes"; then
     pylibdir="$PREFIX/$libname/python$pyversion/site-packages"
     mkdir -p $pylibdir
     export PYTHONPATH=$PYTHONPATH:$pylibdir
-    ## Flag to pass to AGILe and Rivet builds to enable Python extensions
+    ## Flag to pass to Rivet builds to enable Python extensions
     PYEXTFLAGS=--enable-pyext
 fi
 
@@ -101,7 +95,7 @@ wget-untargz() {
 conf-mk-mkinst() {
     if test -d $1; then
         (cd $1 && echo "./configure --prefix=$PREFIX" && \
-            ./configure --prefix=$PREFIX --enable-shared --enable-pyext $2 && \
+            ./configure --prefix=$PREFIX --enable-shared $2 && \
             make && make install) || exit 2
     else
         echo "Couldn't find $1... exiting"
@@ -113,17 +107,11 @@ conf-mk-mkinst() {
 ##############################
 
 
-## Get AGILe and Rivet either from released tarballs or SVN
-## TODO: Remove AGILe from Rivet 1.1.3 onwards
+## Get Rivet either from released tarballs or SVN
 if test "$DEVELOPERMODE" != "yes"; then
     ## USER MODE
-    ## Get Rivet and AGILe tarballs (for non-developers)
-    AGILE_NAME=AGILe-$AGILE_VERSION
+    ## Get Rivet tarball (for non-developers)
     RIVET_NAME=Rivet-$RIVET_VERSION
-    AGILE_URL=http://www.hepforge.org/archive/agile/$AGILE_NAME.tar.gz
-    echo "Getting $AGILE_URL"
-    wget-untargz $AGILE_URL
-    ln -s $AGILE_NAME agile || exit 2
     RIVET_URL=http://www.hepforge.org/archive/rivet/$RIVET_NAME.tar.gz
     echo "Getting $RIVET_URL"
     wget-untargz $RIVET_URL
@@ -132,8 +120,8 @@ if test "$DEVELOPERMODE" != "yes"; then
 else
 
     ## DEVELOPER MODE
-    ## If we've got SVN and there are no already-checked out versions
-    ## of AGILe and Rivet in this directory, then check out/update
+    ## If we've got SVN and there is no already-checked out version
+    ## of Rivet in this directory, then check out/update
     ## the SVN head versions using the HTTP access method
     for pkg in svn autoconf autoreconf automake libtool; do
         if test ! -x "`which $pkg 2> /dev/null`"; then
@@ -142,18 +130,6 @@ else
         fi
     done
 
-
-    ## Package checks done, let's bootstrap AGILe...
-    if [[ ! -e agile ]]; then 
-        svn co http://svn.hepforge.org/agile/trunk agile || exit 2
-	else
-	    svn update agile
-    fi
-    if [[ -e agile && ! -e agile/configure ]]; then 
-        (cd agile && autoreconf -i) || exit 2
-    fi
-
-    ## ... and Rivet
     if [[ ! -e rivet ]]; then 
         svn co http://svn.hepforge.org/rivet/trunk rivet || exit 2        
 	else
@@ -253,17 +229,10 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     echo "HepMC path: $HEPMCPATH"
     FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM 
     echo "FastJet path: $FASTJETPATH"
-    LHAPDFPATH=$LCGDIR/MCGenerators/lhapdf/$LHAPDF_VERSION/$LCGPLATFORM
-    echo "LHAPDF path: $LHAPDFPATH"
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LHAPDFPATH/lib
     BOOST_VERSION=1.34.1
     BOOSTPATH=$LCGDIR/Boost/$BOOST_VERSION/$LCGPLATFORM
     BOOSTFLAGS=--with-boost-incpath=$BOOSTPATH/include/boost-${BOOST_VERSION//./_}
     echo "Compiling with: $BOOSTFLAGS"
-
-    ## Enable C++ Pythia
-    AGILE_CONFIGURE_FLAGS=" --enable-ccpythia"
-    AGILE_CONFIGURE_FLAGS="$AGILE_CONFIGURE_FLAGS --with-pythia8=$LCGDIR/MCGenerators/pythia8/108/$LCGPLATFORM"
 
 
     ## Python interface
@@ -281,40 +250,16 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     fi
 
 
-    ## First AGILe
-    echo "Building AGILe"
-    echo "AGILE_CONFIGURE_FLAGS=$AGILE_CONFIGURE_FLAGS"
-    echo "AGILE_CONFIGURE_PATH=$AGILE_CONFIGURE_PATH"
-    cd agile
-    echo "In $PWD"
-    PATH=$AGILE_CONFIGURE_PATH ./configure --prefix=$PREFIX \
-        --with-hepmc=$HEPMCPATH $BOOSTFLAGS $AGILE_CONFIGURE_FLAGS \
-        $PYEXTFLAGS \
-        || exit 2
-    make || exit 2
-    make install || exit 2
-    cd ..
-    echo "In $PWD"
-    echo
-
-
-    ## Then Rivet + rivetgun
+    ## Rivet
     echo "Building Rivet"
     cd rivet
     echo "In $PWD"
-    ## TODO: get Genser to link their Fortran generators using $(FC) rather than $(CXX), 
-    ## then we can get rid of this nasty, fragile hack...
-    LIB64=lib
-    (echo $LCGPLATFORM | grep 64 &> /dev/null) && LIB64=lib64 
-    GENSER_FC_STDLIBS="/usr/$LIB64/libgfortran.so.0 /usr/$LIB64/libg2c.so.0" 
     ## Finally, run configure...
     ./configure --prefix=$PREFIX \
         --with-hepmc=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH \
-        --with-agile=$PREFIX \
         $BOOSTFLAGS \
-        $PYEXTFLAGS \
-        LDFLAGS="$GENSER_FC_STDLIBS" || exit 2
+        $PYEXTFLAGS || exit 2
     make || exit 2
     make install || exit 2
     cd ..
@@ -323,7 +268,7 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     ## Write sh env file
     > $SHENV
     echo "export PATH=$PREFIX/bin:\$PATH" >> $SHENV
-    echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:$LHAPDFPATH/lib:\$LD_LIBRARY_PATH" >> $SHENV
+    echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:\$LD_LIBRARY_PATH" >> $SHENV
     if test "$USE_PYTHON" == "yes"; then
         echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir" >> $SHENV
     fi
@@ -331,21 +276,15 @@ if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
     ## Write csh env file
     > $CSHENV
     echo "setenv PATH $PREFIX/bin:\$PATH" >> $CSHENV
-    echo "setenv LD_LIBRARY_PATH $PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:$LHAPDFPATH/lib:\$LD_LIBRARY_PATH" >> $CSHENV
+    echo "setenv LD_LIBRARY_PATH $PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:\$LD_LIBRARY_PATH" >> $CSHENV
     if test "$USE_PYTHON" == "yes"; then
         echo "setenv PYTHONPATH \$PYTHONPATH:$pylibdir" >> $CSHENV
     fi
 
-    #echo "export AGILE_GEN_PATH=$LCGDIR/MCGenerators/$LCGPLATFORM/lib"
 
 
 else
     ## We don't have access to LCG AFS, so download the packages...
-
-    ## Get LHAPDF
-    LHAPDFNAME=lhapdf-$LHAPDF_VERSION
-    test -d $LHAPDFNAME || wget-untargz http://www.hepforge.org/archive/lhapdf/$LHAPDFNAME.tar.gz || exit 2
-    conf-mk-mkinst $LHAPDFNAME || exit 2
 
     ## Get HepMC
     HEPMCNAME=HepMC-$HEPMC_VERSION
@@ -383,22 +322,6 @@ else
     fi
 
 
-    ## Build and install AGILe
-    ##conf-mk-mkinst agile || exit 2
-    echo "Building AGILe"
-    echo "AGILE_CONFIGURE_FLAGS=$AGILE_CONFIGURE_FLAGS"
-    echo "AGILE_CONFIGURE_PATH=$AGILE_CONFIGURE_PATH"
-    cd agile
-    echo "In $PWD"
-    PATH=$AGILE_CONFIGURE_PATH ./configure --prefix=$PREFIX \
-        --with-hepmc=$HEPMCPATH $BOOSTFLAGS $PYEXTFLAGS $AGILE_CONFIGURE_FLAGS || exit 2
-    make || exit 2
-    make install || exit 2
-    cd ..
-    echo "In $PWD"
-    echo
-
-
     ## Build and install Rivet
     test "$FASTJETJADE" = "yes" && RIVET_CONFIGURE_FLAGS="--enable-jade $PYEXTFLAGS"
     conf-mk-mkinst rivet $RIVET_CONFIGURE_FLAGS || exit 2
@@ -409,6 +332,9 @@ else
     echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH" >> $SHENV
     if test "$USE_PYTHON" == "yes"; then
         echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir" >> $SHENV
+    fi
+    if test -f $PREFIX/share/Rivet/rivet-completion; then
+	echo "source $PREFIX/share/Rivet/rivet-completion";
     fi
 
     ## Write csh env file
@@ -431,14 +357,3 @@ echo "can be used in sh or csh shells respectively by sourcing, e.g."
 echo ". $SHENV"
 echo "or"
 echo "source $CSHENV"
-
-
-## Mention the AGILe Genser bootstrap to users not using AFS
-if test ! -d "$LCGDIR" || test "$IGNORE_AFS" == "yes"; then
-    echo 
-    echo "You may also want to get a local copy of the Genser generators package"
-    echo "and add its root directory to the AGILE_GEN_PATH variable."
-    echo "The agile-genser-bootstrap script can help you to do this."
-    echo "You can get it from"
-    echo "http://svn.hepforge.org/agile/genser/agile-genser-bootstrap"
-fi

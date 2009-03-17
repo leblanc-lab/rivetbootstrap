@@ -334,7 +334,7 @@ else
         echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir" >> $SHENV
     fi
     if test -f $PREFIX/share/Rivet/rivet-completion; then
-	echo "source $PREFIX/share/Rivet/rivet-completion";
+	echo "source $PREFIX/share/Rivet/rivet-completion" >> $SHENV
     fi
 
     ## Write csh env file

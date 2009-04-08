@@ -32,13 +32,13 @@ RIVET_VERSION=1.1.2
 AGILE_CONFIGURE_PATH="$PATH"
 
 ## Versions of required libraries
-LHAPDF_VERSION=5.6.0
+LHAPDF_VERSION=5.7.0
 FASTJET_VERSION=2.3.4
 if [[ -z "$FASTJETJADE" ]]; then
     FASTJETJADE="yes"
 fi
 HEPMC_VERSION=2.04.00
-PYHEPMC_VERSION=0.3.3
+PYHEPMC_VERSION=0.3.4
 
 ## Specify path to boost include dir if not found automatically
 #BOOSTFLAGS=--with-boost=/usr/local/boost_1_35
@@ -48,7 +48,7 @@ fi
 ## Uncomment this to download and install Boost locally:
 #INSTALL_BOOST=yes 
 ## Version of Boost used for a local installation (assumes that final part of version string is "_0")
-#BOOST_VERSION=1_38
+BOOST_VERSION=1_38
 
 
 ## Build and install to the PREFIX location
@@ -58,7 +58,7 @@ if test -z "$(echo $PREFIX | egrep '^/')"; then
     PREFIX=$PWD/$PREFIX
 fi
 mkdir -p $PREFIX
-if ! test -w "$PREFIX"; then
+if test ! -w "$PREFIX"; then
     echo "Can't write to installation directory, $PREFIX" 1>&2
     echo "Exiting..." 1>&2
     exit 1
@@ -211,7 +211,7 @@ if [[ "$INSTALL_BOOST" == "yes" ]]; then
     echo "In $PWD"
     cd $PREFIX/include
     echo "In $PWD"
-    ln -s boost_${BOOST_VERSION}/boost boost
+    ln -s boost-${BOOST_VERSION}/boost boost
     cd ../..
     echo "In $PWD"
     BOOSTFLAGS=--with-boost=$PREFIX
@@ -359,7 +359,7 @@ else
     test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz || exit 2
     if test "$FASTJETJADE" = "yes" -a -x "$(which autoreconf)"; then
         cd $FASTJETNAME
-        if ! test -e "plugins/Jade"; then
+        if test ! -e "plugins/Jade"; then
             wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
             patch -p1 < fastjet-2.3.4-jade.patch || exit 2
             autoreconf --install || exit 2

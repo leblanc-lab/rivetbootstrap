@@ -36,11 +36,13 @@ PYHEPMC_VERSION=0.3.4
 
 ## Specify path to boost include dir if not found automatically
 #BOOSTFLAGS=--with-boost=/usr/local/boost_1_35
-BOOSTFLAGS=--with-boost=$PWD/local
+if [[ -z "$BOOSTFLAGS" ]]; then
+    BOOSTFLAGS=--with-boost=$PWD/local
+fi
 ## Uncomment this to download and install Boost locally:
 #INSTALL_BOOST=yes 
 ## Version of Boost used for a local installation (assumes that final part of version string is "_0")
-#BOOST_VERSION=1_38
+BOOST_VERSION=1_38
 
 
 ## Build and install to the PREFIX location
@@ -50,7 +52,7 @@ if test -z "$(echo $PREFIX | egrep '^/')"; then
     PREFIX=$PWD/$PREFIX
 fi
 mkdir -p $PREFIX
-if ! test -w "$PREFIX"; then
+if test ! -w "$PREFIX"; then
     echo "Can't write to installation directory, $PREFIX" 1>&2
     echo "Exiting..." 1>&2
     exit 1
@@ -95,7 +97,7 @@ wget-untargz() {
 conf-mk-mkinst() {
     if test -d $1; then
         (cd $1 && echo "./configure --prefix=$PREFIX" && \
-            ./configure --prefix=$PREFIX --enable-shared $2 && \
+            ./configure --prefix=$PREFIX --enable-shared $(echo $* | cut -d \  -f 2-$#) && \
             make && make install) || exit 2
     else
         echo "Couldn't find $1... exiting"
@@ -185,7 +187,7 @@ if [[ "$INSTALL_BOOST" == "yes" ]]; then
     echo "In $PWD"
     cd $PREFIX/include
     echo "In $PWD"
-    ln -s boost_${BOOST_VERSION}/boost boost
+    ln -s boost-${BOOST_VERSION}/boost boost
     cd ../..
     echo "In $PWD"
     BOOSTFLAGS=--with-boost=$PREFIX
@@ -289,14 +291,14 @@ else
     ## Get HepMC
     HEPMCNAME=HepMC-$HEPMC_VERSION
     test -d $HEPMCNAME || wget-untargz http://lcgapp.cern.ch/project/simu/HepMC/download/$HEPMCNAME.tar.gz || exit 2
-    conf-mk-mkinst $HEPMCNAME "--with-momentum=GEV --with-length=MM" || exit 2
+    conf-mk-mkinst $HEPMCNAME --with-momentum=GEV --with-length=MM || exit 2
 
     ## Get FastJet
     FASTJETNAME=fastjet-$FASTJET_VERSION
     test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz || exit 2
     if test "$FASTJETJADE" = "yes" -a -x "$(which autoreconf)"; then
         cd $FASTJETNAME
-        if ! test -e "plugins/Jade"; then
+        if test ! -e "plugins/Jade"; then
             wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
             patch -p1 < fastjet-2.3.4-jade.patch || exit 2
             autoreconf --install || exit 2
@@ -323,7 +325,12 @@ else
 
 
     ## Build and install Rivet
-    test "$FASTJETJADE" = "yes" && RIVET_CONFIGURE_FLAGS="--enable-jade $PYEXTFLAGS"
+    if [[ -z "$CXXFLAGS" ]]; then
+        RIVETCXXFLAGS="-Wno-long-long"
+    else
+        RIVETCXXFLAGS="$CXXFLAGS -Wno-long-long"
+    fi
+    test "$FASTJETJADE" = "yes" && RIVET_CONFIGURE_FLAGS="--enable-jade $PYEXTFLAGS $BOOSTFLAGS CXXFLAGS=$RIVETCXXFLAGS"
     conf-mk-mkinst rivet $RIVET_CONFIGURE_FLAGS || exit 2
 
     ## Write sh env file

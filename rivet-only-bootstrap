@@ -61,14 +61,8 @@ fi
 
 ## Set up Python install area
 if test "$USE_PYTHON" == "yes"; then
-    echo "Setting up Python library install area: must exist and be in \$PYTHONPATH"
     pyversion=$(python -c 'import sys; print "%d.%d" % (sys.version_info[0],sys.version_info[1])')
-    libname="lib"
-    if test "$(uname -m | grep "x86_64")"; then
-        libname="lib64"
-    fi
-    pylibdir="$PREFIX/$libname/python$pyversion/site-packages"
-    mkdir -p $pylibdir
+    pylibdir="$PREFIX/lib/python$pyversion/site-packages:$PREFIX/lib64/python$pyversion/site-packages:$PREFIX/lib32/python$pyversion/site-packages"
     export PYTHONPATH=$PYTHONPATH:$pylibdir
     ## Flag to pass to Rivet builds to enable Python extensions
     PYEXTFLAGS=--enable-pyext

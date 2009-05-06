@@ -34,7 +34,10 @@ AGILE_CONFIGURE_PATH="$PATH"
 ## Versions of required libraries
 LHAPDF_VERSION=5.7.0
 FASTJET_VERSION=2.3.4
-if [[ -z "$FASTJETJADE" ]]; then
+if test "$DEVELOPER_MODE" == "yes"; then
+    ## Head version needs FastJet 2.4.x
+    FASTJET_VERSION=2.4.0
+elif [[ -z "$FASTJETJADE" ]]; then
     FASTJETJADE="yes"
 fi
 HEPMC_VERSION=2.04.00
@@ -137,7 +140,6 @@ else
             exit 1
         fi
     done
-
 
     ## Package checks done, let's bootstrap AGILe...
     if [[ ! -e agile ]]; then 
@@ -357,10 +359,14 @@ else
             wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
             patch -p1 < fastjet-2.3.4-jade.patch || exit 2
             autoreconf --install || exit 2
-        fi;
+        fi
         cd ..
-    fi;
-    conf-mk-mkinst $FASTJETNAME || exit 2
+    fi
+    if test "$DEVELOPER_MODE" = "yes"; then
+        conf-mk-mkinst $FASTJETNAME --enable-allcxxplugins || exit 2
+    else
+        conf-mk-mkinst $FASTJETNAME || exit 2
+    fi
 
 
     ## Python interface

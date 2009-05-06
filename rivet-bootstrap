@@ -34,7 +34,7 @@ AGILE_CONFIGURE_PATH="$PATH"
 ## Versions of required libraries
 LHAPDF_VERSION=5.7.0
 FASTJET_VERSION=2.3.4
-if test "$DEVELOPER_MODE" == "yes"; then
+if test "$DEVELOPERMODE" == "yes"; then
     ## Head version needs FastJet 2.4.x
     FASTJET_VERSION=2.4.0
 elif [[ -z "$FASTJETJADE" ]]; then
@@ -362,7 +362,7 @@ else
         fi
         cd ..
     fi
-    if test "$DEVELOPER_MODE" = "yes"; then
+    if test "$DEVELOPERMODE" = "yes"; then
         conf-mk-mkinst $FASTJETNAME --enable-allcxxplugins || exit 2
     else
         conf-mk-mkinst $FASTJETNAME || exit 2

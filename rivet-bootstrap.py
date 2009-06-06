@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
-## $Date: 2009-03-17 16:31:08 +0000 (Tue, 17 Mar 2009) $
-## $Revision: 1394 $
+## $Date$
+## $Revision$
 
 ## TODO: Make it possible to run without internet access if expanded tarballs are already in place
 
@@ -51,9 +51,7 @@ PREFIX = os.path.abspath(opts.PREFIX)
 if not os.path.exists(PREFIX):
     os.makedirs(PREFIX)
 if not os.access(os.W_OK, PREFIX):
-    logging.error("Can't write to installation directory, %s... exiting" % PREFIX
-    sys.exit(1)
-fi
+    logging.error("Can't write to installation directory, %s... exiting" % PREFIX)
 
 
 # ## Set up Python install area
@@ -62,17 +60,40 @@ fi
 # pylibdir = os.path.join(PREFIX, "lib", "python%s/site-packages" % pyversion)
 
 
-## Function to unpack and delete a tarball
+
+
+
+## Function to grab a tarball from the Web
 def get_tarball():
-                      
-    echo "Downloading: $WGETTER $1 | tar xzv"
-    ($WGETTER $1 | tar xzv) || exit 1
-}
+    import urllib2
+    try:
+        hreq = urllib2.urlopen(url)
+        out = open(outpath, "w")
+        out.write(hreq.read())
+        out.close()
+        hreq.close()
+        return True
+    except urllib2.URLError:
+        logging.error("Problem downloading PDF set from '%s'" % url)
+        hreq.close()
+    except IOError:
+        logging.error("Problem while writing PDF set to '%s'" % outpath)
+        out.close()
+        hreq.close()
+    return False
+
+
+## Function to unpack a tarball
+def unpack_tarball():
+    import tarfile
+    tar = tarfile.open("sample.tar.gz")
+    tar.extractall()
+    tar.close()
 
 
 ## Function to enter an expanded tarball and run the usual
 ## autotools ./configure, make, make install mantra
-conf-mk-mkinst() {
+def conf-mk-mkinst():
     if test -d $1; then
         (cd $1 && echo "./configure --prefix=$PREFIX" && \
             ./configure --prefix=$PREFIX --enable-shared $2 && \

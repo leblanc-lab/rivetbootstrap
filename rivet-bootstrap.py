@@ -55,11 +55,21 @@ except:
 
 
 ## Build location
-BUILDROOT = os.path.abspath("build")
-if not os.path.exists(BUILDROOT):
-    os.makedirs(BUILDROOT)
-if not os.access(os.W_OK, BUILDROOT):
-    logging.error("Can't write to build directory, %s... exiting" % BUILDROOT)
+ROOT = os.path.abspath(os.getcwd())
+
+## Build location
+DLDIR = os.path.abspath(os.path.join(ROOT, "downloads"))
+if not os.path.exists(DLDIR):
+    os.makedirs(DLDIR)
+if not os.access(os.W_OK, DLDIR):
+    logging.error("Can't write to downloads directory, %s... exiting" % DLDIR)
+
+## Build location
+BUILDDIR = os.path.abspath(os.path.join(ROOT, "build"))
+if not os.path.exists(BUILDDIR):
+    os.makedirs(BUILDDIR)
+if not os.access(os.W_OK, BUILDDIR):
+    logging.error("Can't write to build directory, %s... exiting" % BUILDDIR)
 
 ## Install to the PREFIX location
 PREFIX = os.path.abspath(opts.PREFIX)
@@ -78,12 +88,9 @@ if not os.access(os.W_OK, PREFIX):
 
 ## Function to grab a tarball from the Web
 def get_tarball(url):
-    if not os.path.exists("downloads"):
-        logging.debug("Making downloads dir")
-        os.mkdir("downloads")
     import urlparse
     basename = os.path.basename(urlparse.urlparse(url).path)
-    outpath = os.path.join("downloads", basename)
+    outpath = os.path.join(DLDIR, basename)
     import urllib2
     try:
         hreq = urllib2.urlopen(url)
@@ -108,13 +115,12 @@ def unpack_tarball(path):
     tar = tarfile.open(path)
     #tar.extractall()
     for i in tar.getnames():
-        tar.extract(i)
+        tar.extract(i, path=BUILDDIR)
     tar.close()
 
 
 ## Convenience function to get and unpack the tarball
 def get_unpack_tarball(tarurl):
-    ## TODO: run in 'build' directory?
     outfile = get_tarball(tarurl)
     unpack_tarball(outfile)
 
@@ -122,6 +128,7 @@ def get_unpack_tarball(tarurl):
 ## Function to enter an expanded tarball and run the usual
 ## autotools ./configure, make, make install mantra
 def conf_mk_mkinst(d, extraopts=""):
+    prevdir = os.getcwd()
     if os.access(os.W_OK, d):
         os.chdir(d)
         confcmd = "./configure --prefix=%s --enable-shared %s" % (PREFIX, extraopts)
@@ -132,17 +139,17 @@ def conf_mk_mkinst(d, extraopts=""):
             st, op = commands.getstatusoutput("make && make install")
         if st != 0:
             sys.exit(1)
+        os.chdir(prevdir)
     else:
         logging.error("Couldn't find $1... exiting")
         sys.exit(1)
-    os.chdir(BUILDROOT)
 
 
 ##############################
 
 
 ## Get Rivet either from released tarballs or SVN
-os.chdir(BUILDROOT)
+os.chdir(BUILDDIR)
 
 ## USER MODE
 ## Get Rivet tarball (for non-developers)
@@ -178,7 +185,7 @@ else:
         st, op = commands.getstatusoutput("autoreconf -i")
         if st != 0:
             sys.exit(2)
-    os.chdir(BUILDROOT)
+    os.chdir(BUILDDIR)
 
 
 

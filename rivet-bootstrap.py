@@ -16,11 +16,11 @@ TODO:
 import os, sys, logging, shutil
 from optparse import OptionParser
 
-DEFAULTPREFIX = os.path.join(os.cwd(), "local")
+DEFAULTPREFIX = os.path.join(os.getcwd(), "local")
 
 parser = OptionParser(usage=__usage__)
 parser.add_option("--prefix", metavar="INSTALLDIR", default=DEFAULTPREFIX, dest="PREFIX", 
-                  help="Location to install packages to")
+                  help="Location to install packages to (default = %default)")
 parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MODE", 
                   help="Use the SVN development head version of Rivet")
 parser.add_option("--ignore-afs", action="store_true", default=False, dest="IGNORE_AFS", 
@@ -57,25 +57,26 @@ except:
 ## Build location
 ROOT = os.path.abspath(os.getcwd())
 
+
 ## Build location
 DLDIR = os.path.abspath(os.path.join(ROOT, "downloads"))
 if not os.path.exists(DLDIR):
     os.makedirs(DLDIR)
-if not os.access(os.W_OK, DLDIR):
+if not os.access(DLDIR, os.W_OK):
     logging.error("Can't write to downloads directory, %s... exiting" % DLDIR)
 
 ## Build location
 BUILDDIR = os.path.abspath(os.path.join(ROOT, "build"))
 if not os.path.exists(BUILDDIR):
     os.makedirs(BUILDDIR)
-if not os.access(os.W_OK, BUILDDIR):
+if not os.access(BUILDDIR, os.W_OK):
     logging.error("Can't write to build directory, %s... exiting" % BUILDDIR)
 
 ## Install to the PREFIX location
 PREFIX = os.path.abspath(opts.PREFIX)
 if not os.path.exists(PREFIX):
     os.makedirs(PREFIX)
-if not os.access(os.W_OK, PREFIX):
+if not os.access(PREFIX, os.W_OK):
     logging.error("Can't write to installation directory, %s... exiting" % PREFIX)
 
 
@@ -89,7 +90,7 @@ if not os.access(os.W_OK, PREFIX):
 ## Function to grab a tarball from the Web
 def get_tarball(url):
     import urlparse
-    basename = os.path.basename(urlparse.urlparse(url).path)
+    basename = os.path.basename(urlparse.urlparse(url)[2])
     outpath = os.path.join(DLDIR, basename)
     import urllib2
     try:
@@ -129,7 +130,7 @@ def get_unpack_tarball(tarurl):
 ## autotools ./configure, make, make install mantra
 def conf_mk_mkinst(d, extraopts=""):
     prevdir = os.getcwd()
-    if os.access(os.W_OK, d):
+    if os.access(d, os.W_OK):
         os.chdir(d)
         confcmd = "./configure --prefix=%s --enable-shared %s" % (PREFIX, extraopts)
         logging.info(confcmd)
@@ -170,7 +171,7 @@ else:
     for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool"]:
         found = False
         for d in path:
-            if os.access(os.X_OK, os.path.join(d, pkg)):
+            if os.access(os.path.join(d, pkg), os.X_OK):
                 found = True
                 break
         if not found:

@@ -3,14 +3,22 @@
 ## $Date$
 ## $Revision$
 
-## TODO: Make it possible to run without internet access if expanded tarballs are already in place
+__usage__ = """\
+Download packages needed to get the Rivet system running, in several 
+different permutations.
+
+TODO: 
+
+ * Make it possible to run without internet access if expanded tarballs 
+   are already in place.
+"""
 
 import os, sys, logging, shutil
 from optparse import OptionParser
 
 DEFAULTPREFIX = os.path.join(os.cwd(), "local")
 
-parser = OptionParser()
+parser = OptionParser(usage=__usage__)
 parser.add_option("--prefix", metavar="INSTALLDIR", default=DEFAULTPREFIX, dest="PREFIX", 
                   help="Location to install packages to")
 parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MODE", 
@@ -61,10 +69,14 @@ if not os.access(os.W_OK, PREFIX):
 
 
 
-
-
 ## Function to grab a tarball from the Web
-def get_tarball():
+def get_tarball(url):
+    if not os.path.exists("downloads"):
+        logging.debug("Making downloads dir")
+        os.mkdir("downloads")
+    import urlparse
+    basename = os.path.basename(urlparse.urlparse(url).path)
+    outpath = os.path.join("downloads", basename)
     import urllib2
     try:
         hreq = urllib2.urlopen(url)
@@ -72,7 +84,7 @@ def get_tarball():
         out.write(hreq.read())
         out.close()
         hreq.close()
-        return True
+        return outpath
     except urllib2.URLError:
         logging.error("Problem downloading PDF set from '%s'" % url)
         hreq.close()
@@ -80,67 +92,80 @@ def get_tarball():
         logging.error("Problem while writing PDF set to '%s'" % outpath)
         out.close()
         hreq.close()
-    return False
+    return None
 
 
 ## Function to unpack a tarball
-def unpack_tarball():
+def unpack_tarball(path):
     import tarfile
-    tar = tarfile.open("sample.tar.gz")
+    tar = tarfile.open(path)
     tar.extractall()
     tar.close()
 
 
+## Convenience function to get and unpack the tarball
+def get_unpack_tarball(tarurl):
+    ## TODO: run in 'build' directory?
+    outfile = get_tarball(tarurl)
+    unpack_tarball(outfile)
+
+
 ## Function to enter an expanded tarball and run the usual
 ## autotools ./configure, make, make install mantra
-def conf-mk-mkinst():
-    if test -d $1; then
-        (cd $1 && echo "./configure --prefix=$PREFIX" && \
-            ./configure --prefix=$PREFIX --enable-shared $2 && \
-            make && make install) || exit 2
-    else
-        echo "Couldn't find $1... exiting"
-        exit 1
-    fi
-}
+def conf_mk_mkinst(d, extraopts=""):
+    if os.access(os.W_OK, d):
+        os.setcwd(d)
+        confcmd = "./configure --prefix=%s --enable-shared %s" % (PREFIX, extraopts)
+        logging.info(confcmd)
+        import commands #< TODO: replace this with 'subprocess' when Py 2.4 is guaranteed
+        st, op = commands.getstatusoutput(confcmd)
+        if st == 0:
+            st, op = commands.getstatusoutput("make && make install")
+        if st != 0:
+            sys.exit(1)
+    else:
+        logging.error("Couldn't find $1... exiting")
+        sys.exit(1)
 
 
 ##############################
 
 
 ## Get Rivet either from released tarballs or SVN
-if test "$DEVELOPERMODE" != "yes"; then
+if not opts.DEV_MODE:
     ## USER MODE
     ## Get Rivet tarball (for non-developers)
-    RIVET_NAME=Rivet-$RIVET_VERSION
-    RIVET_URL=http://www.hepforge.org/archive/rivet/$RIVET_NAME.tar.gz
-    echo "Getting $RIVET_URL"
-    wget-untargz $RIVET_URL
-    ln -s $RIVET_NAME rivet || exit 2
+    RIVET_NAME = "Rivet-" + opts.RIVET_VERSION
+    RIVET_URL = "http://www.hepforge.org/archive/rivet/%s.tar.gz" % RIVET_NAME
+    logging.info("Getting %s" % RIVET_URL)
+    get_unpack_tarball(RIVET_URL)
+    os.symlink(RIVET_NAME, "rivet")
 
-else
-
+else:
     ## DEVELOPER MODE
     ## If we've got SVN and there is no already-checked out version
     ## of Rivet in this directory, then check out/update
     ## the SVN head versions using the HTTP access method
-    for pkg in svn autoconf autoreconf automake libtool; do
-        if test ! -x "`which $pkg 2> /dev/null`"; then
-            echo "You must have $pkg installed to bootstrap in developer mode" 1>&2
-            exit 1
-        fi
-    done
+    path = os.environ["PATH"]
+    for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool"]:
+        found = False
+        for d in path:
+            if os.access(os.X_OK, os.path.join(d, pkg)):
+                found = True
+                break
+        if not found:
+            logging.error("You must have %s installed to bootstrap in developer mode" % pkg)
+            sys.exit(1)
 
-    if [[ ! -e rivet ]]; then 
-        svn co http://svn.hepforge.org/rivet/trunk rivet || exit 2        
-	else
-	    svn update rivet
-    fi
-    if [[ -e rivet && ! -e rivet/configure ]]; then 
-        (cd rivet && autoreconf -i) || exit 2
-    fi
-
-fi
+    if not os.path.exists("rivet"):
+        st, op = commands.getstatusoutput("svn co http://svn.hepforge.org/rivet/trunk rivet")
+    os.chdir("rivet")
+    st, op = commands.getstatusoutput("svn update")
+    if not os.path.exists("configure"):
+        st, op = commands.getstatusoutput("autoreconf -i")
+        if st != 0:
+            sys.exit(2)
+    os.chdir(BUILDROOT)
 
 
 ## Build Python HepMC interface if required

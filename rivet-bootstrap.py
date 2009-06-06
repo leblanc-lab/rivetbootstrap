@@ -106,7 +106,9 @@ def get_tarball(url):
 def unpack_tarball(path):
     import tarfile
     tar = tarfile.open(path)
-    tar.extractall()
+    #tar.extractall()
+    for i in tar.getnames():
+        tar.extract(i)
     tar.close()
 
 

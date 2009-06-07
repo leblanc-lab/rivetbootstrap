@@ -315,8 +315,9 @@ logging.debug("HepMC path: " + HEPMCPATH)
 RIVET_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
 logging.debug("FastJet path: " + FASTJETPATH)
 RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
-logging.debug("Boost path: " + opts.BOOST_DIR)
-RIVET_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
+if opts.BOOST_DIR:
+    logging.debug("Boost path: " + opts.BOOST_DIR)
+    RIVET_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
 ## Nasty hack in case the Boost headers are installed some rubbish way:
 if BOOSTFLAGS:
     logging.debug("Boost flags: " + BOOSTFLAGS)

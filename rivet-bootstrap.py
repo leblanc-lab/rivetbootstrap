@@ -6,11 +6,6 @@
 __usage__ = """\
 Download packages needed to get the Rivet system running, in several 
 different permutations.
-
-TODO: 
-
- * Make it possible to run without internet access if expanded tarballs 
-   are already in place.
 """
 
 import os, sys, logging, shutil
@@ -21,6 +16,8 @@ DEFAULTPREFIX = os.path.join(os.getcwd(), "local")
 parser = OptionParser(usage=__usage__)
 parser.add_option("--prefix", metavar="INSTALLDIR", default=DEFAULTPREFIX, dest="PREFIX", 
                   help="Location to install packages to (default = %default)")
+parser.add_option("--force", action="store_true", default=False, dest="FORCE", 
+                  help="Overwrite existing tarballs")
 parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MODE", 
                   help="Use the SVN development head version of Rivet")
 parser.add_option("--ignore-afs", action="store_true", default=False, dest="IGNORE_AFS", 
@@ -80,11 +77,7 @@ if not os.access(PREFIX, os.W_OK):
     logging.error("Can't write to installation directory, %s... exiting" % PREFIX)
 
 
-# ## Set up Python install area
-# logging.verbose("Setting up Python library install area: must exist and be in $PYTHONPATH")
-# pyversion =  "%d.%d" % (sys.version_info[0], sys.version_info[1])
-# pylibdir = os.path.join(PREFIX, "lib", "python%s/site-packages" % pyversion)
-
+###########################
 
 
 ## Function to grab a tarball from the Web
@@ -92,6 +85,13 @@ def get_tarball(url):
     import urlparse
     basename = os.path.basename(urlparse.urlparse(url)[2])
     outpath = os.path.join(DLDIR, basename)
+    if os.path.exists(outpath):
+        if not opts.FORCE:
+            logging.info("Not overwriting tarball at %s" % outpath)
+            return outpath
+        else:
+            logging.info("Overwriting tarball at %s" % outpath)
+            os.remove(outpath)
     import urllib2
     try:
         hreq = urllib2.urlopen(url)
@@ -405,3 +405,9 @@ else:
 # echo ". $SHENV"
 # echo "or"
 # echo "source $CSHENV"
+
+
+# ## Set up Python install area
+# logging.verbose("Setting up Python library install area: must exist and be in $PYTHONPATH")
+# pyversion =  "%d.%d" % (sys.version_info[0], sys.version_info[1])
+# pylibdir = os.path.join(PREFIX, "lib", "python%s/site-packages" % pyversion)

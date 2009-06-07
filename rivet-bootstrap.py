@@ -97,6 +97,7 @@ def get_tarball(url, outname=None):
             os.remove(outpath)
     import urllib2
     try:
+        logging.info("Downloading %s" % url)
         hreq = urllib2.urlopen(url)
         out = open(outpath, "w")
         out.write(hreq.read())
@@ -136,7 +137,7 @@ def conf_mk_mkinst(d, extraopts=""):
     if os.access(d, os.W_OK):
         os.chdir(d)
         confcmd = "./configure --prefix=%s --enable-shared %s" % (PREFIX, extraopts)
-        logging.info(confcmd)
+        logging.info("Building in %s: %s" % (os.getcwd(), confcmd))
         import commands #< TODO: replace this with 'subprocess' when Py 2.4 is guaranteed
         st, op = commands.getstatusoutput(confcmd)
         if st == 0:
@@ -201,13 +202,6 @@ else:
     os.chdir(BUILDDIR)
 
 
-
-## Choose names for env files
-SHENV = "rivetenv.sh"
-CSHENV = "rivetenv.csh"    
-
-
-
 ## Get Boost
 if opts.INSTALL_BOOST:
     logging.info("Installing a local copy of Boost")
@@ -234,48 +228,90 @@ if opts.INSTALL_BOOST:
     opts.BOOST_DIR = PREFIX
 
 
-# ## Are we able to use pre-built packages from CERN AFS?
-# if test -d "$LCGDIR" && test "$IGNORE_AFS" != "yes"; then
-#     echo "LCG AFS area available: using LCG packages"
-
-#     ## Platform tag: get distribution
-#     distribution=$(uname)
-#     if test -s "/etc/redhat-release"; then
-#         distribution="redhat"
-#         sltest=$(lsb_release -ds | grep "Scientific Linux")
-#         if test "$sltest"; then
-#             slc_major=$(lsb_release -rs | cut -f1 -d.)
-#             distribution="slc${slc_major}"
-#         fi
-#     fi
-
-#     ## Platform tag: get architecture
-#     machine32=$(uname -m | grep -E "i[3456]86") 
-#     machine64=$(uname -m | grep "x86_64")
-#     if test "$machine32"; then machine="ia32"; fi 
-#     if test "$machine64"; then machine="amd64"; fi
-
-#     ## Platform tag: get GCC version
-#     gcc_version=$(g++ --version | head -1 | cut -d" " -f3)
-#     gcc_major=$(echo $gcc_version | cut -d. -f1)
-#     gcc_minor=$(echo $gcc_version | cut -d. -f2)
-#     gcc_micro=$(echo $gcc_version | cut -d. -f30) 
-#     gcc_code="gcc${gcc_major}${gcc_minor}"
-
-#     LCGPLATFORM="${distribution}_${machine}_${gcc_code}"
-#     echo "Using LCG platform tag = $LCGPLATFORM"
+## Initialise env files
+SHENV = ""
+CSHENV = ""    
 
 
+## Are we able to use pre-built packages from CERN AFS?
+if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
+    logging.info("LCG area available: using LCG-built packages")
 
-#     HEPMCPATH=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM 
-#     echo "HepMC path: $HEPMCPATH"
-#     FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM 
-#     echo "FastJet path: $FASTJETPATH"
-#     BOOST_VERSION=1.34.1
-#     BOOSTPATH=$LCGDIR/Boost/$BOOST_VERSION/$LCGPLATFORM
-#     BOOSTFLAGS=--with-boost-incpath=$BOOSTPATH/include/boost-${BOOST_VERSION//./_}
-#     echo "Compiling with: $BOOSTFLAGS"
+    ## Platform tag: get distribution
+    distribution = commands.getoutput("uname")
+    if os.path.exists("/etc/redhat-release"):
+        distribution = "redhat"
+        sltest = commands.getoutput("lsb_release -ds")
+        if "Scientific Linux" in sltest:
+            version = commands.getoutput("lsb_release -rs").split(".")
+            distribution = "slc" + version[0]
 
+    ## Platform tag: get architecture
+    uname_m = commands.getoutput("uname -m")
+    machine = "ia32"
+    if "64" in uname_m:
+        machine = "amd64"
+
+    ## Platform tag: get GCC version
+    gcc_version = commands.getoutput('g++ --version | head -1 | cut -d" " -f3').split(".")
+    gcc_major = gcc_version[0]
+    gcc_minor = gcc_version[1]
+    gcc_micro = gcc_version[2]
+    gcc_code = "gcc%s%s" % (gcc_major, gcc_minor)
+    ## Historical exceptions
+    if gcc_code in ["gcc32", "gcc40"]; then
+      gcc_code += gcc_micro
+    fi
+
+    LCGPLATFORM = "%s_%s_%s" % (distribution, machine, gcc_code)
+    logging.info("Using LCG platform tag = " + LCGPLATFORM)
+
+
+    ## Now work out paths to give to Rivet
+    HEPMCPATH = os.path.join(opts.LCGDIR, "HepMC", opts.HEPMC_VERSION, LCGPLATFORM)
+    FASTJETPATH = os.path.join(opts.LCGDIR, "fastjet", opts.FASTJET_VERSION, LCGPLATFORM)
+    if not opts.INSTALL_BOOST:
+        BOOST_VERSION = "1.34.1"
+        BOOSTPATH = os.path.join(opts.LCGDIR, "Boost", BOOST_VERSION, LCGPLATFORM)
+        BOOSTFLAGS = "--with-boost-incpath=%s/include/boost-%s" % (BOOSTPATH, BOOST_VERSION.replace(".", "_"))
+
+
+else:
+    ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
+
+    ## Get HepMC
+    hepmcname = "HepMC-" + opts.HEPMC_VERSION
+    os.chdir(BUILDDIR)
+    if not os.path.exists(hepmcname):
+        hepmctarname = hepmcname + "tar.gz"
+        hepmcurl = "http://lcgapp.cern.ch/project/simu/HepMC/download/%s" % hepmctarname
+        get_unpack_tarball(hepmcurl)
+        conf_mk_mkinst(os.path.join(BUILDDIR, hepmcname), "--with-momentum=GEV --with-length=MM")
+
+#     ## Get FastJet
+#     FASTJETNAME=fastjet-$FASTJET_VERSION
+#     test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz || exit 2
+#     if test "$FASTJETJADE" = "yes" -a -x "$(which autoreconf)"; then
+#         cd $FASTJETNAME
+#         if ! test -e "plugins/Jade"; then
+#             wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
+#             patch -p1 < fastjet-2.3.4-jade.patch || exit 2
+#             autoreconf --install || exit 2
+#         fi;
+#         cd ..
+#     fi;
+#     conf-mk-mkinst $FASTJETNAME || exit 2
+
+
+
+
+#     ## Build and install Rivet
+
+    # echo "HepMC path: $HEPMCPATH"
+    # echo "FastJet path: $FASTJETPATH"
+    # echo "Compiling with: $BOOSTFLAGS"
+
+#     conf-mk-mkinst rivet $RIVET_CONFIGURE_FLAGS || exit 2
 
 #     ## Rivet
 #     echo "Building Rivet"
@@ -309,35 +345,6 @@ if opts.INSTALL_BOOST:
 #     fi
 
 
-
-# else
-#     ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
-
-#     ## Get HepMC
-#     HEPMCNAME=HepMC-$HEPMC_VERSION
-#     test -d $HEPMCNAME || wget-untargz http://lcgapp.cern.ch/project/simu/HepMC/download/$HEPMCNAME.tar.gz || exit 2
-#     conf-mk-mkinst $HEPMCNAME "--with-momentum=GEV --with-length=MM" || exit 2
-
-#     ## Get FastJet
-#     FASTJETNAME=fastjet-$FASTJET_VERSION
-#     test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz || exit 2
-#     if test "$FASTJETJADE" = "yes" -a -x "$(which autoreconf)"; then
-#         cd $FASTJETNAME
-#         if ! test -e "plugins/Jade"; then
-#             wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
-#             patch -p1 < fastjet-2.3.4-jade.patch || exit 2
-#             autoreconf --install || exit 2
-#         fi;
-#         cd ..
-#     fi;
-#     conf-mk-mkinst $FASTJETNAME || exit 2
-
-
-
-#     ## Build and install Rivet
-#     test "$FASTJETJADE" = "yes" && RIVET_CONFIGURE_FLAGS="--enable-jade $PYEXTFLAGS"
-#     conf-mk-mkinst rivet $RIVET_CONFIGURE_FLAGS || exit 2
-
 #     ## Write sh env file
 #     > $SHENV
 #     echo "export PATH=$PREFIX/bin:\$PATH" >> $SHENV
@@ -358,6 +365,14 @@ if opts.INSTALL_BOOST:
 #     fi
 
 # fi
+
+
+## Write out env files
+os.chdir(ROOT)
+for ext, text in [("sh", SHENV), ("csh", CSHENV)]:
+    f = open("rivetenv.%s" % ext, "w")
+    f.write(text)
+    f.close()
 
 
 # ## Write environment variable information

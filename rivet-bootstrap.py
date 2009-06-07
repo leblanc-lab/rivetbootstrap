@@ -6,6 +6,10 @@
 __usage__ = """\
 Download packages needed to get the Rivet system running, in several 
 different permutations.
+
+TODO:
+ * Build logging: stream as it builds, like 'tee'?
+ * Control over num of 'make' threads
 """
 
 import os, sys, logging, shutil
@@ -145,7 +149,7 @@ def conf_mk_mkinst(d, extraopts=""):
     prevdir = os.getcwd()
     if os.access(d, os.W_OK):
         os.chdir(d)
-        confcmd = "./configure --prefix=%s --enable-shared %s" % (PREFIX, extraopts)
+        confcmd = "./configure --prefix=%s %s" % (PREFIX, extraopts)
         logging.info("Building in %s: %s" % (os.getcwd(), confcmd))
         import commands #< TODO: replace this with 'subprocess' when Py 2.4 is guaranteed
         st, op = commands.getstatusoutput(confcmd)

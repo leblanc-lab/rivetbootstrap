@@ -11,7 +11,7 @@ TODO:
  * Build logging: stream as it builds, like 'tee'?
 """
 
-import os, sys, logging, shutil
+import os, sys, logging, shutil, commands
 from optparse import OptionParser
 
 DEFAULTPREFIX = os.path.join(os.getcwd(), "local")
@@ -152,7 +152,6 @@ def conf_mk_mkinst(d, extraopts=""):
         os.chdir(d)
         confcmd = "./configure --prefix=%s %s" % (PREFIX, extraopts)
         logging.info("Configuring in %s: %s" % (os.getcwd(), confcmd))
-        import commands #< TODO: replace this with 'subprocess' when Py 2.4 is guaranteed
         st, op = commands.getstatusoutput(confcmd)
         if st != 0:
             logging.error(op)
@@ -174,6 +173,12 @@ def conf_mk_mkinst(d, extraopts=""):
 
 ## Get Rivet source either from released tarballs or SVN
 
+## Clear "rivet" symlink
+os.chdir(BUILDDIR)
+if os.path.islink("rivet"):
+    os.remove("rivet")
+    
+
 ## USER MODE
 ## Get Rivet tarball (for non-developers)
 if not opts.DEV_MODE:
@@ -185,10 +190,7 @@ if not opts.DEV_MODE:
     if not os.path.exists("rivet"):
         os.symlink(RIVET_NAME, "rivet")
     else:
-        if os.path.islink("rivet"):
-            os.remove("rivet")
-            os.symlink(RIVET_NAME, "rivet")
-        else:
+        if not os.path.islink("rivet"):
             logging.warn("A 'rivet' directory already exists in %s, but is not a symlink to an expanded tarball" % BUILDDIR)
             sys.exit(1)
 
@@ -216,6 +218,9 @@ else:
     os.chdir(BUILDDIR)
     if not os.path.exists("rivet"):
         st, op = commands.getstatusoutput("svn co http://svn.hepforge.org/rivet/trunk rivet")
+    else:
+        logging.error("'rivet' directory already exists, blocking SVN checkout")
+        sys.exit(1)
     os.chdir("rivet")
     st, op = commands.getstatusoutput("svn update")
     if not os.path.exists("configure"):
@@ -386,7 +391,7 @@ f.close()
 
 ## Tell the user
 print
-logging.info("All done. Now set some variables in your shell:")
+logging.info("All done. Now set some variables in your shell:\n")
 logging.info("In sh shell:\n" + SHENV)
 logging.info("In csh shell:\n" + CSHENV)
 logging.info("These can be used by sourcing, e.g.\n. rivetenv.sh\nor\nsource rivetenv.csh")

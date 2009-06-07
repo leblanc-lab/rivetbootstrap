@@ -223,15 +223,17 @@ if opts.INSTALL_BOOST:
     boostname = "boost_%s" % opts.BOOST_VERSION
     boosttarname = boostname + ".tar.gz"
     boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
-    get_unpack_tarball(boosturl, outname=boosttarname)
-    conf_mk_mkinst(os.path.join(BUILDDIR, boostname))
+    boostincdir_outer = os.path.join(PREFIX, "include", "boost-%s" % opts.BOOST_VERSION[:-2])
+    if not os.path.exists(boostincdir_outer):
+
+        conf_mk_mkinst(boostbuilddir)
     ## Fix up the crappy default Boost install structure
-    os.chdir(os.path.join(PREFIX, "include"))
-    if not os.path.exists("boost"):
-        boostincdir = os.path.join("boost-%s" % opts.BOOST_VERSION[:-2])
-        if os.path.exists(boostincdir):
-            logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir)
-            os.symlink(boostincdir, "boost")
+    boostincdir = os.path.join(PREFIX, "include", "boost")
+    boostincdir_inner = os.path.join(boostincdir_outer, "boost")
+    if not os.path.exists(boostincdir):
+        if os.path.exists(boostincdir_inner):
+            logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir_inner)
+            os.symlink(boostincdir_inner, boostincdir)
         else:
             logging.error("Can't work out how to make a standard Boost include dir")
             sys.exit(2)

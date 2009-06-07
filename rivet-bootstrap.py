@@ -151,11 +151,15 @@ def conf_mk_mkinst(d, extraopts=""):
     if os.access(d, os.W_OK):
         os.chdir(d)
         confcmd = "./configure --prefix=%s %s" % (PREFIX, extraopts)
-        logging.info("Building in %s: %s" % (os.getcwd(), confcmd))
+        logging.info("Configuring in %s: %s" % (os.getcwd(), confcmd))
         import commands #< TODO: replace this with 'subprocess' when Py 2.4 is guaranteed
         st, op = commands.getstatusoutput(confcmd)
-        if st == 0:
-            st, op = commands.getstatusoutput("make -j%s && make -j%s install" % (opts.JMAKE, opts.JMAKE))
+        if st != 0:
+            logging.error(op)
+            sys.exit(1)
+        buildcmd = "make -j%s && make -j%s install" % (opts.JMAKE, opts.JMAKE)
+        logging.info("Building in %s: %s" % (os.getcwd(), buildcmd))
+        st, op = commands.getstatusoutput(buildcmd)
         if st != 0:
             logging.error(op)
             sys.exit(1)

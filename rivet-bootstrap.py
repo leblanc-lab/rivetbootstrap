@@ -359,8 +359,9 @@ env["LD_LIBRARY_PATH"] = ":".join(libdirs + ["$LD_LIBRARY_PATH"])
 ## Python env
 pyversion = "%d.%d" % (sys.version_info[0], sys.version_info[1])
 pylibdirs = []
-for ld in ["lib", "lib64" "lib32"]:
+for ld in ["lib", "lib64", "lib32"]:
     pylibdir = os.path.join(PREFIX, ld, "python%s/site-packages" % pyversion)
+    logging.debug("Possible Python lib dir: %s" % pylibdir)
     if os.path.exists(pylibdir):
         pylibdirs.append(pylibdir)
 env["PYTHONPATH"] = ":".join(pylibdirs + ["$PYTHONPATH"])

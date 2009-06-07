@@ -304,7 +304,7 @@ else:
         fastjettarname = fastjetname + ".tar.gz"
         fastjeturl = os.path.join(opts.FASTJET_URL, fastjettarname)
         get_unpack_tarball(fastjeturl)
-        conf_mk_mkinst(os.path.join(BUILDDIR, fastjetname), "--enable-shared")
+        conf_mk_mkinst(os.path.join(BUILDDIR, fastjetname), "--enable-shared --enable-allcxxplugins")
     FASTJETPATH = PREFIX
 
 

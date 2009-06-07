@@ -20,15 +20,17 @@ parser.add_option("--force", action="store_true", default=False, dest="FORCE",
                   help="Overwrite existing tarballs")
 parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MODE", 
                   help="Use the SVN development head version of Rivet")
-parser.add_option("--ignore-afs", action="store_true", default=False, dest="IGNORE_AFS", 
-                  help="Always bootstrap from sources, even if AFS versions are available")
+parser.add_option("--lcgextdir", default="/afs/cern.ch/sw/lcg/external", dest="LCGDIR", 
+                  help="Standard location of LCG external packages")
+parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="IGNORE_LCG", 
+                  help="Always bootstrap from sources, even if LCG versions are available")
 parser.add_option("--rivet-version", default="1.1.3a0", dest="RIVET_VERSION", 
                   help="Explicitly specify version of Rivet to get and use")
 parser.add_option("--hepmc-version", default="2.04.01", dest="HEPMC_VERSION", 
                   help="Explicitly specify version of HepMC to get and use")
 parser.add_option("--fastjet-version", default="2.4.0", dest="FASTJET_VERSION", 
                   help="Explicitly specify version of FastJet to get and use")
-parser.add_option("--boost", metavar="DIR", default="", dest="BOOST_DIR", 
+parser.add_option("--boost", metavar="DIR", default=None, dest="BOOST_DIR", 
                   help="Explicit path to find Boost")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST", 
                   help="Don't use a system copy of Boost (NB. it takes a long time to build)")
@@ -81,10 +83,11 @@ if not os.access(PREFIX, os.W_OK):
 
 
 ## Function to grab a tarball from the Web
-def get_tarball(url):
-    import urlparse
-    basename = os.path.basename(urlparse.urlparse(url)[2])
-    outpath = os.path.join(DLDIR, basename)
+def get_tarball(url, outname=None):
+    if not outname:
+        import urlparse
+        outname = os.path.basename(urlparse.urlparse(url)[2])
+    outpath = os.path.join(DLDIR, outname)
     if os.path.exists(outpath):
         if not opts.FORCE:
             logging.info("Not overwriting tarball at %s" % outpath)
@@ -121,8 +124,8 @@ def unpack_tarball(path):
 
 
 ## Convenience function to get and unpack the tarball
-def get_unpack_tarball(tarurl):
-    outfile = get_tarball(tarurl)
+def get_unpack_tarball(tarurl, outname=None):
+    outfile = get_tarball(tarurl, outname)
     unpack_tarball(outfile)
 
 
@@ -149,7 +152,7 @@ def conf_mk_mkinst(d, extraopts=""):
 ##############################
 
 
-## Get Rivet either from released tarballs or SVN
+## Get Rivet source either from released tarballs or SVN
 
 ## USER MODE
 ## Get Rivet tarball (for non-developers)
@@ -171,8 +174,11 @@ if not opts.DEV_MODE:
 ## of Rivet in this directory, then check out/update
 ## the SVN head versions using the HTTP access method
 else:
-    os.chdir(BUILDDIR)
-    path = os.environ["PATH"]
+    path = []
+    if os.environ.has_key("PATH"):
+        path += os.environ["PATH"]
+    if os.environ.has_key("path"):
+        path += os.environ["path"]
     for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool"]:
         found = False
         for d in path:
@@ -183,6 +189,7 @@ else:
             logging.error("You must have %s installed to bootstrap in developer mode" % pkg)
             sys.exit(1)
 
+    os.chdir(BUILDDIR)
     if not os.path.exists("rivet"):
         st, op = commands.getstatusoutput("svn co http://svn.hepforge.org/rivet/trunk rivet")
     os.chdir("rivet")
@@ -195,55 +202,36 @@ else:
 
 
 
-# ## Build Python HepMC interface if required
-# if test "$USE_PYTHON" == "yes"; then
-#     echo "Building Python HepMC interface"
-#     PYHEPMC_NAME=hepmc-python-$PYHEPMC_VERSION
-#     PYHEPMC_URL=http://www.hepforge.org/archive/rivet/$PYHEPMC_NAME.tar.gz
-#     if test ! -e $PYHEPMC_NAME; then
-#         echo "Getting $PYHEPMC_URL"
-#         wget-untargz "$PYHEPMC_URL"
-#         rm -f hepmc-python
-#         ln -s $PYHEPMC_NAME hepmc-python || exit 2
-#     fi
-# fi
+## Choose names for env files
+SHENV = "rivetenv.sh"
+CSHENV = "rivetenv.csh"    
 
 
-# ## AFS directory where LCG external packages are installed
-# LCGDIR=/afs/cern.ch/sw/lcg/external
 
-
-# ## Choose names for env files and determine user's default shell
-# SHENV=rivetenv.sh
-# CSHENV=rivetenv.csh
-# USERSHENV=$SHENV
-# if test -n $(which finger &> /dev/null); then
-#     USERSH=$(finger $USER | grep Shell | sed -e 's/.*Shell:\ *\(.*\)/\1/')
-#     if $(echo "$USERSH" | grep -i "csh" &> /dev/null); then
-#         USERSHENV=$CSHENV
-#     fi
-# fi
-
-
-# ## Get Boost
-# if [[ "$INSTALL_BOOST" == "yes" ]]; then
-#     echo "Installing a local copy of Boost"
-#     wget http://downloads.sourceforge.net/boost/boost_${BOOST_VERSION}_0.tar.gz?use_mirror=mesh -O- | tar xz
-#     cd boost_${BOOST_VERSION}_0
-#     echo "In $PWD"
-#     ./configure --prefix=$PREFIX
-#     make
-#     make install
-#     cd ..
-#     echo "In $PWD"
-#     cd $PREFIX/include
-#     echo "In $PWD"
-#     ln -s boost_${BOOST_VERSION}/boost boost
-#     cd ../..
-#     echo "In $PWD"
-#     BOOSTFLAGS=--with-boost=$PREFIX
-#     echo "Setting BOOSTFLAGS=$BOOSTFLAGS"
-# fi
+## Get Boost
+if opts.INSTALL_BOOST:
+    logging.info("Installing a local copy of Boost")
+    boostname = "boost_%s" % opts.BOOST_VERSION
+    boosttarname = boostname + ".tar.gz"
+    boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
+    get_unpack_tarball(boosturl, outname=boosttarname)
+    conf_mk_mkinst(os.path.join(BUILDDIR, boostname))
+    ## Fix up the crappy default Boost install structure
+    os.chdir(os.path.join(PREFIX, "include"))
+    if not os.path.exists("boost"):
+        boostincdir = None
+        for test in [boostname, boostname[:-2]]:
+            if os.path.exists(os.path.join(test, "boost")):
+                boostincdir = boostname
+                break
+        if boostincdir:
+            logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir)
+            os.symlink(boostincdir, "boost")
+        else:
+            logging.error("Can't work out how to make a standard Boost include dir")
+            sys.exit(2)
+    logging.debug("Setting BOOST_DIR = " + PREFIX)
+    opts.BOOST_DIR = PREFIX
 
 
 # ## Are we able to use pre-built packages from CERN AFS?
@@ -278,6 +266,7 @@ else:
 #     echo "Using LCG platform tag = $LCGPLATFORM"
 
 
+
 #     HEPMCPATH=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGPLATFORM 
 #     echo "HepMC path: $HEPMCPATH"
 #     FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGPLATFORM 
@@ -286,21 +275,6 @@ else:
 #     BOOSTPATH=$LCGDIR/Boost/$BOOST_VERSION/$LCGPLATFORM
 #     BOOSTFLAGS=--with-boost-incpath=$BOOSTPATH/include/boost-${BOOST_VERSION//./_}
 #     echo "Compiling with: $BOOSTFLAGS"
-
-
-#     ## Python interface
-#     if test "$USE_PYTHON" == "yes"; then
-#         echo "Building hepmc-python"
-#         cd hepmc-python
-#         echo "In $PWD"
-#         ./configure --prefix=$PREFIX \
-#             --with-hepmc=$HEPMCPATH || exit 2
-#         make || exit 2
-#         make install || exit 2
-#         cd ..
-#         echo "In $PWD"
-#         echo
-#     fi
 
 
 #     ## Rivet
@@ -337,7 +311,7 @@ else:
 
 
 # else
-#     ## We don't have access to LCG AFS, so download the packages...
+#     ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
 
 #     ## Get HepMC
 #     HEPMCNAME=HepMC-$HEPMC_VERSION
@@ -358,21 +332,6 @@ else:
 #     fi;
 #     conf-mk-mkinst $FASTJETNAME || exit 2
 
-
-#     ## Python interface
-#     if test "$USE_PYTHON" == "yes"; then
-#         #echo "Building hepmc-python"
-#         #cd hepmc-python
-#         #echo "In $PWD"
-#         #./configure --prefix=$PREFIX \
-#         #    --with-hepmc=$HEPMCPATH || exit 2
-#         #make || exit 2
-#         #make install || exit 2
-#         #cd ..
-#         #echo "In $PWD"
-#         #echo
-#         conf-mk-mkinst hepmc-python || exit 2
-#     fi
 
 
 #     ## Build and install Rivet

@@ -150,7 +150,6 @@ def conf_mk_mkinst(d, extraopts=""):
 
 
 ## Get Rivet either from released tarballs or SVN
-os.chdir(BUILDDIR)
 
 ## USER MODE
 ## Get Rivet tarball (for non-developers)
@@ -159,7 +158,12 @@ if not opts.DEV_MODE:
     RIVET_URL = "http://www.hepforge.org/archive/rivet/%s.tar.gz" % RIVET_NAME
     logging.info("Getting %s" % RIVET_URL)
     get_unpack_tarball(RIVET_URL)
-    os.symlink(RIVET_NAME, "rivet")
+    os.chdir(BUILDDIR)
+    if not os.path.exists("rivet"):
+        os.symlink(RIVET_NAME, "rivet")
+    elif not os.path.islink("rivet"):
+        logging.warn("A 'rivet' directory already exists in %s, but is not a symlink to an expanded tarball" % BUILDDIR)
+        sys.exit(1)
 
 
 ## DEVELOPER MODE
@@ -167,6 +171,7 @@ if not opts.DEV_MODE:
 ## of Rivet in this directory, then check out/update
 ## the SVN head versions using the HTTP access method
 else:
+    os.chdir(BUILDDIR)
     path = os.environ["PATH"]
     for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool"]:
         found = False

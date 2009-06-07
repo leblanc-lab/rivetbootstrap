@@ -30,7 +30,7 @@ parser.add_option("--hepmc-version", default="2.04.01", dest="HEPMC_VERSION",
                   help="Explicitly specify version of HepMC to get and use")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/", 
                   dest="HEPMC_URL", help="Base URL for HepMC tarball downloads")
-parser.add_option("--fastjet-version", default="2.4.0", dest="FASTJET_VERSION", 
+parser.add_option("--fastjet-version", default="2.4.1", dest="FASTJET_VERSION", 
                   help="Explicitly specify version of FastJet to get and use")
 parser.add_option("--fastjet-url", default="http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/", 
                   dest="FASTJET_URL", help="Base URL for FastJet tarball downloads")
@@ -213,6 +213,7 @@ else:
 
 
 ## Get Boost
+BOOSTFLAGS = None
 if opts.INSTALL_BOOST:
     logging.info("Installing a local copy of Boost")
     boostname = "boost_%s" % opts.BOOST_VERSION
@@ -276,10 +277,10 @@ if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
     HEPMCPATH = os.path.join(opts.LCGDIR, "HepMC", opts.HEPMC_VERSION, LCGPLATFORM)
     FASTJETPATH = os.path.join(opts.LCGDIR, "fastjet", opts.FASTJET_VERSION, LCGPLATFORM)
     if not opts.INSTALL_BOOST:
-        BOOST_VERSION = "1.34.1"
-        BOOSTPATH = os.path.join(opts.LCGDIR, "Boost", BOOST_VERSION, LCGPLATFORM)
-        BOOSTFLAGS = "--with-boost-incpath=%s/include/boost-%s" % (BOOSTPATH, BOOST_VERSION.replace(".", "_"))
-
+        lcg_boost_version = "1.34.1"
+        opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, LCGPLATFORM)
+        ## This wouldn't be needed if Boost followed normal installation conventions...
+        BOOSTFLAGS = "--with-boost-incpath=%s/include/boost-%s" % (opts.BOOST_DIR, lcg_boost_version.replace(".", "_"))
 
 else:
     ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
@@ -314,9 +315,13 @@ logging.debug("HepMC path: " + HEPMCPATH)
 RIVET_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
 logging.debug("FastJet path: " + FASTJETPATH)
 RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
+logging.debug("Boost path: " + opts.BOOST_DIR)
+RIVET_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
+## Nasty hack in case the Boost headers are installed some rubbish way:
 if BOOSTFLAGS:
     logging.debug("Boost flags: " + BOOSTFLAGS)
     RIVET_CONFIGURE_FLAGS += " " + BOOSTFLAGS
+## Energise!
 conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
 
 

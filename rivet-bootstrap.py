@@ -9,7 +9,6 @@ different permutations.
 
 TODO:
  * Build logging: stream as it builds, like 'tee'?
- * Control over num of 'make' threads
 """
 
 import os, sys, logging, shutil
@@ -22,6 +21,8 @@ parser.add_option("--prefix", metavar="INSTALLDIR", default=DEFAULTPREFIX, dest=
                   help="Location to install packages to (default = %default)")
 parser.add_option("--force", action="store_true", default=False, dest="FORCE", 
                   help="Overwrite existing tarballs")
+parser.add_option("-j", default="2", dest="JMAKE", 
+                  help="Num of 'make' threads to run in parallel (the n in 'make -j<n>')")
 parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MODE", 
                   help="Use the SVN development head version of Rivet")
 parser.add_option("--lcgextdir", default="/afs/cern.ch/sw/lcg/external", dest="LCGDIR", 
@@ -154,7 +155,7 @@ def conf_mk_mkinst(d, extraopts=""):
         import commands #< TODO: replace this with 'subprocess' when Py 2.4 is guaranteed
         st, op = commands.getstatusoutput(confcmd)
         if st == 0:
-            st, op = commands.getstatusoutput("make -j2 && make -j2 install")
+            st, op = commands.getstatusoutput("make -j%s && make -j%s install" % (opts.JMAKE, opts.JMAKE))
         if st != 0:
             logging.error(op)
             sys.exit(1)

@@ -28,7 +28,7 @@ parser.add_option("--lcgextdir", default="/afs/cern.ch/sw/lcg/external", dest="L
                   help="Standard location of LCG external packages")
 parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="IGNORE_LCG", 
                   help="Always bootstrap from sources, even if LCG versions are available")
-parser.add_option("--rivet-version", default="1.1.3a0", dest="RIVET_VERSION", 
+parser.add_option("--rivet-version", default="1.1.3b0", dest="RIVET_VERSION", 
                   help="Explicitly specify version of Rivet to get and use")
 parser.add_option("--hepmc-version", default="2.04.01", dest="HEPMC_VERSION", 
                   help="Explicitly specify version of HepMC to get and use")

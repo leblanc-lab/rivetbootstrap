@@ -96,6 +96,8 @@ def get_tarball(url, outname=None):
             logging.info("Overwriting tarball at %s" % outpath)
             os.remove(outpath)
     import urllib2
+    hreq = None
+    out = None
     try:
         logging.info("Downloading %s" % url)
         hreq = urllib2.urlopen(url)
@@ -106,11 +108,14 @@ def get_tarball(url, outname=None):
         return outpath
     except urllib2.URLError:
         logging.error("Problem downloading PDF set from '%s'" % url)
-        hreq.close()
+        if hreq:
+            hreq.close()
     except IOError:
         logging.error("Problem while writing PDF set to '%s'" % outpath)
-        out.close()
-        hreq.close()
+        if out:
+            out.close()
+        if hreq:
+            hreq.close()
     return None
 
 
@@ -259,7 +264,7 @@ if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
     gcc_micro = gcc_version[2]
     gcc_code = "gcc%s%s" % (gcc_major, gcc_minor)
     ## Historical exceptions
-    if gcc_code in ["gcc32", "gcc40"]; then
+    if gcc_code in ["gcc32", "gcc40"]:
       gcc_code += gcc_micro
     fi
 
@@ -283,7 +288,7 @@ else:
     hepmcname = "HepMC-" + opts.HEPMC_VERSION
     os.chdir(BUILDDIR)
     if not os.path.exists(hepmcname):
-        hepmctarname = hepmcname + "tar.gz"
+        hepmctarname = hepmcname + ".tar.gz"
         hepmcurl = "http://lcgapp.cern.ch/project/simu/HepMC/download/%s" % hepmctarname
         get_unpack_tarball(hepmcurl)
         conf_mk_mkinst(os.path.join(BUILDDIR, hepmcname), "--with-momentum=GEV --with-length=MM")

@@ -228,12 +228,8 @@ if opts.INSTALL_BOOST:
     ## Fix up the crappy default Boost install structure
     os.chdir(os.path.join(PREFIX, "include"))
     if not os.path.exists("boost"):
-        boostincdir = None
-        for test in [boostname, boostname[:-2]]:
-            if os.path.exists(os.path.join(test, "boost")):
-                boostincdir = boostname
-                break
-        if boostincdir:
+        boostincdir = os.path.join("boost-%s" % opts.BOOST_VERSION[:-2])
+        if os.path.exists(boostincdir):
             logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir)
             os.symlink(boostincdir, "boost")
         else:

@@ -28,8 +28,12 @@ parser.add_option("--rivet-version", default="1.1.3a0", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use")
 parser.add_option("--hepmc-version", default="2.04.01", dest="HEPMC_VERSION", 
                   help="Explicitly specify version of HepMC to get and use")
+parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/", 
+                  dest="HEPMC_URL", help="Base URL for HepMC tarball downloads")
 parser.add_option("--fastjet-version", default="2.4.0", dest="FASTJET_VERSION", 
                   help="Explicitly specify version of FastJet to get and use")
+parser.add_option("--fastjet-url", default="http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/", 
+                  dest="FASTJET_URL", help="Base URL for FastJet tarball downloads")
 parser.add_option("--boost", metavar="DIR", default=None, dest="BOOST_DIR", 
                   help="Explicit path to find Boost")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST", 
@@ -146,8 +150,9 @@ def conf_mk_mkinst(d, extraopts=""):
         import commands #< TODO: replace this with 'subprocess' when Py 2.4 is guaranteed
         st, op = commands.getstatusoutput(confcmd)
         if st == 0:
-            st, op = commands.getstatusoutput("make && make install")
+            st, op = commands.getstatusoutput("make -j2 && make -j2 install")
         if st != 0:
+            logging.error(op)
             sys.exit(1)
         os.chdir(prevdir)
     else:
@@ -233,11 +238,6 @@ if opts.INSTALL_BOOST:
     opts.BOOST_DIR = PREFIX
 
 
-## Initialise env files
-SHENV = ""
-CSHENV = ""    
-
-
 ## Are we able to use pre-built packages from CERN AFS?
 if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
     logging.info("LCG area available: using LCG-built packages")
@@ -284,114 +284,92 @@ if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
 else:
     ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
 
-    ## Get HepMC
+    ## Get and build HepMC
     hepmcname = "HepMC-" + opts.HEPMC_VERSION
     os.chdir(BUILDDIR)
     if not os.path.exists(hepmcname):
         hepmctarname = hepmcname + ".tar.gz"
-        hepmcurl = "http://lcgapp.cern.ch/project/simu/HepMC/download/%s" % hepmctarname
+        hepmcurl = os.path.join(opts.HEPMC_URL, hepmctarname)
         get_unpack_tarball(hepmcurl)
         conf_mk_mkinst(os.path.join(BUILDDIR, hepmcname), "--with-momentum=GEV --with-length=MM")
+    HEPMCPATH = PREFIX
 
-#     ## Get FastJet
-#     FASTJETNAME=fastjet-$FASTJET_VERSION
-#     test -d $FASTJETNAME || wget-untargz http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/$FASTJETNAME.tar.gz || exit 2
-#     if test "$FASTJETJADE" = "yes" -a -x "$(which autoreconf)"; then
-#         cd $FASTJETNAME
-#         if ! test -e "plugins/Jade"; then
-#             wget http://users.hepforge.org/~hoeth/fastjet/fastjet-2.3.4-jade.patch || exit 2
-#             patch -p1 < fastjet-2.3.4-jade.patch || exit 2
-#             autoreconf --install || exit 2
-#         fi;
-#         cd ..
-#     fi;
-#     conf-mk-mkinst $FASTJETNAME || exit 2
+    ## Get and build FastJet
+    fastjetname = "fastjet-" + opts.FASTJET_VERSION
+    os.chdir(BUILDDIR)
+    if not os.path.exists(fastjetname):
+        fastjettarname = fastjetname + ".tar.gz"
+        hepmcurl = os.path.join(opts.FASTJET_URL, fastjettarname)
+        get_unpack_tarball(fastjeturl)
+        conf_mk_mkinst(os.path.join(BUILDDIR, fastjetname), "--enable-shared")
+    FASTJETPATH = PREFIX
 
 
+## TODO: AGILe
 
 
-#     ## Build and install Rivet
-
-    # echo "HepMC path: $HEPMCPATH"
-    # echo "FastJet path: $FASTJETPATH"
-    # echo "Compiling with: $BOOSTFLAGS"
-
-#     conf-mk-mkinst rivet $RIVET_CONFIGURE_FLAGS || exit 2
-
-#     ## Rivet
-#     echo "Building Rivet"
-#     cd rivet
-#     echo "In $PWD"
-#     ## Finally, run configure...
-#     ./configure --prefix=$PREFIX \
-#         --with-hepmc=$HEPMCPATH \
-#         --with-fastjet=$FASTJETPATH \
-#         $BOOSTFLAGS \
-#         $PYEXTFLAGS || exit 2
-#     make || exit 2
-#     make install || exit 2
-#     cd ..
-#     echo "In $PWD"
-
-#     ## Write sh env file
-#     > $SHENV
-#     echo "export PATH=$PREFIX/bin:\$PATH" >> $SHENV
-#     echo "export LD_LIBRARY_PATH=$PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:\$LD_LIBRARY_PATH" >> $SHENV
-#     if test "$USE_PYTHON" == "yes"; then
-#         echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir" >> $SHENV
-#     fi
-
-#     ## Write csh env file
-#     > $CSHENV
-#     echo "setenv PATH $PREFIX/bin:\$PATH" >> $CSHENV
-#     echo "setenv LD_LIBRARY_PATH $PREFIX/lib:$HEPMCPATH/lib:$FASTJETPATH/lib:$CGALPATH/lib:\$LD_LIBRARY_PATH" >> $CSHENV
-#     if test "$USE_PYTHON" == "yes"; then
-#         echo "setenv PYTHONPATH \$PYTHONPATH:$pylibdir" >> $CSHENV
-#     fi
+## Build and install Rivet
+RIVET_CONFIGURE_FLAGS = ""
+logging.debug("HepMC path: " + HEPMCPATH)
+RIVET_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
+logging.debug("FastJet path: " + FASTJETPATH)
+RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
+if BOOSTFLAGS:
+    logging.debug("Boost flags: " + BOOSTFLAGS)
+    RIVET_CONFIGURE_FLAGS += " " + BOOSTFLAGS
+conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
 
 
-#     ## Write sh env file
-#     > $SHENV
-#     echo "export PATH=$PREFIX/bin:\$PATH" >> $SHENV
-#     echo "export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH" >> $SHENV
-#     if test "$USE_PYTHON" == "yes"; then
-#         echo "export PYTHONPATH=\$PYTHONPATH:$pylibdir" >> $SHENV
-#     fi
-#     if test -f $PREFIX/share/Rivet/rivet-completion; then
-# 	echo "source $PREFIX/share/Rivet/rivet-completion" >> $SHENV
-#     fi
+## Collect and write out environment variables
+env = {}
 
-#     ## Write csh env file
-#     > $CSHENV
-#     echo "setenv PATH $PREFIX/bin:\$PATH" >> $CSHENV
-#     echo "setenv LD_LIBRARY_PATH $PREFIX/lib:\$LD_LIBRARY_PATH" >> $CSHENV
-#     if test "$USE_PYTHON" == "yes"; then
-#         echo "setenv PYTHONPATH \$PYTHONPATH:$pylibdir" >> $CSHENV
-#     fi
+## Path env
+env["PATH"] = ":".join([os.path.join(PREFIX, "bin"), "$PATH"])
 
-# fi
+## Lib env
+libdirs = []
+for d in [PREFIX, HEPMCPATH, FASTJETPATH]: # CGALPATH
+    libdir = os.path.join(d, "lib")
+    if libdir not in libdirs:
+        libdirs.append(libdir)
+env["LD_LIBRARY_PATH"] = ":".join(libdirs + ["$LD_LIBRARY_PATH"])
+
+## Python env
+pyversion = "%d.%d" % (sys.version_info[0], sys.version_info[1])
+pylibdirs = []
+for ld in ["lib", "lib64" "lib32"]:
+    pylibdir = os.path.join(PREFIX, ld, "python%s/site-packages" % pyversion)
+    if os.path.exists(pylibdir):
+        pylibdirs.append(pylibdir)
+env["PYTHONPATH"] = ":".join(pylibdirs + ["$PYTHONPATH"])
 
 
 ## Write out env files
+
+## sh
+SHENV = ""
+for k, v in env.iteritems():
+    SHENV += "export %s=%s\n" % (k,v)
+comppath = os.path.join(PREFIX, "share", "Rivet", "rivet-completion")
+if os.path.exists(comppath):
+    SHENV += ". %s\n" % comppath
 os.chdir(ROOT)
-for ext, text in [("sh", SHENV), ("csh", CSHENV)]:
-    f = open("rivetenv.%s" % ext, "w")
-    f.write(text)
-    f.close()
+f = open("rivetenv.sh", "w")
+f.write(SHENV)
+f.close()
 
+## csh
+CSHENV = "" 
+for k, v in env.iteritems():
+    CSHENV += "setenv %s %s\n" % (k,v)
+os.chdir(ROOT)
+f = open("rivetenv.csh", "w")
+f.write(CSHENV)
+f.close()
 
-# ## Write environment variable information
-# echo
-# echo "All done. Now set some variables:"
-# cat $USERSHENV
-# echo "These variables are also written to $SHENV and $CSHENV, and"
-# echo "can be used in sh or csh shells respectively by sourcing, e.g."
-# echo ". $SHENV"
-# echo "or"
-# echo "source $CSHENV"
-
-
-# ## Set up Python install area
-# logging.verbose("Setting up Python library install area: must exist and be in $PYTHONPATH")
-# pyversion =  "%d.%d" % (sys.version_info[0], sys.version_info[1])
-# pylibdir = os.path.join(PREFIX, "lib", "python%s/site-packages" % pyversion)
+## Tell the user
+print
+logging.info("All done. Now set some variables in your shell:")
+logging.info("In sh shell:\n" + SHENV)
+logging.info("In csh shell:\n" + CSHENV)
+logging.info("These can be used by sourcing, e.g.\n. rivetenv.sh\nor\nsource rivetenv.csh")

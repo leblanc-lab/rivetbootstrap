@@ -299,7 +299,7 @@ else:
     os.chdir(BUILDDIR)
     if not os.path.exists(fastjetname):
         fastjettarname = fastjetname + ".tar.gz"
-        hepmcurl = os.path.join(opts.FASTJET_URL, fastjettarname)
+        fastjeturl = os.path.join(opts.FASTJET_URL, fastjettarname)
         get_unpack_tarball(fastjeturl)
         conf_mk_mkinst(os.path.join(BUILDDIR, fastjetname), "--enable-shared")
     FASTJETPATH = PREFIX

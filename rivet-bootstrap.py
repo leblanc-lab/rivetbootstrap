@@ -184,9 +184,13 @@ if not opts.DEV_MODE:
     os.chdir(BUILDDIR)
     if not os.path.exists("rivet"):
         os.symlink(RIVET_NAME, "rivet")
-    elif not os.path.islink("rivet"):
-        logging.warn("A 'rivet' directory already exists in %s, but is not a symlink to an expanded tarball" % BUILDDIR)
-        sys.exit(1)
+    else:
+        if os.path.islink("rivet"):
+            os.remove("rivet")
+            os.symlink(RIVET_NAME, "rivet")
+        else:
+            logging.warn("A 'rivet' directory already exists in %s, but is not a symlink to an expanded tarball" % BUILDDIR)
+            sys.exit(1)
 
 
 ## DEVELOPER MODE

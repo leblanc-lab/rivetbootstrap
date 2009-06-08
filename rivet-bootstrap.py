@@ -283,7 +283,6 @@ if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
     ## Historical exceptions
     if gcc_code in ["gcc32", "gcc40"]:
       gcc_code += gcc_micro
-    fi
 
     LCGPLATFORM = "%s_%s_%s" % (distribution, machine, gcc_code)
     logging.info("Using LCG platform tag = " + LCGPLATFORM)

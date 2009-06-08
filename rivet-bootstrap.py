@@ -335,8 +335,6 @@ if opts.BOOST_DIR:
     if not os.path.exists(os.path.join(boostincdir, "boost")):
         logging.info("Boost's headers are not installed properly in " + opts.BOOST_DIR)
         incdirs = [d for d in os.listdir(boostincdir) if d.startswith("boost-")]
-        if
-        logging.info("Boost's headers are not installed properly in " + opts.BOOST_DIR)
         if len(incdirs) > 0:
             #BOOSTFLAGS = "--with-boost-incpath=%s/include/boost-%s" % (opts.BOOST_DIR, lcg_boost_version.replace(".", "_"))
             BOOSTFLAGS = "--with-boost-incpath=%s" % os.path.join(boostincdir, incdirs[0])

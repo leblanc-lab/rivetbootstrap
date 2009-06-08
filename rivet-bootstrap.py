@@ -289,13 +289,20 @@ if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
 
 
     ## Now work out paths to give to Rivet
+    ## HepMC
     HEPMCPATH = os.path.join(opts.LCGDIR, "HepMC", opts.HEPMC_VERSION, LCGPLATFORM)
+    if not os.path.exists(HEPMCPATH):
+        logging.error("HepMC does not exist at path %s. You may wish to use the --ignore-lcgext option" % HEPMCPATH)
+        sys.exit(1)
+    ## FastJet
     FASTJETPATH = os.path.join(opts.LCGDIR, "fastjet", opts.FASTJET_VERSION, LCGPLATFORM)
+    if not os.path.exists(FASTJETPATH):
+        logging.error("FastJet does not exist at path %s. You may wish to use the --ignore-lcgext option" % FASTJETPATH)
+        sys.exit(1)
+    ## Boost
     if not opts.INSTALL_BOOST:
         lcg_boost_version = "1.34.1"
         opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, LCGPLATFORM)
-        ## This wouldn't be needed if Boost followed normal installation conventions...
-        BOOSTFLAGS = "--with-boost-incpath=%s/include/boost-%s" % (opts.BOOST_DIR, lcg_boost_version.replace(".", "_"))
 
 else:
     ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
@@ -321,7 +328,26 @@ else:
     FASTJETPATH = PREFIX
 
 
+## This wouldn't be needed if Boost followed normal installation conventions...
+if opts.BOOST_DIR:
+    logging.debug("Working out if Boost's headers are installed properly in " + opts.BOOST_DIR)
+    boostincdir = os.path.join(opts.BOOST_DIR, "include")
+    if not os.path.exists(os.path.join(boostincdir, "boost")):
+        logging.info("Boost's headers are not installed properly in " + opts.BOOST_DIR)
+        incdirs = [d for d in os.listdir(boostincdir) if d.startswith("boost-")]
+        if
+        logging.info("Boost's headers are not installed properly in " + opts.BOOST_DIR)
+        if len(incdirs) > 0:
+            #BOOSTFLAGS = "--with-boost-incpath=%s/include/boost-%s" % (opts.BOOST_DIR, lcg_boost_version.replace(".", "_"))
+            BOOSTFLAGS = "--with-boost-incpath=%s" % os.path.join(boostincdir, incdirs[0])
+        else:
+            logging.error("Couldn't work out Boost headers in %s" % boostincdir)
+            sys.exit(1)
+
+
+
 ## TODO: AGILe
+
 
 
 ## Build and install Rivet

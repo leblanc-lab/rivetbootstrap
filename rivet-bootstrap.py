@@ -202,9 +202,9 @@ if not opts.DEV_MODE:
 else:
     path = []
     if os.environ.has_key("PATH"):
-        path += os.environ["PATH"]
+        path = os.environ["PATH"].split(":")
     if os.environ.has_key("path"):
-        path += os.environ["path"]
+        path = os.environ["path"].split(":")
     for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool"]:
         found = False
         for d in path:

@@ -4,11 +4,18 @@
 ## $Revision$
 
 __usage__ = """\
-Download packages needed to get the Rivet system running, in several 
-different permutations.
+%prog [options]
+
+%prog is a helper script which downloads and installs Rivet and the 
+other packages needed to get the Rivet generator validation system up and
+running. It tries to be relatively intelligent about what it downloads so that,
+e.g. for users on systems with the LCG applications mounted in
+/afs/cern.ch/sw/lcg/external it will try to build Rivet using those when
+possible, rather than downloading and building things that are already
+available.
 
 TODO:
- * Build logging: stream as it builds, like 'tee'?
+ * Build logging: can we stream build output as it happens (in verbose mode)?
 """
 
 import os, sys, logging, shutil, commands
@@ -29,7 +36,7 @@ parser.add_option("--lcgextdir", default="/afs/cern.ch/sw/lcg/external", dest="L
                   help="Standard location of LCG external packages")
 parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="IGNORE_LCG", 
                   help="Always bootstrap from sources, even if LCG versions are available")
-parser.add_option("--rivet-version", default="1.1.3b0", dest="RIVET_VERSION", 
+parser.add_option("--rivet-version", default="1.1.3", dest="RIVET_VERSION", 
                   help="Explicitly specify version of Rivet to get and use")
 parser.add_option("--hepmc-version", default="2.04.01", dest="HEPMC_VERSION", 
                   help="Explicitly specify version of HepMC to get and use")
@@ -116,11 +123,11 @@ def get_tarball(url, outname=None):
         hreq.close()
         return outpath
     except urllib2.URLError:
-        logging.error("Problem downloading PDF set from '%s'" % url)
+        logging.error("Problem downloading tarball from %s" % url)
         if hreq:
             hreq.close()
     except IOError:
-        logging.error("Problem while writing PDF set to '%s'" % outpath)
+        logging.error("Problem while writing tarball to %s" % outpath)
         if out:
             out.close()
         if hreq:
@@ -156,12 +163,14 @@ def conf_mk_mkinst(d, extraopts=""):
         if st != 0:
             logging.error(op)
             sys.exit(1)
+        logging.debug("Configure output:\n" + op)
         buildcmd = "make -j%s && make -j%s install" % (opts.JMAKE, opts.JMAKE)
         logging.info("Building in %s: %s" % (os.getcwd(), buildcmd))
         st, op = commands.getstatusoutput(buildcmd)
         if st != 0:
             logging.error(op)
             sys.exit(1)
+        logging.debug("Build output:\n" + op)
         os.chdir(prevdir)
     else:
         logging.error("Couldn't find $1... exiting")
@@ -173,253 +182,266 @@ def conf_mk_mkinst(d, extraopts=""):
 
 ## Get Rivet source either from released tarballs or SVN
 
-## Clear "rivet" symlink
-os.chdir(BUILDDIR)
-if os.path.islink("rivet"):
-    os.remove("rivet")
-    
+try:
 
-## USER MODE
-## Get Rivet tarball (for non-developers)
-if not opts.DEV_MODE:
-    RIVET_NAME = "Rivet-" + opts.RIVET_VERSION
-    RIVET_URL = "http://www.hepforge.org/archive/rivet/%s.tar.gz" % RIVET_NAME
-    logging.info("Getting %s" % RIVET_URL)
-    get_unpack_tarball(RIVET_URL)
+    ## Clear "rivet" symlink
     os.chdir(BUILDDIR)
-    if not os.path.exists("rivet"):
-        os.symlink(RIVET_NAME, "rivet")
-    else:
-        if not os.path.islink("rivet"):
-            logging.warn("A 'rivet' directory already exists in %s, but is not a symlink to an expanded tarball" % BUILDDIR)
-            sys.exit(1)
+    if os.path.islink("rivet"):
+        os.remove("rivet")
 
 
-## DEVELOPER MODE
-## If we've got SVN and there is no already-checked out version
-## of Rivet in this directory, then check out/update
-## the SVN head versions using the HTTP access method
-else:
-    path = []
-    if os.environ.has_key("PATH"):
-        path = os.environ["PATH"].split(":")
-    if os.environ.has_key("path"):
-        path = os.environ["path"].split(":")
-    for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool"]:
-        found = False
-        for d in path:
-            if os.access(os.path.join(d, pkg), os.X_OK):
-                found = True
-                break
-        if not found:
-            logging.error("You must have %s installed to bootstrap in developer mode" % pkg)
-            sys.exit(1)
-
-    os.chdir(BUILDDIR)
-    if not os.path.exists("rivet"):
-        st, op = commands.getstatusoutput("svn co http://svn.hepforge.org/rivet/trunk rivet")
-    else:
-        logging.error("'rivet' directory already exists, blocking SVN checkout")
-        sys.exit(1)
-    os.chdir("rivet")
-    st, op = commands.getstatusoutput("svn update")
-    if not os.path.exists("configure"):
-        st, op = commands.getstatusoutput("autoreconf -i")
-        if st != 0:
-            sys.exit(2)
-    os.chdir(BUILDDIR)
-
-
-## Get Boost
-BOOSTFLAGS = None
-if opts.INSTALL_BOOST:
-    logging.info("Installing a local copy of Boost")
-    boostname = "boost_%s" % opts.BOOST_VERSION
-    boosttarname = boostname + ".tar.gz"
-    boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
-    conf_mk_mkinst(boostbuilddir)
-    ## Fix up the crappy default Boost install structure
-    incdir = os.path.join(PREFIX, "include")
-    boostincdir = os.path.join(incdir, "boost")
-    boostincdirs = [d for d in os.listdir(incdir) if d.startswith("boost-")]
-    if len(boostincdirs) > 0:
-        boostincdir_outer = boostincdirs[-1]
-        boostincdir_inner = os.path.join(boostincdir_outer, "boost")
-        if not os.path.exists(boostincdir_inner):
-            logging.error("Can't find Boost include dir %s to symlink" % boostincdir_inner)
-            sys.exit(2)
-        logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir_inner)
-        os.symlink(boostincdir_inner, boostincdir)
-    else:
-        logging.error("Can't work out how to make a standard Boost include dir")
-        sys.exit(2)
-    logging.debug("Setting BOOST_DIR = " + PREFIX)
-    opts.BOOST_DIR = PREFIX
-
-
-## Are we able to use pre-built packages from CERN AFS?
-if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
-    logging.info("LCG area available: using LCG-built packages")
-
-    ## Platform tag: get distribution
-    distribution = commands.getoutput("uname")
-    if os.path.exists("/etc/redhat-release"):
-        distribution = "redhat"
-        sltest = commands.getoutput("lsb_release -ds")
-        if "Scientific Linux" in sltest:
-            version = commands.getoutput("lsb_release -rs").split(".")
-            distribution = "slc" + version[0]
-
-    ## Platform tag: get architecture
-    uname_m = commands.getoutput("uname -m")
-    machine = "ia32"
-    if "64" in uname_m:
-        machine = "amd64"
-
-    ## Platform tag: get GCC version
-    gcc_version = commands.getoutput('g++ --version | head -1 | cut -d" " -f3').split(".")
-    gcc_major = gcc_version[0]
-    gcc_minor = gcc_version[1]
-    gcc_micro = gcc_version[2]
-    gcc_code = "gcc%s%s" % (gcc_major, gcc_minor)
-    ## Historical exceptions
-    if gcc_code in ["gcc32", "gcc40"]:
-      gcc_code += gcc_micro
-
-    LCGPLATFORM = "%s_%s_%s" % (distribution, machine, gcc_code)
-    logging.info("Using LCG platform tag = " + LCGPLATFORM)
-
-
-    ## Now work out paths to give to Rivet
-    ## HepMC
-    HEPMCPATH = os.path.join(opts.LCGDIR, "HepMC", opts.HEPMC_VERSION, LCGPLATFORM)
-    if not os.path.exists(HEPMCPATH):
-        logging.error("HepMC does not exist at path %s. You may wish to use the --ignore-lcgext option" % HEPMCPATH)
-        sys.exit(1)
-    ## FastJet
-    FASTJETPATH = os.path.join(opts.LCGDIR, "fastjet", opts.FASTJET_VERSION, LCGPLATFORM)
-    if not os.path.exists(FASTJETPATH):
-        logging.error("FastJet does not exist at path %s. You may wish to use the --ignore-lcgext option" % FASTJETPATH)
-        sys.exit(1)
-    ## Boost
-    if not opts.INSTALL_BOOST:
-        lcg_boost_version = "1.34.1"
-        opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, LCGPLATFORM)
-
-else:
-    ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
-
-    ## Get and build HepMC
-    hepmcname = "HepMC-" + opts.HEPMC_VERSION
-    os.chdir(BUILDDIR)
-    if not os.path.exists(hepmcname):
-        hepmctarname = hepmcname + ".tar.gz"
-        hepmcurl = os.path.join(opts.HEPMC_URL, hepmctarname)
-        get_unpack_tarball(hepmcurl)
-        conf_mk_mkinst(os.path.join(BUILDDIR, hepmcname), "--with-momentum=GEV --with-length=MM")
-    HEPMCPATH = PREFIX
-
-    ## Get and build FastJet
-    fastjetname = "fastjet-" + opts.FASTJET_VERSION
-    os.chdir(BUILDDIR)
-    if not os.path.exists(fastjetname):
-        fastjettarname = fastjetname + ".tar.gz"
-        fastjeturl = os.path.join(opts.FASTJET_URL, fastjettarname)
-        get_unpack_tarball(fastjeturl)
-        conf_mk_mkinst(os.path.join(BUILDDIR, fastjetname), "--enable-shared --enable-allcxxplugins")
-    FASTJETPATH = PREFIX
-
-
-## This wouldn't be needed if Boost followed normal installation conventions...
-if opts.BOOST_DIR:
-    logging.debug("Working out if Boost's headers are installed properly in " + opts.BOOST_DIR)
-    boostincdir = os.path.join(opts.BOOST_DIR, "include")
-    if not os.path.exists(os.path.join(boostincdir, "boost")):
-        logging.info("Boost's headers are not installed properly in " + opts.BOOST_DIR)
-        incdirs = [d for d in os.listdir(boostincdir) if d.startswith("boost-")]
-        if len(incdirs) > 0:
-            BOOSTFLAGS = "--with-boost-incpath=%s" % os.path.join(boostincdir, incdirs[0])
+    ## USER MODE
+    ## Get Rivet tarball (for non-developers)
+    if not opts.DEV_MODE:
+        RIVET_NAME = "Rivet-" + opts.RIVET_VERSION
+        RIVET_URL = "http://www.hepforge.org/archive/rivet/%s.tar.gz" % RIVET_NAME
+        logging.info("Getting %s" % RIVET_URL)
+        get_unpack_tarball(RIVET_URL)
+        os.chdir(BUILDDIR)
+        if not os.path.exists("rivet"):
+            os.symlink(RIVET_NAME, "rivet")
         else:
-            logging.error("Couldn't work out Boost headers in %s" % boostincdir)
+            if not os.path.islink("rivet"):
+                logging.warn("A 'rivet' directory already exists in %s, but is not a symlink to an expanded tarball" % BUILDDIR)
+                sys.exit(1)
+
+
+    ## DEVELOPER MODE
+    ## If we've got SVN and there is no already-checked out version
+    ## of Rivet in this directory, then check out/update
+    ## the SVN head versions using the HTTP access method
+    else:
+        path = []
+        if os.environ.has_key("PATH"):
+            path = os.environ["PATH"].split(":")
+        if os.environ.has_key("path"):
+            path = os.environ["path"].split(":")
+        for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool"]:
+            found = False
+            for d in path:
+                if os.access(os.path.join(d, pkg), os.X_OK):
+                    found = True
+                    break
+            if not found:
+                logging.error("You must have %s installed to bootstrap in developer mode" % pkg)
+                sys.exit(1)
+
+        os.chdir(BUILDDIR)
+        if not os.path.exists("rivet"):
+            st, op = commands.getstatusoutput("svn co http://svn.hepforge.org/rivet/trunk rivet")
+        else:
+            logging.error("'rivet' directory already exists, blocking SVN checkout")
             sys.exit(1)
+        os.chdir("rivet")
+        st, op = commands.getstatusoutput("svn update")
+        if not os.path.exists("configure"):
+            st, op = commands.getstatusoutput("autoreconf -i")
+            if st != 0:
+                sys.exit(2)
+        os.chdir(BUILDDIR)
+
+
+    ## Get Boost
+    BOOSTFLAGS = None
+    if opts.INSTALL_BOOST:
+        logging.info("Installing a local copy of Boost")
+        boostname = "boost_%s" % opts.BOOST_VERSION
+        boosttarname = boostname + ".tar.gz"
+        boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
+        get_unpack_tarball(boosturl)
+        boostbuilddir = os.path.join(BUILDDIR, boostname)
+        conf_mk_mkinst(boostbuilddir)
+        ## Fix up the crappy default Boost install structure
+        incdir = os.path.join(PREFIX, "include")
+        boostincdir = os.path.join(incdir, "boost")
+        boostincdirs = [d for d in os.listdir(incdir) if d.startswith("boost-")]
+        if len(boostincdirs) > 0:
+            boostincdir_outer = boostincdirs[-1]
+            boostincdir_inner = os.path.join(boostincdir_outer, "boost")
+            if not os.path.exists(boostincdir_inner):
+                logging.error("Can't find Boost include dir %s to symlink" % boostincdir_inner)
+                sys.exit(2)
+            logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir_inner)
+            os.symlink(boostincdir_inner, boostincdir)
+        else:
+            logging.error("Can't work out how to make a standard Boost include dir")
+            sys.exit(2)
+        logging.debug("Setting BOOST_DIR = " + PREFIX)
+        opts.BOOST_DIR = PREFIX
+
+
+    ## Are we able to use pre-built packages from CERN AFS?
+    if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
+        logging.info("LCG area available: using LCG-built packages")
+
+        ## Platform tag: get distribution
+        distribution = commands.getoutput("uname")
+        if os.path.exists("/etc/redhat-release"):
+            distribution = "redhat"
+            sltest = commands.getoutput("lsb_release -ds")
+            if "Scientific Linux" in sltest:
+                version = commands.getoutput("lsb_release -rs").split(".")
+                distribution = "slc" + version[0]
+
+        ## Platform tag: get architecture
+        uname_m = commands.getoutput("uname -m")
+        machine = "ia32"
+        if "64" in uname_m:
+            machine = "amd64"
+
+        ## Platform tag: get GCC version
+        gcc_version = commands.getoutput('g++ --version | head -1 | cut -d" " -f3').split(".")
+        gcc_major = gcc_version[0]
+        gcc_minor = gcc_version[1]
+        gcc_micro = gcc_version[2]
+        gcc_code = "gcc%s%s" % (gcc_major, gcc_minor)
+        ## Historical exceptions
+        if gcc_code in ["gcc32", "gcc40"]:
+          gcc_code += gcc_micro
+
+        LCGPLATFORM = "%s_%s_%s" % (distribution, machine, gcc_code)
+        logging.info("Using LCG platform tag = " + LCGPLATFORM)
+
+
+        ## Now work out paths to give to Rivet
+        ## HepMC
+        HEPMCPATH = os.path.join(opts.LCGDIR, "HepMC", opts.HEPMC_VERSION, LCGPLATFORM)
+        if not os.path.exists(HEPMCPATH):
+            logging.error("HepMC does not exist at path %s. You may wish to use the --ignore-lcgext option" % HEPMCPATH)
+            sys.exit(1)
+        ## FastJet
+        FASTJETPATH = os.path.join(opts.LCGDIR, "fastjet", opts.FASTJET_VERSION, LCGPLATFORM)
+        if not os.path.exists(FASTJETPATH):
+            logging.error("FastJet does not exist at path %s. You may wish to use the --ignore-lcgext option" % FASTJETPATH)
+            sys.exit(1)
+        ## Boost
+        if not opts.INSTALL_BOOST:
+            lcg_boost_version = "1.34.1"
+            opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, LCGPLATFORM)
+
+    else:
+        ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
+
+        ## Get and build HepMC
+        hepmcname = "HepMC-" + opts.HEPMC_VERSION
+        os.chdir(BUILDDIR)
+        if not os.path.exists(hepmcname):
+            hepmctarname = hepmcname + ".tar.gz"
+            hepmcurl = os.path.join(opts.HEPMC_URL, hepmctarname)
+            get_unpack_tarball(hepmcurl)
+            conf_mk_mkinst(os.path.join(BUILDDIR, hepmcname), "--with-momentum=GEV --with-length=MM")
+        HEPMCPATH = PREFIX
+
+        ## Get and build FastJet
+        fastjetname = "fastjet-" + opts.FASTJET_VERSION
+        os.chdir(BUILDDIR)
+        if not os.path.exists(fastjetname):
+            fastjettarname = fastjetname + ".tar.gz"
+            fastjeturl = os.path.join(opts.FASTJET_URL, fastjettarname)
+            get_unpack_tarball(fastjeturl)
+            conf_mk_mkinst(os.path.join(BUILDDIR, fastjetname), "--enable-shared --enable-allcxxplugins")
+        FASTJETPATH = PREFIX
+
+
+    ## This wouldn't be needed if Boost followed normal installation conventions...
+    if opts.BOOST_DIR:
+        logging.debug("Working out if Boost's headers are installed properly in " + opts.BOOST_DIR)
+        boostincdir = os.path.join(opts.BOOST_DIR, "include")
+        if not os.path.exists(os.path.join(boostincdir, "boost")):
+            logging.info("Boost's headers are not installed properly in " + opts.BOOST_DIR)
+            incdirs = [d for d in os.listdir(boostincdir) if d.startswith("boost-")]
+            if len(incdirs) > 0:
+                BOOSTFLAGS = "--with-boost-incpath=%s" % os.path.join(boostincdir, incdirs[0])
+            else:
+                logging.error("Couldn't work out Boost headers in %s" % boostincdir)
+                sys.exit(1)
 
 
 
-## TODO: AGILe
+    ## TODO: AGILe
 
 
 
-## Build and install Rivet
-RIVET_CONFIGURE_FLAGS = ""
-logging.debug("HepMC path: " + HEPMCPATH)
-RIVET_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
-logging.debug("FastJet path: " + FASTJETPATH)
-RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
-if opts.BOOST_DIR:
-    logging.debug("Boost path: " + opts.BOOST_DIR)
-    RIVET_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
-## Nasty hack in case the Boost headers are installed some rubbish way:
-if BOOSTFLAGS:
-    logging.debug("Boost flags: " + BOOSTFLAGS)
-    RIVET_CONFIGURE_FLAGS += " " + BOOSTFLAGS
-## Energise!
-conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
+    ## Build and install Rivet
+    RIVET_CONFIGURE_FLAGS = ""
+    logging.debug("HepMC path: " + HEPMCPATH)
+    RIVET_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
+    logging.debug("FastJet path: " + FASTJETPATH)
+    RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
+    if opts.BOOST_DIR:
+        logging.debug("Boost path: " + opts.BOOST_DIR)
+        RIVET_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
+    ## Nasty hack in case the Boost headers are installed some rubbish way:
+    if BOOSTFLAGS:
+        logging.debug("Boost flags: " + BOOSTFLAGS)
+        RIVET_CONFIGURE_FLAGS += " " + BOOSTFLAGS
+    ## Energise!
+    conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
 
 
-## Collect and write out environment variables
-env = {}
+    ## Collect and write out environment variables
+    env = {}
 
-## Path env
-env["PATH"] = ":".join([os.path.join(PREFIX, "bin"), "$PATH"])
+    ## Path env
+    env["PATH"] = ":".join([os.path.join(PREFIX, "bin"), "$PATH"])
 
-## Lib env
-libdirs = []
-for d in [PREFIX, HEPMCPATH, FASTJETPATH]: # CGALPATH
-    libdir = os.path.join(d, "lib")
-    if libdir not in libdirs:
-        libdirs.append(libdir)
-if commands.getoutput("uname") == "Darwin":
-    env["DYLD_LIBRARY_PATH"] = ":".join(libdirs + ["$DYLD_LIBRARY_PATH"])
-else:
-    env["LD_LIBRARY_PATH"] = ":".join(libdirs + ["$LD_LIBRARY_PATH"])
+    ## Lib env
+    libdirs = []
+    for d in [PREFIX, HEPMCPATH, FASTJETPATH]: # CGALPATH
+        libdir = os.path.join(d, "lib")
+        if libdir not in libdirs:
+            libdirs.append(libdir)
+    if commands.getoutput("uname") == "Darwin":
+        env["DYLD_LIBRARY_PATH"] = ":".join(libdirs + ["$DYLD_LIBRARY_PATH"])
+    else:
+        env["LD_LIBRARY_PATH"] = ":".join(libdirs + ["$LD_LIBRARY_PATH"])
 
-## Python env
-pyversion = "%d.%d" % (sys.version_info[0], sys.version_info[1])
-pylibdirs = []
-for ld in ["lib", "lib64", "lib32"]:
-    pylibdir = os.path.join(PREFIX, ld, "python%s/site-packages" % pyversion)
-    logging.debug("Possible Python lib dir: %s" % pylibdir)
-    if os.path.exists(pylibdir):
-        pylibdirs.append(pylibdir)
-env["PYTHONPATH"] = ":".join(pylibdirs + ["$PYTHONPATH"])
+    ## Python env
+    pyversion = "%d.%d" % (sys.version_info[0], sys.version_info[1])
+    pylibdirs = []
+    for ld in ["lib", "lib64", "lib32"]:
+        pylibdir = os.path.join(PREFIX, ld, "python%s/site-packages" % pyversion)
+        logging.debug("Possible Python lib dir: %s" % pylibdir)
+        if os.path.exists(pylibdir):
+            pylibdirs.append(pylibdir)
+    env["PYTHONPATH"] = ":".join(pylibdirs + ["$PYTHONPATH"])
 
 
-## Write out env files
+    ## Write out env files
 
-## sh
-SHENV = ""
-for k, v in env.iteritems():
-    SHENV += "export %s=%s\n" % (k,v)
-comppath = os.path.join(PREFIX, "share", "Rivet", "rivet-completion")
-if os.path.exists(comppath):
-    SHENV += ". %s\n" % comppath
-os.chdir(ROOT)
-f = open("rivetenv.sh", "w")
-f.write(SHENV)
-f.close()
+    ## sh
+    SHENV = ""
+    for k, v in env.iteritems():
+        SHENV += "export %s=%s\n" % (k,v)
+    comppath = os.path.join(PREFIX, "share", "Rivet", "rivet-completion")
+    if os.path.exists(comppath):
+        SHENV += ". %s\n" % comppath
+    os.chdir(ROOT)
+    f = open("rivetenv.sh", "w")
+    f.write(SHENV)
+    f.close()
 
-## csh
-CSHENV = "" 
-for k, v in env.iteritems():
-    CSHENV += "setenv %s %s\n" % (k,v)
-os.chdir(ROOT)
-f = open("rivetenv.csh", "w")
-f.write(CSHENV)
-f.close()
+    ## csh
+    CSHENV = "" 
+    for k, v in env.iteritems():
+        CSHENV += "setenv %s %s\n" % (k,v)
+    os.chdir(ROOT)
+    f = open("rivetenv.csh", "w")
+    f.write(CSHENV)
+    f.close()
 
-## Tell the user
-print
-logging.info("All done. Now set some variables in your shell:\n")
-logging.info("In sh shell:\n" + SHENV)
-logging.info("In csh shell:\n" + CSHENV)
-logging.info("These can be used by sourcing, e.g.\n. rivetenv.sh\nor\nsource rivetenv.csh")
+    ## Tell the user
+    print
+    logging.info("All done. Now set some variables in your shell:\n")
+    logging.info("In sh shell:\n" + SHENV)
+    logging.info("In csh shell:\n" + CSHENV)
+    logging.info("These can be used by sourcing, e.g.\n. rivetenv.sh\nor\nsource rivetenv.csh")
+
+except Exception, e:
+    import traceback
+    traceback.print_exc()
+    logging.error("\n\n")
+    logging.error("An error has occurred while bootstrapping Rivet or one of its dependencies. Sorry!")
+    logging.error("Please contact the Rivet developers at rivet@projects.hepforge.org, with a \
+description of your problem, a copy of this script and any error trace that may have appeared \
+and we'll try to get it fixed as soon as possible. Thanks for your help!")

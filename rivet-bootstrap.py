@@ -378,7 +378,10 @@ for d in [PREFIX, HEPMCPATH, FASTJETPATH]: # CGALPATH
     libdir = os.path.join(d, "lib")
     if libdir not in libdirs:
         libdirs.append(libdir)
-env["LD_LIBRARY_PATH"] = ":".join(libdirs + ["$LD_LIBRARY_PATH"])
+if commands.getoutput("uname") == "Darwin":
+    env["DYLD_LIBRARY_PATH"] = ":".join(libdirs + ["$DYLD_LIBRARY_PATH"])
+else:
+    env["LD_LIBRARY_PATH"] = ":".join(libdirs + ["$LD_LIBRARY_PATH"])
 
 ## Python env
 pyversion = "%d.%d" % (sys.version_info[0], sys.version_info[1])

@@ -237,20 +237,22 @@ if opts.INSTALL_BOOST:
     boostname = "boost_%s" % opts.BOOST_VERSION
     boosttarname = boostname + ".tar.gz"
     boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
-    boostincdir_outer = os.path.join(PREFIX, "include", "boost-%s" % opts.BOOST_VERSION[:-2])
-    if not os.path.exists(boostincdir_outer):
-
-        conf_mk_mkinst(boostbuilddir)
+    conf_mk_mkinst(boostbuilddir)
     ## Fix up the crappy default Boost install structure
-    boostincdir = os.path.join(PREFIX, "include", "boost")
-    boostincdir_inner = os.path.join(boostincdir_outer, "boost")
-    if not os.path.exists(boostincdir):
-        if os.path.exists(boostincdir_inner):
-            logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir_inner)
-            os.symlink(boostincdir_inner, boostincdir)
-        else:
-            logging.error("Can't work out how to make a standard Boost include dir")
+    incdir = os.path.join(PREFIX, "include")
+    boostincdir = os.path.join(incdir, "boost")
+    boostincdirs = [d for d in os.listdir(incdir) if d.startswith("boost-")]
+    if len(boostincdirs) > 0:
+        boostincdir_outer = boostincdirs[-1]
+        boostincdir_inner = os.path.join(boostincdir_outer, "boost")
+        if not os.path.exists(boostincdir_inner):
+            logging.error("Can't find Boost include dir %s to symlink" % boostincdir_inner)
             sys.exit(2)
+        logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir_inner)
+        os.symlink(boostincdir_inner, boostincdir)
+    else:
+        logging.error("Can't work out how to make a standard Boost include dir")
+        sys.exit(2)
     logging.debug("Setting BOOST_DIR = " + PREFIX)
     opts.BOOST_DIR = PREFIX
 
@@ -336,7 +338,6 @@ if opts.BOOST_DIR:
         logging.info("Boost's headers are not installed properly in " + opts.BOOST_DIR)
         incdirs = [d for d in os.listdir(boostincdir) if d.startswith("boost-")]
         if len(incdirs) > 0:
-            #BOOSTFLAGS = "--with-boost-incpath=%s/include/boost-%s" % (opts.BOOST_DIR, lcg_boost_version.replace(".", "_"))
             BOOSTFLAGS = "--with-boost-incpath=%s" % os.path.join(boostincdir, incdirs[0])
         else:
             logging.error("Couldn't work out Boost headers in %s" % boostincdir)

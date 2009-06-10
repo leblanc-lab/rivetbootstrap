@@ -41,7 +41,7 @@ parser.add_option("--rivet-version", default="1.1.3", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE", 
                   help="Install the AGILe interface system for Fortran generators")
-parser.add_option("--agile-version", default="1.1.3", dest="AGILE_VERSION", 
+parser.add_option("--agile-version", default="1.1.4a0", dest="AGILE_VERSION", 
                   help="Explicitly specify version of AGILe to get and use")
 parser.add_option("--agile-url", default="http://www.hepforge.org/archive/agile/", 
                   dest="AGILE_URL", help="Base URL for AGILe tarball downloads")
@@ -434,6 +434,10 @@ try:
     comppath = os.path.join(PREFIX, "share", "Rivet", "rivet-completion")
     if os.path.exists(comppath):
         SHENV += ". %s\n" % comppath
+    if opts.INSTALL_AGILE:
+        comppath = os.path.join(PREFIX, "share", "AGILe", "agile-completion")
+        if os.path.exists(comppath):
+            SHENV += ". %s\n" % comppath
     os.chdir(ROOT)
     f = open("rivetenv.sh", "w")
     f.write(SHENV)

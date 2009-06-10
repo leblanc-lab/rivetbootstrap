@@ -16,6 +16,7 @@ available.
 
 TODO:
  * Build logging: can we stream build output as it happens (in verbose mode)?
+ * Get and install AGILe, if asked
 """
 
 import os, sys, logging, shutil, commands
@@ -38,6 +39,12 @@ parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="I
                   help="Always bootstrap from sources, even if LCG versions are available")
 parser.add_option("--rivet-version", default="1.1.3", dest="RIVET_VERSION", 
                   help="Explicitly specify version of Rivet to get and use")
+parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE", 
+                  help="Install the AGILe interface system for Fortran generators")
+parser.add_option("--agile-version", default="1.1.3", dest="AGILE_VERSION", 
+                  help="Explicitly specify version of AGILe to get and use")
+parser.add_option("--agile-url", default="http://www.hepforge.org/archive/agile/", 
+                  dest="AGILE_URL", help="Base URL for AGILe tarball downloads")
 parser.add_option("--hepmc-version", default="2.04.01", dest="HEPMC_VERSION", 
                   help="Explicitly specify version of HepMC to get and use")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/", 
@@ -357,26 +364,37 @@ try:
                 sys.exit(1)
 
 
-
-    ## TODO: AGILe
-
-
-
-    ## Build and install Rivet
-    RIVET_CONFIGURE_FLAGS = ""
+    ## Get build flags for Rivet and AGILe
+    RA_CONFIGURE_FLAGS = ""
     logging.debug("HepMC path: " + HEPMCPATH)
-    RIVET_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
-    logging.debug("FastJet path: " + FASTJETPATH)
-    RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
+    RA_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
     if opts.BOOST_DIR:
         logging.debug("Boost path: " + opts.BOOST_DIR)
-        RIVET_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
+        RA_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
     ## Nasty hack in case the Boost headers are installed some rubbish way:
     if BOOSTFLAGS:
         logging.debug("Boost flags: " + BOOSTFLAGS)
-        RIVET_CONFIGURE_FLAGS += " " + BOOSTFLAGS
-    ## Energise!
+        RA_CONFIGURE_FLAGS += " " + BOOSTFLAGS
+    AGILE_CONFIGURE_FLAGS = RA_CONFIGURE_FLAGS
+    RIVET_CONFIGURE_FLAGS = RA_CONFIGURE_FLAGS
+
+
+    ## Build and install Rivet
+    logging.debug("FastJet path: " + FASTJETPATH)
+    RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
     conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
+
+
+    ## Build and install AGILe
+    if opts.INSTALL_AGILE:
+        agilename = "AGILe-" + opts.AGILE_VERSION
+        os.chdir(BUILDDIR)
+        #if not os.path.exists(agilename):
+        agiletarname = agilename + ".tar.gz"
+        agileurl = os.path.join(opts.AGILE_URL, agiletarname)
+        get_unpack_tarball(agileurl)
+        AGILE_CONFIGURE_FLAGS += " --enable-pyext"
+        conf_mk_mkinst(os.path.join(BUILDDIR, agilename), AGILE_CONFIGURE_FLAGS)
 
 
     ## Collect and write out environment variables

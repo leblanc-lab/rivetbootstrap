@@ -16,7 +16,8 @@ available.
 
 TODO:
  * Build logging: can we stream build output as it happens (in verbose mode)?
- * Get and install AGILe, if asked
+ * Run LaTeX in batch mode
+ * Add new SLC5 LCG platform tag scheme
 """
 
 import os, sys, logging, shutil, commands
@@ -382,6 +383,7 @@ try:
     ## Build and install Rivet
     logging.debug("FastJet path: " + FASTJETPATH)
     RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
+    RIVET_CONFIGURE_FLAGS += " --disable-pdfmanual"
     conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
 
 

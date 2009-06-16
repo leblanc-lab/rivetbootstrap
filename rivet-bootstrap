@@ -16,7 +16,6 @@ available.
 
 TODO:
  * Build logging: can we stream build output as it happens (in verbose mode)?
- * Run LaTeX in batch mode
  * Add new SLC5 LCG platform tag scheme
 """
 
@@ -185,6 +184,52 @@ def conf_mk_mkinst(d, extraopts=""):
         sys.exit(1)
 
 
+def compute_lcg_tag():
+    ## Get distribution
+    slversion = None
+    distribution = commands.getoutput("uname")
+    if os.path.exists("/etc/redhat-release"):
+        distribution = "redhat"
+        sltest = commands.getoutput("lsb_release -ds")
+        if "Scientific Linux" in sltest:
+            slversion = commands.getoutput("lsb_release -rs").split(".")
+            distribution = "slc" + slversion[0]
+    logging.debug("OS: " + distribution)
+
+    ## Get architecture
+    machine = commands.getoutput("uname -m")
+    logging.debug("Architecture: " + machine)
+
+    ## Get GCC version
+    gcc_version = commands.getoutput('g++ --version | head -1 | cut -d" " -f3').split(".")
+    logging.debug("GCC version: " + str(gcc_version))
+    gcc_major = gcc_version[0]
+    gcc_minor = gcc_version[1]
+    gcc_micro = gcc_version[2]
+    gcc_code = "gcc%s%s" % (gcc_major, gcc_minor)
+
+    ## Future-proof platform tag
+    lcgplatform = "%s-%s-%s-%s" % (machine, distribution, gcc_code, "opt")
+
+    ## Historical platform tags
+    if slversion is not None and int(slversion[0]) < 5:
+        logging.debug("Computing old-style tag to replace " + lcgplatform)
+
+        ## Different arch codes
+        if "64" in machine:
+            machine = "amd64"
+        else:
+            machine = "ia32"
+
+        ## Historical exceptions for GCC version
+        if gcc_code in ["gcc32", "gcc40"]:
+            gcc_code += gcc_micro
+
+        lcgplatform = "%s_%s_%s" % (distribution, machine, gcc_code)
+
+    return lcgplatform
+
+
 ##############################
 
 
@@ -219,12 +264,13 @@ try:
     ## of Rivet in this directory, then check out/update
     ## the SVN head versions using the HTTP access method
     else:
+        logging.info("Checking for developer mode programs")
         path = []
         if os.environ.has_key("PATH"):
             path = os.environ["PATH"].split(":")
         if os.environ.has_key("path"):
             path = os.environ["path"].split(":")
-        for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool"]:
+        for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool", "swig"]:
             found = False
             for d in path:
                 if os.access(os.path.join(d, pkg), os.X_OK):
@@ -236,16 +282,29 @@ try:
 
         os.chdir(BUILDDIR)
         if not os.path.exists("rivet"):
+            logging.info("Checking out Rivet from SVN head")
             st, op = commands.getstatusoutput("svn co http://svn.hepforge.org/rivet/trunk rivet")
-        else:
-            logging.error("'rivet' directory already exists, blocking SVN checkout")
+            if st != 0:
+                logging.error(op)
+                sys.exit(2)
+            logging.debug("SVN checkout output:\n" + op)
+        elif not os.path.exists(os.path.join("rivet", ".svn")):
+            logging.error("Non-SVN 'rivet' directory already exists, blocking SVN checkout")
             sys.exit(1)
         os.chdir("rivet")
+        logging.info("Updating Rivet SVN working copy")
         st, op = commands.getstatusoutput("svn update")
+        if st != 0:
+            logging.error(op)
+            sys.exit(1)
+        logging.debug("SVN update output:\n" + op)
         if not os.path.exists("configure"):
+            logging.info("Bootstrapping autoconf files")
             st, op = commands.getstatusoutput("autoreconf -i")
             if st != 0:
+                logging.error(op)
                 sys.exit(2)
+            logging.debug("autoreconf output:\n" + op)
         os.chdir(BUILDDIR)
 
 
@@ -282,34 +341,8 @@ try:
     if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
         logging.info("LCG area available: using LCG-built packages")
 
-        ## Platform tag: get distribution
-        distribution = commands.getoutput("uname")
-        if os.path.exists("/etc/redhat-release"):
-            distribution = "redhat"
-            sltest = commands.getoutput("lsb_release -ds")
-            if "Scientific Linux" in sltest:
-                version = commands.getoutput("lsb_release -rs").split(".")
-                distribution = "slc" + version[0]
-
-        ## Platform tag: get architecture
-        uname_m = commands.getoutput("uname -m")
-        machine = "ia32"
-        if "64" in uname_m:
-            machine = "amd64"
-
-        ## Platform tag: get GCC version
-        gcc_version = commands.getoutput('g++ --version | head -1 | cut -d" " -f3').split(".")
-        gcc_major = gcc_version[0]
-        gcc_minor = gcc_version[1]
-        gcc_micro = gcc_version[2]
-        gcc_code = "gcc%s%s" % (gcc_major, gcc_minor)
-        ## Historical exceptions
-        if gcc_code in ["gcc32", "gcc40"]:
-          gcc_code += gcc_micro
-
-        LCGPLATFORM = "%s_%s_%s" % (distribution, machine, gcc_code)
+        LCGPLATFORM = compute_lcg_tag()
         logging.info("Using LCG platform tag = " + LCGPLATFORM)
-
 
         ## Now work out paths to give to Rivet
         ## HepMC

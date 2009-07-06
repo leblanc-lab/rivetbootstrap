@@ -26,39 +26,41 @@ DEFAULTPREFIX = os.path.join(os.getcwd(), "local")
 
 parser = OptionParser(usage=__usage__)
 parser.add_option("--prefix", metavar="INSTALLDIR", default=DEFAULTPREFIX, dest="PREFIX", 
-                  help="Location to install packages to (default = %default)")
+                  help="Location to install packages to [%default]")
 parser.add_option("--force", action="store_true", default=False, dest="FORCE", 
-                  help="Overwrite existing tarballs")
+                  help="Overwrite existing tarballs [%default]")
 parser.add_option("-j", default="2", dest="JMAKE", 
-                  help="Num of 'make' threads to run in parallel (the n in 'make -j<n>')")
+                  help="Num of 'make' threads to run in parallel (the n in 'make -j<n>') [%default]")
 parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MODE", 
-                  help="Use the SVN development head version of Rivet")
+                  help="Use the SVN development head version of Rivet [%default]")
 parser.add_option("--lcgextdir", default="/afs/cern.ch/sw/lcg/external", dest="LCGDIR", 
-                  help="Standard location of LCG external packages")
+                  help="Standard location of LCG external packages [%default]")
 parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="IGNORE_LCG", 
-                  help="Always bootstrap from sources, even if LCG versions are available")
+                  help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--rivet-version", default="1.1.3", dest="RIVET_VERSION", 
-                  help="Explicitly specify version of Rivet to get and use")
+                  help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE", 
-                  help="Install the AGILe interface system for Fortran generators")
+                  help="Install the AGILe interface system for Fortran generators [%default]")
 parser.add_option("--agile-version", default="1.1.4a0", dest="AGILE_VERSION", 
-                  help="Explicitly specify version of AGILe to get and use")
+                  help="Explicitly specify version of AGILe to get and use [%default]")
 parser.add_option("--agile-url", default="http://www.hepforge.org/archive/agile/", 
-                  dest="AGILE_URL", help="Base URL for AGILe tarball downloads")
+                  dest="AGILE_URL", help="Base URL for AGILe tarball downloads [%default]")
 parser.add_option("--hepmc-version", default="2.04.01", dest="HEPMC_VERSION", 
-                  help="Explicitly specify version of HepMC to get and use")
+                  help="Explicitly specify version of HepMC to get and use [%default]")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/", 
-                  dest="HEPMC_URL", help="Base URL for HepMC tarball downloads")
+                  dest="HEPMC_URL", help="Base URL for HepMC tarball downloads [%default]")
 parser.add_option("--fastjet-version", default="2.4.1", dest="FASTJET_VERSION", 
-                  help="Explicitly specify version of FastJet to get and use")
+                  help="Explicitly specify version of FastJet to get and use [%default]")
 parser.add_option("--fastjet-url", default="http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/", 
-                  dest="FASTJET_URL", help="Base URL for FastJet tarball downloads")
-parser.add_option("--boost", metavar="DIR", default=None, dest="BOOST_DIR", 
-                  help="Explicit path to find Boost")
+                  dest="FASTJET_URL", help="Base URL for FastJet tarball downloads [%default]")
+parser.add_option("--with-gsl", metavar="DIR", default=None, dest="GSL_DIR", 
+                  help="Explicit path to find GSL [%default]")
+parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR", 
+                  help="Explicit path to find Boost [%default]")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST", 
-                  help="Don't use a system copy of Boost (NB. it takes a long time to build)")
+                  help="Don't use a system copy of Boost (NB. it takes a long time to build) [%default]")
 parser.add_option("--boost-version", default="1_38_0", dest="BOOST_VERSION", 
-                  help="Explicitly specify version of Boost to get and use (if --install-boost is used)")
+                  help="Explicitly specify version of Boost to get and use (if --install-boost is used) [%default]")
 parser.add_option("-V", "--verbose", action="store_const", const=logging.DEBUG, dest="LOGLEVEL",
                   default=logging.INFO, help="print debug (very verbose) messages")
 parser.add_option("-Q", "--quiet", action="store_const", const=logging.WARNING, dest="LOGLEVEL",
@@ -416,6 +418,8 @@ try:
     ## Build and install Rivet
     logging.debug("FastJet path: " + FASTJETPATH)
     RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
+    if opts.GSL_DIR:
+        RIVET_CONFIGURE_FLAGS += " --with-gsl=%s" % opts.GSL_DIR
     RIVET_CONFIGURE_FLAGS += " --disable-pdfmanual"
     conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
 

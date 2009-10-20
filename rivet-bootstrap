@@ -20,6 +20,107 @@ TODO:
 """
 
 import os, sys, logging, shutil, commands
+
+def compute_lcg_tag():
+    import platform
+
+    ## Get distribution
+    slversion = None
+    osxversion = None
+    distribution = platform.system()
+    ## SL tests
+    rhreleasepath = "/etc/redhat-release"
+    if os.path.exists(rhreleasepath):
+        distribution = "redhat"
+        f = open(rhreleasepath, "r")
+        #sltest = commands.getoutput("lsb_release -ds")
+        sltest = f.read()
+        f.close()
+        if "Scientific Linux" in sltest:
+            #slversion = [int(i) for i in commands.getoutput("lsb_release -rs").split(".")]
+            slversion = [int(i) for i in sltest.split()[5].split(".")]
+            distribution = "slc%d" % slversion[0]
+    ## Mac tests
+    if distribution == "Darwin":
+        osxversion = (10,4)
+        macver = platform.mac_ver()[0]
+        if len(macver) > 0:
+            ver = macver.split(".")
+            osxversion = [int(i) for i in ver]
+        distribution = "mac%d%d" % (osxversion[0], osxversion[1])
+    ## Windows tests
+    if distribution == "Windows":
+        distribution = "winxp"
+    logging.debug("OS: " + distribution)
+
+
+    ## Get architecture
+    machine = platform.machine()
+    logging.debug("Architecture: " + machine)
+
+
+    ## Get compiler version
+    compiler_code = None
+    vcversion = None
+    if distribution != "winxp":
+        ## Get GCC version
+        GCC_CMD = "g++"
+        if os.environ.has_key("CC"):
+            GCC_CMD = os.environ["CC"]
+        elif os.environ.has_key("CXX"):
+            GCC_CMD = os.environ["CXX"]
+        gcc_version = commands.getoutput(GCC_CMD + ' --version | head -1 | cut -d" " -f3').split(".")
+        logging.debug("GCC version: " + str(gcc_version))
+        gcc_major = gcc_version[0]
+        gcc_minor = gcc_version[1]
+        gcc_micro = gcc_version[2]
+        compiler_code = "gcc%s%s" % (gcc_major, gcc_minor)
+    else:
+        ## Try to find VC version... somehow!
+        import distutils.msvccompiler as msvc
+        vcversions = sorted(msvc.get_devstudio_versions())
+        vcversion = vcversions[0]
+        compiler_code = "vc%s" % vcversion
+
+
+    ## the "future-proof" platform tag
+    LCGPLATFORM = "%s-%s-%s-%s" % (machine, distribution, compiler_code, "opt")
+
+
+    ## Historical platform tags
+    if vcversion is not None and vcversion < 9:
+        logging.debug("Computing old-style Windows tag to replace " + LCGPLATFORM)
+        LCGPLATFORM = "win32_vc71_dbg"
+    elif slversion is not None and slversion[0] < 5 or osxversion is not None and osxversion[1] < 6:
+        logging.debug("Computing old-style tag to replace " + LCGPLATFORM)
+
+        ## Different arch codes
+        if "64" in machine:
+            machine = "amd64"
+        else:
+            machine = "ia32"
+
+        ## Old Mac code is "osx" rather than "mac"
+        if osxversion:
+            distribution = distribution.replace("mac", "osx")
+
+        ## Historical exceptions for GCC version
+        if compiler_code in ["gcc32", "gcc40"]:
+            compiler_code += gcc_micro
+
+        ## For Macs, append "_dbg" if needed
+        LCGPLATFORM = "%s_%s_%s" % (distribution, machine, compiler_code)
+        if osxversion and opts.BUILD_TYPE == "dbg":
+            LCGPLATFORM += "_dbg"
+
+    return LCGPLATFORM
+
+
+
+##############################
+
+
+
 from optparse import OptionParser
 
 DEFAULTPREFIX = os.path.join(os.getcwd(), "local")
@@ -35,6 +136,8 @@ parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MOD
                   help="Use the SVN development head version of Rivet [%default]")
 parser.add_option("--lcgextdir", default="/afs/cern.ch/sw/lcg/external", dest="LCGDIR", 
                   help="Standard location of LCG external packages [%default]")
+parser.add_option("--lcgtag", default=compute_lcg_tag(), dest="LCGTAG",
+                  help="Force the LCG platform tag if it's not being computed correctly [%default]")
 parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="IGNORE_LCG", 
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--rivet-version", default="1.1.3", dest="RIVET_VERSION", 
@@ -186,53 +289,7 @@ def conf_mk_mkinst(d, extraopts=""):
         sys.exit(1)
 
 
-def compute_lcg_tag():
-    ## Get distribution
-    slversion = None
-    distribution = commands.getoutput("uname")
-    if os.path.exists("/etc/redhat-release"):
-        distribution = "redhat"
-        sltest = commands.getoutput("lsb_release -ds")
-        if "Scientific Linux" in sltest:
-            slversion = commands.getoutput("lsb_release -rs").split(".")
-            distribution = "slc" + slversion[0]
-    logging.debug("OS: " + distribution)
 
-    ## Get architecture
-    machine = commands.getoutput("uname -m")
-    logging.debug("Architecture: " + machine)
-
-    ## Get GCC version
-    gcc_version = commands.getoutput('g++ --version | head -1 | cut -d" " -f3').split(".")
-    logging.debug("GCC version: " + str(gcc_version))
-    gcc_major = gcc_version[0]
-    gcc_minor = gcc_version[1]
-    gcc_micro = gcc_version[2]
-    gcc_code = "gcc%s%s" % (gcc_major, gcc_minor)
-
-    ## Future-proof platform tag
-    lcgplatform = "%s-%s-%s-%s" % (machine, distribution, gcc_code, "opt")
-
-    ## Historical platform tags
-    if slversion is not None and int(slversion[0]) < 5:
-        logging.debug("Computing old-style tag to replace " + lcgplatform)
-
-        ## Different arch codes
-        if "64" in machine:
-            machine = "amd64"
-        else:
-            machine = "ia32"
-
-        ## Historical exceptions for GCC version
-        if gcc_code in ["gcc32", "gcc40"]:
-            gcc_code += gcc_micro
-
-        lcgplatform = "%s_%s_%s" % (distribution, machine, gcc_code)
-
-    return lcgplatform
-
-
-##############################
 
 
 ## Get Rivet source either from released tarballs or SVN
@@ -343,7 +400,7 @@ try:
     if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
         logging.info("LCG area available: using LCG-built packages")
 
-        LCGPLATFORM = compute_lcg_tag()
+        LCGPLATFORM = opts.LCGTAG
         logging.info("Using LCG platform tag = " + LCGPLATFORM)
 
         ## Now work out paths to give to Rivet
@@ -360,6 +417,8 @@ try:
         ## Boost
         if not opts.INSTALL_BOOST:
             lcg_boost_version = "1.34.1"
+            if "slc5" in LCGPLATFORM:
+                lcg_boost_version = "1.39.0_python2.5"
             opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, LCGPLATFORM)
 
     else:
@@ -404,6 +463,13 @@ try:
     RA_CONFIGURE_FLAGS = ""
     logging.debug("HepMC path: " + HEPMCPATH)
     RA_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
+    if "slc5" in LCGPLATFORM:
+        GSLPATH = os.path.join("/afs/cern.ch/sw/lcg/external/GSL/1.10/", LCGPLATFORM)
+        logging.debug("Using GSL path: " + GSLPATH)
+        RA_CONFIGURE_FLAGS += " --with-gsl=%s" % GSLPATH
+        RA_CONFIGURE_FLAGS += " --with-gslcblas=%s" % GSLPATH
+        ## TODO: remove this for Rivet > 1.1.3
+        RA_CONFIGURE_FLAGS += " CPPFLAGS=-I%s/include" % GSLPATH
     if opts.BOOST_DIR:
         logging.debug("Boost path: " + opts.BOOST_DIR)
         RA_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR

@@ -252,15 +252,20 @@ def unpack_tarball(path):
     import tarfile
     tar = tarfile.open(path)
     #tar.extractall()
-    for i in tar.getnames():
-        tar.extract(i, path=BUILDDIR)
+    try:
+        for i in tar.getnames():
+            tar.extract(i, path=BUILDDIR)
+    except:
+        return False
     tar.close()
+    return True
 
 
 ## Convenience function to get and unpack the tarball
 def get_unpack_tarball(tarurl, outname=None):
     outfile = get_tarball(tarurl, outname)
-    unpack_tarball(outfile)
+    unpack_tarball(outfile) or sys.exit(1)
+    return True
 
 
 ## Function to enter an expanded tarball and run the usual
@@ -289,11 +294,67 @@ def conf_mk_mkinst(d, extraopts=""):
         sys.exit(1)
 
 
+DEVTOOLS_OK = False
+def check_devtools():
+    global DEVTOOLS_OK
+    if not DEVTOOLS_OK:
+        logging.info("Checking for developer mode programs")
+        path = []
+        if os.environ.has_key("PATH"):
+            path = os.environ["PATH"].split(":")
+        if os.environ.has_key("path"):
+            path = os.environ["path"].split(":")
+        for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool", "swig"]:
+            found = False
+            for d in path:
+                if os.access(os.path.join(d, pkg), os.X_OK):
+                    found = True
+                    break
+            if not found:
+                logging.error("You must have %s installed to bootstrap in developer mode" % pkg)
+                return False
+    DEVTOOLS_OK = True
+    return True
+
+
+def pkg_bootstrap_svn(svnurl, pkgname, displayname=None):
+    st = check_devtools()
+    if not st:
+        return False
+    #
+    if displayname is None:
+        displayname = pkgname
+    os.chdir(BUILDDIR)
+    if not os.path.exists("rivet"):
+        logging.info("Checking out %s from SVN head" % displayname)
+        st, op = commands.getstatusoutput("svn co %s %s" % (svnurl, pkgname))
+        if st != 0:
+            logging.error(op)
+            return False
+        logging.debug("SVN checkout output:\n" + op)
+    elif not os.path.exists(os.path.join(pkgname, ".svn")):
+        logging.error("Non-SVN '%s' directory already exists, blocking SVN checkout" % pkgname)
+        return False
+    os.chdir(pkgname)
+    logging.info("Updating %s SVN working copy" % displayname)
+    st, op = commands.getstatusoutput("svn update")
+    if st != 0:
+        logging.error(op)
+        return False
+    logging.debug("SVN update output:\n" + op)
+    if not os.path.exists("configure"):
+        logging.info("Bootstrapping autoconf files")
+        st, op = commands.getstatusoutput("autoreconf -i")
+        if st != 0:
+            logging.error(op)
+            return False
+        logging.debug("autoreconf output:\n" + op)
+    os.chdir(BUILDDIR)
+    return True
 
 
 
 ## Get Rivet source either from released tarballs or SVN
-
 try:
 
     ## Clear "rivet" symlink
@@ -323,48 +384,7 @@ try:
     ## of Rivet in this directory, then check out/update
     ## the SVN head versions using the HTTP access method
     else:
-        logging.info("Checking for developer mode programs")
-        path = []
-        if os.environ.has_key("PATH"):
-            path = os.environ["PATH"].split(":")
-        if os.environ.has_key("path"):
-            path = os.environ["path"].split(":")
-        for pkg in ["svn", "autoconf", "autoreconf", "automake", "libtool", "swig"]:
-            found = False
-            for d in path:
-                if os.access(os.path.join(d, pkg), os.X_OK):
-                    found = True
-                    break
-            if not found:
-                logging.error("You must have %s installed to bootstrap in developer mode" % pkg)
-                sys.exit(1)
-
-        os.chdir(BUILDDIR)
-        if not os.path.exists("rivet"):
-            logging.info("Checking out Rivet from SVN head")
-            st, op = commands.getstatusoutput("svn co http://svn.hepforge.org/rivet/trunk rivet")
-            if st != 0:
-                logging.error(op)
-                sys.exit(2)
-            logging.debug("SVN checkout output:\n" + op)
-        elif not os.path.exists(os.path.join("rivet", ".svn")):
-            logging.error("Non-SVN 'rivet' directory already exists, blocking SVN checkout")
-            sys.exit(1)
-        os.chdir("rivet")
-        logging.info("Updating Rivet SVN working copy")
-        st, op = commands.getstatusoutput("svn update")
-        if st != 0:
-            logging.error(op)
-            sys.exit(1)
-        logging.debug("SVN update output:\n" + op)
-        if not os.path.exists("configure"):
-            logging.info("Bootstrapping autoconf files")
-            st, op = commands.getstatusoutput("autoreconf -i")
-            if st != 0:
-                logging.error(op)
-                sys.exit(2)
-            logging.debug("autoreconf output:\n" + op)
-        os.chdir(BUILDDIR)
+        pkg_bootstrap_svn("http://svn.hepforge.org/rivet/trunk", "rivet", "Rivet") or sys.exit(2)
 
 
     ## Get Boost
@@ -493,12 +513,16 @@ try:
 
     ## Build and install AGILe
     if opts.INSTALL_AGILE:
-        agilename = "AGILe-" + opts.AGILE_VERSION
-        os.chdir(BUILDDIR)
-        #if not os.path.exists(agilename):
-        agiletarname = agilename + ".tar.gz"
-        agileurl = os.path.join(opts.AGILE_URL, agiletarname)
-        get_unpack_tarball(agileurl)
+        if not opts.DEV_MODE:
+            agilename = "AGILe-" + opts.AGILE_VERSION
+            os.chdir(BUILDDIR)
+            #if not os.path.exists(agilename):
+            agiletarname = agilename + ".tar.gz"
+            agileurl = os.path.join(opts.AGILE_URL, agiletarname)
+            get_unpack_tarball(agileurl) or sys.exit(2)
+        else:
+            pkg_bootstrap_svn("http://svn.hepforge.org/rivet/trunk", "rivet", "Rivet") or sys.exit(2)
+        #
         AGILE_CONFIGURE_FLAGS += " --enable-pyext"
         AGILE_CONFIGURE_FLAGS += " --with-lcgtag=%s" % opts.LCGTAG
         conf_mk_mkinst(os.path.join(BUILDDIR, agilename), AGILE_CONFIGURE_FLAGS)

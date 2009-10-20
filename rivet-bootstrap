@@ -463,6 +463,7 @@ try:
     RA_CONFIGURE_FLAGS = ""
     logging.debug("HepMC path: " + HEPMCPATH)
     RA_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
+    ## TODO: surely this can be less hacky?!
     if "slc5" in LCGPLATFORM:
         GSLPATH = os.path.join("/afs/cern.ch/sw/lcg/external/GSL/1.10/", LCGPLATFORM)
         logging.debug("Using GSL path: " + GSLPATH)
@@ -499,6 +500,7 @@ try:
         agileurl = os.path.join(opts.AGILE_URL, agiletarname)
         get_unpack_tarball(agileurl)
         AGILE_CONFIGURE_FLAGS += " --enable-pyext"
+        AGILE_CONFIGURE_FLAGS += " --with-lcgtag=%s" % opts.LCGTAG
         conf_mk_mkinst(os.path.join(BUILDDIR, agilename), AGILE_CONFIGURE_FLAGS)
 
 

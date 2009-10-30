@@ -19,7 +19,111 @@ TODO:
  * Add new SLC5 LCG platform tag scheme
 """
 
-import os, sys, logging, shutil, commands
+import os, sys 
+import logging
+import shutil, commands
+
+
+def compute_lcg_tag():
+    import platform
+
+    ## Get distribution
+    slversion = None
+    osxversion = None
+    distribution = platform.system()
+    ## SL tests
+    rhreleasepath = "/etc/redhat-release"
+    if os.path.exists(rhreleasepath):
+        distribution = "redhat"
+        f = open(rhreleasepath, "r")
+        #sltest = commands.getoutput("lsb_release -ds")
+        sltest = f.read()
+        f.close()
+        if "Scientific Linux" in sltest:
+            #slversion = [int(i) for i in commands.getoutput("lsb_release -rs").split(".")]
+            slversion = [int(i) for i in sltest.split()[5].split(".")]
+            distribution = "slc%d" % slversion[0]
+    ## Mac tests
+    if distribution == "Darwin":
+        osxversion = (10,4)
+        macver = platform.mac_ver()[0]
+        if len(macver) > 0:
+            ver = macver.split(".")
+            osxversion = [int(i) for i in ver]
+        distribution = "mac%d%d" % (osxversion[0], osxversion[1])
+    ## Windows tests
+    if distribution == "Windows":
+        distribution = "winxp"
+    logging.debug("OS: " + distribution)
+
+
+    ## Get architecture
+    machine = platform.machine()
+    logging.debug("Architecture: " + machine)
+
+
+    ## Get compiler version
+    compiler_code = None
+    vcversion = None
+    if distribution != "winxp":
+        ## Get GCC version
+        GCC_CMD = "g++"
+        if os.environ.has_key("CC"):
+            GCC_CMD = os.environ["CC"]
+        elif os.environ.has_key("CXX"):
+            GCC_CMD = os.environ["CXX"]
+        gcc_version = commands.getoutput(GCC_CMD + ' --version | head -1 | cut -d" " -f3').split(".")
+        logging.debug("GCC version: " + str(gcc_version))
+        gcc_major = gcc_version[0]
+        gcc_minor = gcc_version[1]
+        gcc_micro = gcc_version[2]
+        compiler_code = "gcc%s%s" % (gcc_major, gcc_minor)
+    else:
+        ## Try to find VC version... somehow!
+        import distutils.msvccompiler as msvc
+        vcversions = sorted(msvc.get_devstudio_versions())
+        vcversion = vcversions[0]
+        compiler_code = "vc%s" % vcversion
+
+
+    ## the "future-proof" platform tag
+    LCGPLATFORM = "%s-%s-%s-%s" % (machine, distribution, compiler_code, "opt")
+
+
+    ## Historical platform tags
+    if vcversion is not None and vcversion < 9:
+        logging.debug("Computing old-style Windows tag to replace " + LCGPLATFORM)
+        LCGPLATFORM = "win32_vc71_dbg"
+    elif slversion is not None and slversion[0] < 5 or osxversion is not None and osxversion[1] < 6:
+        logging.debug("Computing old-style tag to replace " + LCGPLATFORM)
+
+        ## Different arch codes
+        if "64" in machine:
+            machine = "amd64"
+        else:
+            machine = "ia32"
+
+        ## Old Mac code is "osx" rather than "mac"
+        if osxversion:
+            distribution = distribution.replace("mac", "osx")
+
+        ## Historical exceptions for GCC version
+        if compiler_code in ["gcc32", "gcc40"]:
+            compiler_code += gcc_micro
+
+        ## For Macs, append "_dbg" if needed
+        LCGPLATFORM = "%s_%s_%s" % (distribution, machine, compiler_code)
+        if osxversion and opts.BUILD_TYPE == "dbg":
+            LCGPLATFORM += "_dbg"
+
+    return LCGPLATFORM
+
+
+
+##############################
+
+
+
 
 def compute_lcg_tag():
     import platform
@@ -172,12 +276,33 @@ opts, args = parser.parse_args()
 
 
 ## Configure logging
+# try:
+#     logging.basicConfig(level=opts.LOGLEVEL, format="%(message)s")
+#     logging.info("FOO")
+#     logging.warning("BAR")
+# except:
+#     h = logging.StreamHandler()
+#     h.setFormatter(logging.Formatter("%(message)s"))
+#     if logging.getLogger().handlers:
+#         logging.getLogger().handlers[0] = h
+#     else:
+#         logging.getLogger().addHandler(h)
+# print opts.LOGLEVEL, logging.INFO, logging.WARNING
+# print logging.getLogger().handlers[0]
+# logging.getLogger().setLevel(opts.LOGLEVEL)
+
 try:
     logging.basicConfig(level=opts.LOGLEVEL, format="%(message)s")
+    #logging.info("FOO")
+    #logging.warning("BAR")
 except:
-    logging.getLogger().setLevel(opts.LOGLEVEL)
-    h = logging.StreamHandler()
-    h.setFormatter(logging.Formatter("%(message)s"))
+    pass
+h = logging.StreamHandler()
+h.setFormatter(logging.Formatter("%(message)s"))
+logging.getLogger().setLevel(opts.LOGLEVEL)
+if logging.getLogger().handlers:
+    logging.getLogger().handlers[0] = h
+else:
     logging.getLogger().addHandler(h)
 
 
@@ -325,7 +450,7 @@ def pkg_bootstrap_svn(svnurl, pkgname, displayname=None):
     if displayname is None:
         displayname = pkgname
     os.chdir(BUILDDIR)
-    if not os.path.exists("rivet"):
+    if not os.path.exists(pkgname):
         logging.info("Checking out %s from SVN head" % displayname)
         st, op = commands.getstatusoutput("svn co %s %s" % (svnurl, pkgname))
         if st != 0:
@@ -513,6 +638,7 @@ try:
 
     ## Build and install AGILe
     if opts.INSTALL_AGILE:
+        agilename = "agile"
         if not opts.DEV_MODE:
             agilename = "AGILe-" + opts.AGILE_VERSION
             os.chdir(BUILDDIR)
@@ -521,7 +647,7 @@ try:
             agileurl = os.path.join(opts.AGILE_URL, agiletarname)
             get_unpack_tarball(agileurl) or sys.exit(2)
         else:
-            pkg_bootstrap_svn("http://svn.hepforge.org/rivet/trunk", "rivet", "Rivet") or sys.exit(2)
+            pkg_bootstrap_svn("http://svn.hepforge.org/agile/trunk", agilename, "AGILe") or sys.exit(2)
         #
         AGILE_CONFIGURE_FLAGS += " --enable-pyext"
         AGILE_CONFIGURE_FLAGS += " --with-lcgtag=%s" % opts.LCGTAG

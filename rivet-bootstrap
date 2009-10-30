@@ -276,25 +276,8 @@ opts, args = parser.parse_args()
 
 
 ## Configure logging
-# try:
-#     logging.basicConfig(level=opts.LOGLEVEL, format="%(message)s")
-#     logging.info("FOO")
-#     logging.warning("BAR")
-# except:
-#     h = logging.StreamHandler()
-#     h.setFormatter(logging.Formatter("%(message)s"))
-#     if logging.getLogger().handlers:
-#         logging.getLogger().handlers[0] = h
-#     else:
-#         logging.getLogger().addHandler(h)
-# print opts.LOGLEVEL, logging.INFO, logging.WARNING
-# print logging.getLogger().handlers[0]
-# logging.getLogger().setLevel(opts.LOGLEVEL)
-
 try:
     logging.basicConfig(level=opts.LOGLEVEL, format="%(message)s")
-    #logging.info("FOO")
-    #logging.warning("BAR")
 except:
     pass
 h = logging.StreamHandler()

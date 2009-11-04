@@ -412,12 +412,16 @@ try:
         incdir = os.path.join(PREFIX, "include")
         boostincdir = os.path.join(incdir, "boost")
         boostincdirs = [d for d in os.listdir(incdir) if d.startswith("boost-")]
-        if len(boostincdirs) > 0:
+        boostincdirs.sort()
+        if boostincdirs:
             boostincdir_outer = boostincdirs[-1]
             boostincdir_inner = os.path.join(boostincdir_outer, "boost")
             if not os.path.exists(boostincdir_inner):
                 logging.error("Can't find Boost include dir %s to symlink" % boostincdir_inner)
                 sys.exit(2)
+            if os.path.islink(boostincdir):
+                logging.info("Removing existing symlink at %s" % boostincdir)
+                os.unlink(boostincdir)
             logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir_inner)
             os.symlink(boostincdir_inner, boostincdir)
         else:

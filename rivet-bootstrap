@@ -216,6 +216,12 @@ if not os.path.exists(PREFIX):
     os.makedirs(PREFIX)
 if not os.access(PREFIX, os.W_OK):
     logging.error("Can't write to installation directory, %s... exiting" % PREFIX)
+INCDIR = os.path.join(PREFIX, "include")
+if not os.path.exists(INCDIR):
+    os.makedirs(INCDIR)
+LIBDIR = os.path.join(PREFIX, "lib")
+if not os.path.exists(LIBDIR):
+    os.makedirs(LIBDIR)
 
 
 ###########################
@@ -262,10 +268,10 @@ def get_tarball(url, outname=None):
 def unpack_tarball(path):
     import tarfile
     tar = tarfile.open(path)
-    #tar.extractall()
     try:
         for i in tar.getnames():
-            tar.extract(i, path=BUILDDIR)
+            if not os.path.exists(os.path.join(BUILDDIR, i)):
+                tar.extract(i, path=BUILDDIR)
     except:
         return False
     tar.close()
@@ -407,25 +413,14 @@ try:
         boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
         get_unpack_tarball(boosturl)
         boostbuilddir = os.path.join(BUILDDIR, boostname)
-        conf_mk_mkinst(boostbuilddir)
-        ## Fix up the crappy default Boost install structure
-        incdir = os.path.join(PREFIX, "include")
-        boostincdir = os.path.join(incdir, "boost")
-        boostincdirs = [d for d in os.listdir(incdir) if d.startswith("boost-")]
-        boostincdirs.sort()
-        if boostincdirs:
-            boostincdir_outer = boostincdirs[-1]
-            boostincdir_inner = os.path.join(boostincdir_outer, "boost")
-            if not os.path.exists(boostincdir_inner):
-                logging.error("Can't find Boost include dir %s to symlink" % boostincdir_inner)
-                sys.exit(2)
-            if os.path.islink(boostincdir):
-                logging.info("Removing existing symlink at %s" % boostincdir)
-                os.unlink(boostincdir)
-            logging.info("Symlinking Boost include dir: %s -> boost" % boostincdir_inner)
-            os.symlink(boostincdir_inner, boostincdir)
+        ## Don't do a full install --- just copy the headers into place 
+        ## (the build system changes between versions, and usually cocks up the dir structure)
+        import shutil
+        boostincdir = os.path.join(INCDIR, "boost")
+        if not os.path.exists(boostincdir):
+            shutil.copytree(os.path.join(boostbuilddir, "boost"), boostincdir)
         else:
-            logging.error("Can't work out how to make a standard Boost include dir")
+            logging.warning("Boost header directory %s already exists... exiting" % boostincdir)
             sys.exit(2)
         logging.debug("Setting BOOST_DIR = " + PREFIX)
         opts.BOOST_DIR = PREFIX

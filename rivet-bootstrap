@@ -430,26 +430,25 @@ try:
     if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
         logging.info("LCG area available: using LCG-built packages")
 
-        LCGPLATFORM = opts.LCGTAG
-        logging.info("Using LCG platform tag = " + LCGPLATFORM)
+        logging.info("Using LCG platform tag = " + opts.LCGTAG)
 
         ## Now work out paths to give to Rivet
         ## HepMC
-        HEPMCPATH = os.path.join(opts.LCGDIR, "HepMC", opts.HEPMC_VERSION, LCGPLATFORM)
+        HEPMCPATH = os.path.join(opts.LCGDIR, "HepMC", opts.HEPMC_VERSION, opts.LCGTAG)
         if not os.path.exists(HEPMCPATH):
             logging.error("HepMC does not exist at path %s. You may wish to use the --ignore-lcgext option" % HEPMCPATH)
             sys.exit(1)
         ## FastJet
-        FASTJETPATH = os.path.join(opts.LCGDIR, "fastjet", opts.FASTJET_VERSION, LCGPLATFORM)
+        FASTJETPATH = os.path.join(opts.LCGDIR, "fastjet", opts.FASTJET_VERSION, opts.LCGTAG)
         if not os.path.exists(FASTJETPATH):
             logging.error("FastJet does not exist at path %s. You may wish to use the --ignore-lcgext option" % FASTJETPATH)
             sys.exit(1)
         ## Boost
         if not opts.INSTALL_BOOST:
             lcg_boost_version = "1.34.1"
-            if "slc5" in LCGPLATFORM:
+            if "slc5" in opts.LCGTAG:
                 lcg_boost_version = "1.39.0_python2.5"
-            opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, LCGPLATFORM)
+            opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, opts.LCGTAG)
 
     else:
         ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
@@ -494,8 +493,8 @@ try:
     logging.debug("HepMC path: " + HEPMCPATH)
     RA_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
     ## TODO: surely this can be less hacky?!
-    if "slc5" in LCGPLATFORM:
-        GSLPATH = os.path.join("/afs/cern.ch/sw/lcg/external/GSL/1.10/", LCGPLATFORM)
+    if "slc5" in opts.LCGTAG:
+        GSLPATH = os.path.join("/afs/cern.ch/sw/lcg/external/GSL/1.10/", opts.LCGTAG)
         logging.debug("Using GSL path: " + GSLPATH)
         RA_CONFIGURE_FLAGS += " --with-gsl=%s" % GSLPATH
         RA_CONFIGURE_FLAGS += " --with-gslcblas=%s" % GSLPATH

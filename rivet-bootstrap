@@ -598,7 +598,7 @@ try:
     logging.info("All done. Now set some variables in your shell:\n")
     logging.info("In sh shell:\n" + SHENV)
     logging.info("In csh shell:\n" + CSHENV)
-    logging.info("These can be used by sourcing, e.g.\n. rivetenv.sh\nor\nsource rivetenv.csh")
+    logging.info("These can be used by sourcing, e.g.\nsource rivetenv.sh\nor\nsource rivetenv.csh")
 
 except Exception, e:
     import traceback

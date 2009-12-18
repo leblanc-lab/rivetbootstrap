@@ -26,6 +26,7 @@ import shutil, commands
 
 def compute_lcg_tag():
     import platform
+    import re
 
     ## Get distribution
     slversion = None
@@ -41,7 +42,6 @@ def compute_lcg_tag():
         f.close()
         if "Scientific Linux" in sltest:
             #slversion = [int(i) for i in commands.getoutput("lsb_release -rs").split(".")]
-            import re
             m = re.search(r'Scientific Linux.*? (\d)\.(\d).*', sltest)
             if m:
                 slversion = [int(m.group(1)), int(m.group(2))]
@@ -75,12 +75,14 @@ def compute_lcg_tag():
             GCC_CMD = os.environ["CC"]
         elif os.environ.has_key("CXX"):
             GCC_CMD = os.environ["CXX"]
-        gcc_version = commands.getoutput(GCC_CMD + ' --version | head -1 | cut -d" " -f3').split(".")
-        logging.debug("GCC version: " + str(gcc_version))
-        gcc_major = gcc_version[0]
-        gcc_minor = gcc_version[1]
-        gcc_micro = gcc_version[2]
-        compiler_code = "gcc%s%s" % (gcc_major, gcc_minor)
+        gcc_version_str = commands.getoutput(GCC_CMD + ' --version | head -1')
+        gcc_version_match = re.search(r'.*? (\d)\.(\d)\.?(\d)?.*?', gcc_version_str)
+        compiler_code = "gccXX"
+        if gcc_version_match is not None:
+            gcc_major = gcc_version_match.group(1)
+            gcc_minor = gcc_version_match.group(2)
+            gcc_micro = gcc_version_match.group(3)
+            compiler_code = "gcc%s%s" % (gcc_major, gcc_minor)
     else:
         ## Try to find VC version... somehow!
         import distutils.msvccompiler as msvc
@@ -111,7 +113,7 @@ def compute_lcg_tag():
             distribution = distribution.replace("mac", "osx")
 
         ## Historical exceptions for GCC version
-        if compiler_code in ["gcc32", "gcc40"]:
+        if compiler_code in ["gcc32", "gcc40"] and gcc_micro is not None:
             compiler_code += gcc_micro
 
         ## For Macs, append "_dbg" if needed

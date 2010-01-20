@@ -518,6 +518,7 @@ try:
     RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
     if opts.GSL_DIR:
         RIVET_CONFIGURE_FLAGS += " --with-gsl=%s" % opts.GSL_DIR
+        RIVET_CONFIGURE_FLAGS += " --with-gslcblas=%s" % opts.GSL_DIR
     RIVET_CONFIGURE_FLAGS += " --disable-pdfmanual"
     conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
 

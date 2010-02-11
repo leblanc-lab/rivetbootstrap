@@ -492,6 +492,7 @@ try:
 
     ## Get build flags for Rivet and AGILe
     RA_CONFIGURE_FLAGS = ""
+    RA_CONFIGURE_FLAGS += " --with-lcgtag=%s" % opts.LCGTAG
     logging.debug("HepMC path: " + HEPMCPATH)
     RA_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
     ## TODO: surely this can be less hacky?!
@@ -537,7 +538,6 @@ try:
             pkg_bootstrap_svn("http://svn.hepforge.org/agile/trunk", agilename, "AGILe") or sys.exit(2)
         #
         AGILE_CONFIGURE_FLAGS += " --enable-pyext"
-        AGILE_CONFIGURE_FLAGS += " --with-lcgtag=%s" % opts.LCGTAG
         conf_mk_mkinst(os.path.join(BUILDDIR, agilename), AGILE_CONFIGURE_FLAGS)
 
 

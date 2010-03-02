@@ -99,7 +99,8 @@ def compute_lcg_tag():
     if vcversion is not None and vcversion < 9:
         logging.debug("Computing old-style Windows tag to replace " + LCGPLATFORM)
         LCGPLATFORM = "win32_vc71_dbg"
-    elif slversion is not None and slversion[0] < 5 or osxversion is not None and osxversion[1] < 6:
+    elif slversion is not None and slversion[0] < 5 or \
+            osxversion is not None and osxversion[1] < 6:
         logging.debug("Computing old-style tag to replace " + LCGPLATFORM)
 
         ## Different arch codes
@@ -116,10 +117,10 @@ def compute_lcg_tag():
         if compiler_code in ["gcc32", "gcc40"] and gcc_micro is not None:
             compiler_code += gcc_micro
 
-        ## For Macs, append "_dbg" if needed
-        LCGPLATFORM = "%s_%s_%s" % (distribution, machine, compiler_code)
-        if osxversion and opts.BUILD_TYPE == "dbg":
-            LCGPLATFORM += "_dbg"
+        # ## For Macs, append "_dbg" if needed
+        # LCGPLATFORM = "%s_%s_%s" % (distribution, machine, compiler_code)
+        # if osxversion and opts.BUILD_TYPE == "dbg":
+        #     LCGPLATFORM += "_dbg"
 
     return LCGPLATFORM
 
@@ -148,7 +149,7 @@ parser.add_option("--lcgtag", default=compute_lcg_tag(), dest="LCGTAG",
                   help="Force the LCG platform tag if it's not being computed correctly [%default]")
 parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="IGNORE_LCG", 
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
-parser.add_option("--rivet-version", default="1.1.3", dest="RIVET_VERSION", 
+parser.add_option("--rivet-version", default="1.2.0", dest="RIVET_VERSION", 
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE", 
                   help="Install the AGILe interface system for Fortran generators [%default]")
@@ -156,8 +157,7 @@ parser.add_option("--agile-version", default="1.1.4", dest="AGILE_VERSION",
                   help="Explicitly specify version of AGILe to get and use [%default]")
 parser.add_option("--agile-url", default="http://www.hepforge.org/archive/agile/", 
                   dest="AGILE_URL", help="Base URL for AGILe tarball downloads [%default]")
-## TODO: update to 2.05.00 when Rivet 1.2.0 released:
-parser.add_option("--hepmc-version", default="2.04.02", dest="HEPMC_VERSION", 
+parser.add_option("--hepmc-version", default="2.05.00", dest="HEPMC_VERSION", 
                   help="Explicitly specify version of HepMC to get and use [%default]")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/", 
                   dest="HEPMC_URL", help="Base URL for HepMC tarball downloads [%default]")
@@ -165,7 +165,7 @@ parser.add_option("--fastjet-version", default="2.4.1", dest="FASTJET_VERSION",
                   help="Explicitly specify version of FastJet to get and use [%default]")
 parser.add_option("--fastjet-url", default="http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/", 
                   dest="FASTJET_URL", help="Base URL for FastJet tarball downloads [%default]")
-parser.add_option("--with-gsl", metavar="DIR", default=None, dest="GSL_DIR", 
+parser.add_option("--with-gsl", metavar="DIR", default=None, dest="GSL_DIR",
                   help="Explicit path to find GSL [%default]")
 parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR", 
                   help="Explicit path to find Boost [%default]")
@@ -501,8 +501,6 @@ try:
         logging.debug("Using GSL path: " + GSLPATH)
         RA_CONFIGURE_FLAGS += " --with-gsl=%s" % GSLPATH
         RA_CONFIGURE_FLAGS += " --with-gslcblas=%s" % GSLPATH
-        ## TODO: remove this for Rivet > 1.1.3
-        RA_CONFIGURE_FLAGS += " CPPFLAGS=-I%s/include" % GSLPATH
     if opts.BOOST_DIR:
         logging.debug("Boost path: " + opts.BOOST_DIR)
         RA_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR

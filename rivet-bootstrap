@@ -149,7 +149,7 @@ parser.add_option("--lcgtag", default=compute_lcg_tag(), dest="LCGTAG",
                   help="Force the LCG platform tag if it's not being computed correctly [%default]")
 parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="IGNORE_LCG", 
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
-parser.add_option("--rivet-version", default="1.2.0", dest="RIVET_VERSION", 
+parser.add_option("--rivet-version", default="1.2.1", dest="RIVET_VERSION", 
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE", 
                   help="Install the AGILe interface system for Fortran generators [%default]")
@@ -161,7 +161,7 @@ parser.add_option("--hepmc-version", default="2.05.00", dest="HEPMC_VERSION",
                   help="Explicitly specify version of HepMC to get and use [%default]")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/", 
                   dest="HEPMC_URL", help="Base URL for HepMC tarball downloads [%default]")
-parser.add_option("--fastjet-version", default="2.4.1", dest="FASTJET_VERSION", 
+parser.add_option("--fastjet-version", default="2.4.2", dest="FASTJET_VERSION", 
                   help="Explicitly specify version of FastJet to get and use [%default]")
 parser.add_option("--fastjet-url", default="http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/", 
                   dest="FASTJET_URL", help="Base URL for FastJet tarball downloads [%default]")

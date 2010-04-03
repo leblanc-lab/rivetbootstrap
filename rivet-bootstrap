@@ -117,8 +117,10 @@ def compute_lcg_tag():
         if compiler_code in ["gcc32", "gcc40"] and gcc_micro is not None:
             compiler_code += gcc_micro
 
+        ## Set legacy LCG platform
+        LCGPLATFORM = "%s_%s_%s" % (distribution, machine, compiler_code)
+
         # ## For Macs, append "_dbg" if needed
-        # LCGPLATFORM = "%s_%s_%s" % (distribution, machine, compiler_code)
         # if osxversion and opts.BUILD_TYPE == "dbg":
         #     LCGPLATFORM += "_dbg"
 

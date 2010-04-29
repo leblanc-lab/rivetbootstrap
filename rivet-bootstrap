@@ -569,8 +569,9 @@ try:
     env["PYTHONPATH"] = ":".join(pylibdirs + ["$PYTHONPATH"])
 
     ## LaTeX env
-    texmfdir = os.path.join(PREFIX, "share", "Rivet", "texmf")
+    texmfdir = [os.path.join(PREFIX, "share", "Rivet", "texmf")]
     env["HOMETEXMF"] = ":".join(texmfdir + ["$HOMETEXMF"])
+    env["TEXMFHOME"] = ":".join(texmfdir + ["$TEXMFHOME"])
 
     ## Write out env files
 

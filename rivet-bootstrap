@@ -181,7 +181,7 @@ parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR",
                   help="Explicit path to find Boost [%default]")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST",
                   help="Don't use a system copy of Boost (NB. it takes a long time to build) [%default]")
-parser.add_option("--boost-version", default="1_40_0", dest="BOOST_VERSION",
+parser.add_option("--boost-version", default="1_42_0", dest="BOOST_VERSION",
                   help="Explicitly specify version of Boost to get and use (if --install-boost is used) [%default]")
 parser.add_option("-V", "--verbose", action="store_const", const=logging.DEBUG, dest="LOGLEVEL",
                   default=logging.INFO, help="print debug (very verbose) messages")
@@ -433,7 +433,7 @@ try:
     BOOSTFLAGS = None
     if opts.INSTALL_BOOST:
         logging.info("Installing a local copy of Boost")
-        boostname = "boost_%s" % opts.BOOST_VERSION
+        boostname = "boost_%s" % opts.BOOST_VERSION.replace(".", "_")
         boosttarname = boostname + ".tar.gz"
         boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
         get_unpack_tarball(boosturl)
@@ -470,9 +470,7 @@ try:
             sys.exit(1)
         ## Boost
         if not opts.INSTALL_BOOST:
-            lcg_boost_version = "1.34.1"
-            if "slc5" in opts.LCGTAG:
-                lcg_boost_version = "1.39.0_python2.5"
+            lcg_boost_version = opts.BOOST_VERSION + "_python2.5"
             opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, opts.LCGTAG)
         ## GSL
         if not opts.GSL_DIR:

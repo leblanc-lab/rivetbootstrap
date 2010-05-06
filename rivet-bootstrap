@@ -153,8 +153,12 @@ parser.add_option("--lcgtag", default=compute_lcg_tag(), dest="LCGTAG",
                   help="Force the LCG platform tag if it's not being computed correctly [%default]")
 parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="IGNORE_LCG",
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
+parser.add_option("--no-install-rivet", action="store_false", default=True, dest="INSTALL_RIVET",
+                  help="Don't install Rivet! Useful to set up required packages, or AGILe only [%default]")
 parser.add_option("--rivet-version", default="1.2.1", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
+parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
+                  dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE",
                   help="Install the AGILe interface system for Fortran generators [%default]")
 parser.add_option("--agile-version", default="1.1.4", dest="AGILE_VERSION",
@@ -169,8 +173,10 @@ parser.add_option("--fastjet-version", default="2.4.2", dest="FASTJET_VERSION",
                   help="Explicitly specify version of FastJet to get and use [%default]")
 parser.add_option("--fastjet-url", default="http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/",
                   dest="FASTJET_URL", help="Base URL for FastJet tarball downloads [%default]")
+parser.add_option("--gsl-version", default="1.10", dest="GSL_VERSION",
+                  help="Version of GSL to be used from LCG if AFS is available and used [%default]")
 parser.add_option("--with-gsl", metavar="DIR", default=None, dest="GSL_DIR",
-                  help="Explicit path to find GSL [%default]")
+                  help="Explicit path to find GSL -- overrides --gsl-version [%default]")
 parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR",
                   help="Explicit path to find Boost [%default]")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST",
@@ -377,37 +383,50 @@ def pkg_bootstrap_svn(svnurl, pkgname, displayname=None):
 
 
 
-## Get Rivet source either from released tarballs or SVN
 try:
 
-    ## Clear "rivet" symlink
-    os.chdir(BUILDDIR)
-    if os.path.islink("rivet"):
-        os.remove("rivet")
-
-
-    ## USER MODE
-    ## Get Rivet tarball (for non-developers)
-    if not opts.DEV_MODE:
-        RIVET_NAME = "Rivet-" + opts.RIVET_VERSION
-        RIVET_URL = "http://www.hepforge.org/archive/rivet/%s.tar.gz" % RIVET_NAME
-        logging.info("Getting %s" % RIVET_URL)
-        get_unpack_tarball(RIVET_URL)
+    ## Get Rivet
+    if opts.INSTALL_RIVET:
+        rivetname = "rivet"
         os.chdir(BUILDDIR)
-        if not os.path.exists("rivet"):
-            os.symlink(RIVET_NAME, "rivet")
+        if os.path.islink(rivetname):
+            os.remove(rivetname)
+        if not opts.DEV_MODE:
+            RIVET_NAME = "Rivet-" + opts.RIVET_VERSION
+            RIVET_URL = opts.RIVET_URL + "/%s.tar.gz" % RIVET_NAME
+            logging.info("Getting %s" % RIVET_URL)
+            get_unpack_tarball(RIVET_URL)
+            os.chdir(BUILDDIR)
+            if not os.path.exists(rivetname):
+                os.symlink(RIVET_NAME, rivetname)
+            else:
+                if not os.path.islink(rivetname):
+                    logging.warn("A '%s' directory already exists in %s, but is not a symlink to an expanded tarball" % (rivetname, BUILDDIR))
+                    sys.exit(1)
         else:
-            if not os.path.islink("rivet"):
-                logging.warn("A 'rivet' directory already exists in %s, but is not a symlink to an expanded tarball" % BUILDDIR)
-                sys.exit(1)
+            pkg_bootstrap_svn("http://svn.hepforge.org/rivet/trunk", rivetname, "Rivet") or sys.exit(2)
 
 
-    ## DEVELOPER MODE
-    ## If we've got SVN and there is no already-checked out version
-    ## of Rivet in this directory, then check out/update
-    ## the SVN head versions using the HTTP access method
-    else:
-        pkg_bootstrap_svn("http://svn.hepforge.org/rivet/trunk", "rivet", "Rivet") or sys.exit(2)
+    ## Get AGILe
+    if opts.INSTALL_AGILE:
+        agilename = "agile"
+        os.chdir(BUILDDIR)
+        if os.path.islink(agilename):
+            os.remove(agilename)
+        if not opts.DEV_MODE:
+            AGILE_NAME = "AGILe-" + opts.AGILE_VERSION
+            AGILE_URL = opts.AGILE_URL + "/%s.tar.gz" % AGILE_NAME
+            logging.info("Getting %s" % AGILE_URL)
+            get_unpack_tarball(agileurl) or sys.exit(2)
+            os.chdir(BUILDDIR)
+            if not os.path.exists(agilename):
+                os.symlink(AGILE_NAME, agilename)
+            else:
+                if not os.path.islink(agilename):
+                    logging.warn("A '%s' directory already exists in %s, but is not a symlink to an expanded tarball" % (agilename, BUILDDIR))
+                    sys.exit(1)
+        else:
+            pkg_bootstrap_svn("http://svn.hepforge.org/agile/trunk", agilename, "AGILe") or sys.exit(2)
 
 
     ## Get Boost
@@ -455,6 +474,9 @@ try:
             if "slc5" in opts.LCGTAG:
                 lcg_boost_version = "1.39.0_python2.5"
             opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, opts.LCGTAG)
+        ## GSL
+        if not opts.GSL_DIR:
+            opts.GSL_DIR = os.path.join(opts.LCGDIR, "GSL", opts.GSL_VERSION, opts.LCGTAG)
 
     else:
         ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...
@@ -499,12 +521,6 @@ try:
     RA_CONFIGURE_FLAGS += " --with-lcgtag=%s" % opts.LCGTAG
     logging.debug("HepMC path: " + HEPMCPATH)
     RA_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
-    ## TODO: surely this can be less hacky?!
-    if "slc5" in opts.LCGTAG:
-        GSLPATH = os.path.join("/afs/cern.ch/sw/lcg/external/GSL/1.10/", opts.LCGTAG)
-        logging.debug("Using GSL path: " + GSLPATH)
-        RA_CONFIGURE_FLAGS += " --with-gsl=%s" % GSLPATH
-        RA_CONFIGURE_FLAGS += " --with-gslcblas=%s" % GSLPATH
     if opts.BOOST_DIR:
         logging.debug("Boost path: " + opts.BOOST_DIR)
         RA_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
@@ -517,29 +533,21 @@ try:
 
 
     ## Build and install Rivet
-    logging.debug("FastJet path: " + FASTJETPATH)
-    RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
-    if opts.GSL_DIR:
-        RIVET_CONFIGURE_FLAGS += " --with-gsl=%s" % opts.GSL_DIR
-        RIVET_CONFIGURE_FLAGS += " --with-gslcblas=%s" % opts.GSL_DIR
-    RIVET_CONFIGURE_FLAGS += " --disable-pdfmanual"
-    conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
+    if opts.INSTALL_RIVET:
+        logging.debug("FastJet path: " + FASTJETPATH)
+        RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
+        RIVET_CONFIGURE_FLAGS += " --disable-pdfmanual"
+        if opts.GSL_DIR:
+            logging.debug("Using GSL path: " + opts.GSL_DIR)
+            RIVET_CONFIGURE_FLAGS += " --with-gsl=%s" % opts.GSL_DIR
+            ## TODO: Remove for Rivet >= 1.2.2
+            if not opts.DEV_MODE:
+                RIVET_CONFIGURE_FLAGS += " --with-gslcblas=%s" % opts.GSL_DIR
+        conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
 
 
     ## Build and install AGILe
     if opts.INSTALL_AGILE:
-        agilename = "agile"
-        if not opts.DEV_MODE:
-            agilename = "AGILe-" + opts.AGILE_VERSION
-            os.chdir(BUILDDIR)
-            #if not os.path.exists(agilename):
-            agiletarname = agilename + ".tar.gz"
-            agileurl = os.path.join(opts.AGILE_URL, agiletarname)
-            get_unpack_tarball(agileurl) or sys.exit(2)
-        else:
-            pkg_bootstrap_svn("http://svn.hepforge.org/agile/trunk", agilename, "AGILe") or sys.exit(2)
-        #
-        AGILE_CONFIGURE_FLAGS += " --enable-pyext"
         conf_mk_mkinst(os.path.join(BUILDDIR, agilename), AGILE_CONFIGURE_FLAGS)
 
 

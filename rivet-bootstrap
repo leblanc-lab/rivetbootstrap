@@ -181,8 +181,8 @@ parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR",
                   help="Explicit path to find Boost [%default]")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST",
                   help="Don't use a system copy of Boost (NB. it takes a long time to build) [%default]")
-parser.add_option("--boost-version", default="1_42_0", dest="BOOST_VERSION",
-                  help="Explicitly specify version of Boost to get and use (if --install-boost is used) [%default]")
+parser.add_option("--boost-version", default="1.42.0", dest="BOOST_VERSION",
+                  help="Explicitly specify version of Boost to use from LCG (or to get if --install-boost is used) [%default]")
 parser.add_option("-V", "--verbose", action="store_const", const=logging.DEBUG, dest="LOGLEVEL",
                   default=logging.INFO, help="print debug (very verbose) messages")
 parser.add_option("-Q", "--quiet", action="store_const", const=logging.WARNING, dest="LOGLEVEL",

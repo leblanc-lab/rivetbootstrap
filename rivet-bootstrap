@@ -417,7 +417,7 @@ try:
             AGILE_NAME = "AGILe-" + opts.AGILE_VERSION
             AGILE_URL = opts.AGILE_URL + "/%s.tar.gz" % AGILE_NAME
             logging.info("Getting %s" % AGILE_URL)
-            get_unpack_tarball(agileurl) or sys.exit(2)
+            get_unpack_tarball(AGILE_URL) or sys.exit(2)
             os.chdir(BUILDDIR)
             if not os.path.exists(agilename):
                 os.symlink(AGILE_NAME, agilename)

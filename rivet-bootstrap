@@ -392,8 +392,9 @@ try:
         if os.path.islink(rivetname):
             os.remove(rivetname)
         if not opts.DEV_MODE:
+            import urlparse
             RIVET_NAME = "Rivet-" + opts.RIVET_VERSION
-            RIVET_URL = opts.RIVET_URL + "/%s.tar.gz" % RIVET_NAME
+            RIVET_URL = urlparse.urljoin(opts.RIVET_URL, "%s.tar.gz" % RIVET_NAME)
             logging.info("Getting %s" % RIVET_URL)
             get_unpack_tarball(RIVET_URL)
             os.chdir(BUILDDIR)
@@ -414,8 +415,9 @@ try:
         if os.path.islink(agilename):
             os.remove(agilename)
         if not opts.DEV_MODE:
+            import urlparse
             AGILE_NAME = "AGILe-" + opts.AGILE_VERSION
-            AGILE_URL = opts.AGILE_URL + "/%s.tar.gz" % AGILE_NAME
+            AGILE_URL = urlparse.urljoin(opts.AGILE_URL, "%s.tar.gz" % AGILE_NAME)
             logging.info("Getting %s" % AGILE_URL)
             get_unpack_tarball(AGILE_URL) or sys.exit(2)
             os.chdir(BUILDDIR)
@@ -475,6 +477,13 @@ try:
         ## GSL
         if not opts.GSL_DIR:
             opts.GSL_DIR = os.path.join(opts.LCGDIR, "GSL", opts.GSL_VERSION, opts.LCGTAG)
+
+        ## Automatically set up a nice SWIG version from LCG if available
+        swigbin = os.path.join(opts.LCGDIR, "swig", "1.3.40", opts.LCGTAG, "bin")
+        if os.access(swigbin, os.R_OK) and os.access(os.path.join(swigbin, "swig"), os.X_OK):
+            ## TODO: Check if this is exported to the builds
+            os.environ["PATH"] = os.environ["PATH"] + ":" + swigbin
+
 
     else:
         ## We don't have access to LCG AFS, or are ignoring it, so we download the packages...

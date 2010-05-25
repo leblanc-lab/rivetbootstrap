@@ -514,24 +514,27 @@ try:
         logging.debug("Working out if Boost's headers are installed properly in " + opts.BOOST_DIR)
         boostincdir = os.path.join(opts.BOOST_DIR, "include")
         if not os.path.exists(os.path.join(boostincdir, "boost")):
-            logging.info("Boost's headers are not installed properly in " + opts.BOOST_DIR)
+            logging.debug("Boost's headers are not installed properly in " + opts.BOOST_DIR)
             incdirs = [d for d in os.listdir(boostincdir) if d.startswith("boost-")]
             if len(incdirs) > 0:
                 BOOSTFLAGS = "--with-boost-incpath=%s" % os.path.join(boostincdir, incdirs[0])
             else:
-                logging.error("Couldn't work out Boost headers in %s" % boostincdir)
+                logging.error("Couldn't work out location of Boost headers in %s" % boostincdir)
                 sys.exit(1)
 
 
     ## Get build flags for Rivet and AGILe
     RA_CONFIGURE_FLAGS = ""
+    ## LCG tag
     RA_CONFIGURE_FLAGS += " --with-lcgtag=%s" % opts.LCGTAG
+    ## HepMC
     logging.debug("HepMC path: " + HEPMCPATH)
     RA_CONFIGURE_FLAGS += " --with-hepmc=%s" % HEPMCPATH
+    ## Boost
     if opts.BOOST_DIR:
         logging.debug("Boost path: " + opts.BOOST_DIR)
         RA_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
-    ## Nasty hack in case the Boost headers are installed some rubbish way:
+    ## In case the Boost headers are not in the standard structure, also try this:
     if BOOSTFLAGS:
         logging.debug("Boost flags: " + BOOSTFLAGS)
         RA_CONFIGURE_FLAGS += " " + BOOSTFLAGS

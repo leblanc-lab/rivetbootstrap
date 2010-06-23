@@ -159,6 +159,10 @@ parser.add_option("--rivet-version", default="1.2.1", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
                   dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")
+parser.add_option("--build-rivet-manual", default=False, action="store_true",
+                  dest="BUILD_RIVET_MANUAL", help="Try to build the Rivet PDF manual (requires LaTeX) [%default]")
+parser.add_option("--build-unvalidated", default=False, action="store_true",
+                  dest="BUILD_UNVALIDATED", help="Build the unvalidated collection of Rivet analyses [%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE",
                   help="Install the AGILe interface system for Fortran generators [%default]")
 parser.add_option("--agile-version", default="1.1.6", dest="AGILE_VERSION",
@@ -546,7 +550,10 @@ try:
     if opts.INSTALL_RIVET:
         logging.debug("FastJet path: " + FASTJETPATH)
         RIVET_CONFIGURE_FLAGS += " --with-fastjet=%s" % FASTJETPATH
-        RIVET_CONFIGURE_FLAGS += " --disable-pdfmanual"
+        if not opts.BUILD_RIVET_MANUAL:
+            RIVET_CONFIGURE_FLAGS += " --disable-pdfmanual"
+        if opts.BUILD_UNVALIDATED:
+            RIVET_CONFIGURE_FLAGS += " --enable-unvalidated"
         if opts.GSL_DIR:
             logging.debug("Using GSL path: " + opts.GSL_DIR)
             RIVET_CONFIGURE_FLAGS += " --with-gsl=%s" % opts.GSL_DIR

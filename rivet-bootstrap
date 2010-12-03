@@ -574,7 +574,7 @@ try:
     if opts.INSTALL_AGILE:
         envpaths += [os.path.join(BUILDDIR, "agile", "agileenv.sh"), os.path.join(BUILDDIR, "agile", "agileenv.csh")]
     for ep in envpaths:
-        if os.path.exists():
+        if os.path.exists(ep):
             shutil.copy(ep, ".")
 
 

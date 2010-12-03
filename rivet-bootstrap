@@ -16,7 +16,6 @@ available.
 
 TODO:
  * Build logging: can we stream build output as it happens (in verbose mode)?
- * Add new SLC5 LCG platform tag scheme
 """
 
 import os, sys
@@ -155,7 +154,7 @@ parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="I
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--no-install-rivet", action="store_false", default=True, dest="INSTALL_RIVET",
                   help="Don't install Rivet! Useful to set up required packages, or AGILe only [%default]")
-parser.add_option("--rivet-version", default="1.3.0", dest="RIVET_VERSION",
+parser.add_option("--rivet-version", default="1.4.0", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
                   dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")
@@ -476,7 +475,7 @@ try:
             sys.exit(1)
         ## Boost
         if not opts.INSTALL_BOOST:
-            lcg_boost_version = opts.BOOST_VERSION + "_python2.5"
+            lcg_boost_version = opts.BOOST_VERSION + "_python2.6"
             opts.BOOST_DIR = os.path.join(opts.LCGDIR, "Boost", lcg_boost_version, opts.LCGTAG)
         ## GSL
         if not opts.GSL_DIR:
@@ -557,7 +556,7 @@ try:
         if opts.GSL_DIR:
             logging.debug("Using GSL path: " + opts.GSL_DIR)
             RIVET_CONFIGURE_FLAGS += " --with-gsl=%s" % opts.GSL_DIR
-            ## TODO: Remove for Rivet >= 1.2.2
+            ## TODO: Remove for Rivet >= 1.3.0
             if not opts.DEV_MODE:
                 RIVET_CONFIGURE_FLAGS += " --with-gslcblas=%s" % opts.GSL_DIR
         conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
@@ -568,65 +567,16 @@ try:
         conf_mk_mkinst(os.path.join(BUILDDIR, agilename), AGILE_CONFIGURE_FLAGS)
 
 
-    ## Collect and write out environment variables
-    ## TODO: just point at rivetenv.(c)sh from 1.3.0 (and AGILe 1.2.0) onwards. Need to add completion sourcing?
-    env = {}
-
-    ## Path env
-    env["PATH"] = ":".join([os.path.join(PREFIX, "bin"), "$PATH"])
-
-    ## Lib env
-    libdirs = []
-    for d in [PREFIX, HEPMCPATH, FASTJETPATH]: # CGALPATH
-        libdir = os.path.join(d, "lib")
-        if libdir not in libdirs:
-            libdirs.append(libdir)
-    if commands.getoutput("uname") == "Darwin":
-        env["DYLD_LIBRARY_PATH"] = ":".join(libdirs + ["$DYLD_LIBRARY_PATH"])
-    else:
-        env["LD_LIBRARY_PATH"] = ":".join(libdirs + ["$LD_LIBRARY_PATH"])
-
-    ## Python env
-    pyversion = "%d.%d" % (sys.version_info[0], sys.version_info[1])
-    pylibdirs = []
-    for ld in ["lib", "lib64", "lib32"]:
-        pylibdir = os.path.join(PREFIX, ld, "python%s/site-packages" % pyversion)
-        logging.debug("Possible Python lib dir: %s" % pylibdir)
-        if os.path.exists(pylibdir):
-            pylibdirs.append(pylibdir)
-    env["PYTHONPATH"] = ":".join(pylibdirs + ["$PYTHONPATH"])
-
-    ## LaTeX env
-    texmfdir = [os.path.join(PREFIX, "share", "Rivet", "texmf")]
-    env["HOMETEXMF"] = ":".join(texmfdir + ["$HOMETEXMF"])
-    env["TEXMFHOME"] = ":".join(texmfdir + ["$TEXMFHOME"])
-
-    ## Write out env files
-
-    ## sh
-    SHENV = ""
-    for k, v in env.iteritems():
-        SHENV += "export %s=%s\n" % (k,v)
-    comppath = os.path.join(PREFIX, "share", "Rivet", "rivet-completion")
-    if os.path.exists(comppath):
-        SHENV += "test \"$SHELL\" = \"bash\" && source %s\n" % comppath
+    ## Copy in the environment variable sourcing scripts
+    envpaths = []
+    if opts.INSTALL_RIVET:
+        envpaths += [os.path.join(BUILDDIR, "rivet", "rivetenv.sh"), os.path.join(BUILDDIR, "rivet", "rivetenv.csh")]
     if opts.INSTALL_AGILE:
-        comppath = os.path.join(PREFIX, "share", "AGILe", "agile-completion")
-        if os.path.exists(comppath):
-            SHENV += "test \"$SHELL\" = \"bash\" && source %s\n" % comppath
-    os.chdir(ROOT)
-    f = open("rivetenv.sh", "w")
-    f.write(SHENV)
-    f.close()
+        envpaths += [os.path.join(BUILDDIR, "agile", "agileenv.sh"), os.path.join(BUILDDIR, "agile", "agileenv.csh")]
+    for ep in envpaths:
+        if os.path.exists():
+            shutil.copy(ep, ".")
 
-    ## csh
-    CSHENV = ""
-    for k, v in env.iteritems():
-        CSHENV += "setenv %s %s\n" % (k,v)
-    os.chdir(ROOT)
-    f = open("rivetenv.csh", "w")
-    f.write(CSHENV)
-    f.close()
 
     ## Tell the user
     print

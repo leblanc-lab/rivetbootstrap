@@ -580,12 +580,12 @@ try:
 
     ## Tell the user
     print
-    logging.info("All done. Now set some variables in your shell by sourcing, e.g.\n")
+    logging.info("All done. Now set some variables in your shell by sourcing, for bash shell:\n")
     if opts.INSTALL_RIVET:
         logging.info("source rivetenv.sh")
     if opts.INSTALL_AGILE:
         logging.info("source agileenv.sh")
-    logging.info("\nor\n")
+    logging.info("\nor for csh shell:\n")
     if opts.INSTALL_RIVET:
         logging.info("source rivetenv.csh")
     if opts.INSTALL_AGILE:

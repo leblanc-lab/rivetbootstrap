@@ -580,10 +580,11 @@ try:
 
     ## Tell the user
     print
-    logging.info("All done. Now set some variables in your shell:\n")
-    logging.info("In sh shell:\n" + SHENV)
-    logging.info("In csh shell:\n" + CSHENV)
-    logging.info("These can be used by sourcing, e.g.\nsource rivetenv.sh\nor\nsource rivetenv.csh")
+    logging.info("All done. Now set some variables in your shell by sourcing, e.g.\n")
+    if opts.INSTALL_RIVET:
+        logging.info("\nsource rivetenv.sh\nor\nsource rivetenv.csh")
+    if opts.INSTALL_AGILE:
+        logging.info("\nsource agileenv.sh\nor\nsource agileenv.csh")
 
 except Exception, e:
     import traceback

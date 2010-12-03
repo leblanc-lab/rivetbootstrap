@@ -582,9 +582,14 @@ try:
     print
     logging.info("All done. Now set some variables in your shell by sourcing, e.g.\n")
     if opts.INSTALL_RIVET:
-        logging.info("\nsource rivetenv.sh\nor\nsource rivetenv.csh")
+        logging.info("source rivetenv.sh")
     if opts.INSTALL_AGILE:
-        logging.info("\nsource agileenv.sh\nor\nsource agileenv.csh")
+        logging.info("source agileenv.sh")
+    logging.info("\nor\n")
+    if opts.INSTALL_RIVET:
+        logging.info("source rivetenv.csh")
+    if opts.INSTALL_AGILE:
+        logging.info("source agileenv.csh")
 
 except Exception, e:
     import traceback

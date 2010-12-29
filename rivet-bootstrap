@@ -184,7 +184,7 @@ parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR",
                   help="Explicit path to find Boost [%default]")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST",
                   help="Don't use a system copy of Boost (NB. it takes a long time to build) [%default]")
-parser.add_option("--boost-version", default="1.42.0", dest="BOOST_VERSION",
+parser.add_option("--boost-version", default="1.44.0", dest="BOOST_VERSION",
                   help="Explicitly specify version of Boost to use from LCG (or to get if --install-boost is used) [%default]")
 parser.add_option("-v", "--verbose", action="store_const", const=logging.DEBUG, dest="LOGLEVEL",
                   default=logging.INFO, help="print debug (very verbose) messages")
@@ -208,18 +208,18 @@ else:
 
 
 ## Build location
-ROOT = os.path.abspath(os.getcwd())
+ROOTDIR = os.path.abspath(os.getcwd())
 
 
 ## Build location
-DLDIR = os.path.abspath(os.path.join(ROOT, "downloads"))
+DLDIR = os.path.abspath(os.path.join(ROOTDIR, "downloads"))
 if not os.path.exists(DLDIR):
     os.makedirs(DLDIR)
 if not os.access(DLDIR, os.W_OK):
     logging.error("Can't write to downloads directory, %s... exiting" % DLDIR)
 
 ## Build location
-BUILDDIR = os.path.abspath(os.path.join(ROOT, "build"))
+BUILDDIR = os.path.abspath(os.path.join(ROOTDIR, "build"))
 if not os.path.exists(BUILDDIR):
     os.makedirs(BUILDDIR)
 if not os.access(BUILDDIR, os.W_OK):
@@ -573,6 +573,7 @@ try:
         envpaths += [os.path.join(BUILDDIR, "rivet", "rivetenv.sh"), os.path.join(BUILDDIR, "rivet", "rivetenv.csh")]
     if opts.INSTALL_AGILE:
         envpaths += [os.path.join(BUILDDIR, "agile", "agileenv.sh"), os.path.join(BUILDDIR, "agile", "agileenv.csh")]
+    os.chdir(ROOTDIR)
     for ep in envpaths:
         if os.path.exists(ep):
             shutil.copy(ep, ".")

@@ -3,7 +3,7 @@
 ## $Date$
 ## $Revision$
 
-__usage__ = """\
+"""\
 %prog [options]
 
 %prog is a helper script which downloads and installs Rivet and the
@@ -135,7 +135,7 @@ from optparse import OptionParser
 
 DEFAULTPREFIX = os.path.join(os.getcwd(), "local")
 
-parser = OptionParser(usage=__usage__)
+parser = OptionParser(usage=__doc__)
 parser.add_option("--prefix", metavar="INSTALLDIR", default=DEFAULTPREFIX, dest="PREFIX",
                   help="Location to install packages to [%default]")
 parser.add_option("--force", action="store_true", default=False, dest="FORCE",
@@ -154,7 +154,7 @@ parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="I
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--no-install-rivet", action="store_false", default=True, dest="INSTALL_RIVET",
                   help="Don't install Rivet! Useful to set up required packages, or AGILe only [%default]")
-parser.add_option("--rivet-version", default="1.4.0", dest="RIVET_VERSION",
+parser.add_option("--rivet-version", default="1.5.0", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
                   dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")

@@ -164,7 +164,7 @@ parser.add_option("--build-unvalidated", default=False, action="store_true",
                   dest="BUILD_UNVALIDATED", help="Build the unvalidated collection of Rivet analyses [%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE",
                   help="Install the AGILe interface system for Fortran generators [install=%default]")
-parser.add_option("--agile-version", default="1.2.1", dest="AGILE_VERSION",
+parser.add_option("--agile-version", default="1.2.2", dest="AGILE_VERSION",
                   help="Explicitly specify version of AGILe to get and use [%default]")
 parser.add_option("--agile-url", default="http://www.hepforge.org/archive/agile/",
                   dest="AGILE_URL", help="Base URL for AGILe tarball downloads [%default]")

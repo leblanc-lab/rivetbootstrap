@@ -154,7 +154,7 @@ parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="I
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--no-install-rivet", action="store_false", default=True, dest="INSTALL_RIVET",
                   help="Don't install Rivet! Useful to set up required packages, or AGILe only [install=%default]")
-parser.add_option("--rivet-version", default="1.5.1", dest="RIVET_VERSION",
+parser.add_option("--rivet-version", default="1.6.0", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
                   dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")

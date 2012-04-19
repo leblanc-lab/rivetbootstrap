@@ -154,7 +154,7 @@ parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="I
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--no-install-rivet", action="store_false", default=True, dest="INSTALL_RIVET",
                   help="Don't install Rivet! Useful to set up required packages, or AGILe only [install=%default]")
-parser.add_option("--rivet-version", default="1.7.0", dest="RIVET_VERSION",
+parser.add_option("--rivet-version", default="1.8.0", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
                   dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")
@@ -164,7 +164,7 @@ parser.add_option("--build-unvalidated", default=False, action="store_true",
                   dest="BUILD_UNVALIDATED", help="Build the unvalidated collection of Rivet analyses [%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE",
                   help="Install the AGILe interface system for Fortran generators [install=%default]")
-parser.add_option("--agile-version", default="1.3.0", dest="AGILE_VERSION",
+parser.add_option("--agile-version", default="1.4.0", dest="AGILE_VERSION",
                   help="Explicitly specify version of AGILe to get and use [%default]")
 parser.add_option("--agile-url", default="http://www.hepforge.org/archive/agile/",
                   dest="AGILE_URL", help="Base URL for AGILe tarball downloads [%default]")
@@ -172,10 +172,9 @@ parser.add_option("--hepmc-version", default="2.06.05", dest="HEPMC_VERSION",
                   help="Explicitly specify version of HepMC to get and use [%default]")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/",
                   dest="HEPMC_URL", help="Base URL for HepMC tarball downloads [%default]")
-# TODO: update to FastJet version 3.0 once available
-parser.add_option("--fastjet-version", default="2.4.3", dest="FASTJET_VERSION",
+parser.add_option("--fastjet-version", default="3.0.2", dest="FASTJET_VERSION",
                   help="Explicitly specify version of FastJet to get and use [%default]")
-parser.add_option("--fastjet-url", default="http://www.lpthe.jussieu.fr/~salam/repository/software/fastjet/",
+parser.add_option("--fastjet-url", default="http://www.fastjet.fr/repo/",
                   dest="FASTJET_URL", help="Base URL for FastJet tarball downloads [%default]")
 parser.add_option("--gsl-version", default="1.10", dest="GSL_VERSION",
                   help="Version of GSL to be used from LCG if AFS is available and used [%default]")

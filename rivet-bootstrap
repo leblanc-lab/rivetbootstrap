@@ -408,7 +408,7 @@ try:
                     logging.warn("A '%s' directory already exists in %s, but is not a symlink to an expanded tarball" % (rivetname, BUILDDIR))
                     sys.exit(1)
         else:
-            pkg_bootstrap_svn("http://svn.hepforge.org/rivet/trunk", rivetname, "Rivet") or sys.exit(2)
+            pkg_bootstrap_svn("http://rivet.hepforge.org/svn/trunk", rivetname, "Rivet") or sys.exit(2)
 
 
     ## Get AGILe
@@ -431,7 +431,7 @@ try:
                     logging.warn("A '%s' directory already exists in %s, but is not a symlink to an expanded tarball" % (agilename, BUILDDIR))
                     sys.exit(1)
         else:
-            pkg_bootstrap_svn("http://svn.hepforge.org/agile/trunk", agilename, "AGILe") or sys.exit(2)
+            pkg_bootstrap_svn("http://agile.hepforge.org/svn/trunk", agilename, "AGILe") or sys.exit(2)
 
 
     ## Get Boost

@@ -154,7 +154,7 @@ parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="I
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--no-install-rivet", action="store_false", default=True, dest="INSTALL_RIVET",
                   help="Don't install Rivet! Useful to set up required packages, or AGILe only [install=%default]")
-parser.add_option("--rivet-version", default="1.8.0", dest="RIVET_VERSION",
+parser.add_option("--rivet-version", default="1.8.1", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
                   dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")
@@ -172,7 +172,7 @@ parser.add_option("--hepmc-version", default="2.06.05", dest="HEPMC_VERSION",
                   help="Explicitly specify version of HepMC to get and use [%default]")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/",
                   dest="HEPMC_URL", help="Base URL for HepMC tarball downloads [%default]")
-parser.add_option("--fastjet-version", default="3.0.2", dest="FASTJET_VERSION",
+parser.add_option("--fastjet-version", default="3.0.3", dest="FASTJET_VERSION",
                   help="Explicitly specify version of FastJet to get and use [%default]")
 parser.add_option("--fastjet-url", default="http://www.fastjet.fr/repo/",
                   dest="FASTJET_URL", help="Base URL for FastJet tarball downloads [%default]")
@@ -184,7 +184,7 @@ parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR",
                   help="Explicit path to find Boost [%default]")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST",
                   help="Don't use a system copy of Boost (NB. it takes a long time to build) [%default]")
-parser.add_option("--boost-version", default="1.44.0", dest="BOOST_VERSION",
+parser.add_option("--boost-version", default="1.50.0", dest="BOOST_VERSION",
                   help="Explicitly specify version of Boost to use from LCG (or to get if --install-boost is used) [%default]")
 parser.add_option("-v", "--verbose", action="store_const", const=logging.DEBUG, dest="LOGLEVEL",
                   default=logging.INFO, help="print debug (very verbose) messages")

@@ -556,9 +556,6 @@ try:
         if opts.GSL_DIR:
             logging.debug("Using GSL path: " + opts.GSL_DIR)
             RIVET_CONFIGURE_FLAGS += " --with-gsl=%s" % opts.GSL_DIR
-            ## TODO: Remove for Rivet >= 1.3.0
-            if not opts.DEV_MODE:
-                RIVET_CONFIGURE_FLAGS += " --with-gslcblas=%s" % opts.GSL_DIR
         conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
 
 

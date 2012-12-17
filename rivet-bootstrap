@@ -146,6 +146,8 @@ parser.add_option("--dev-mode", action="store_true", default=False, dest="DEV_MO
                   help="Use the SVN development head version of Rivet [%default]")
 parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MODE",
                   help="Deprecated: alias for --dev-mode [%default]")
+parser.add_option("--dev-mode-aida", action="store_true", default=False, dest="DEV_MODE_AIDA",
+                  help="Use the aida SVN development head version of Rivet [%default]")
 parser.add_option("--lcgextdir", default="/afs/cern.ch/sw/lcg/external", dest="LCGDIR",
                   help="Standard location of LCG external packages [%default]")
 parser.add_option("--lcgtag", default=compute_lcg_tag(), dest="LCGTAG",
@@ -162,6 +164,8 @@ parser.add_option("--build-rivet-manual", default=False, action="store_true",
                   dest="BUILD_RIVET_MANUAL", help="Try to build the Rivet PDF manual (requires LaTeX) [%default]")
 parser.add_option("--build-unvalidated", default=False, action="store_true",
                   dest="BUILD_UNVALIDATED", help="Build the unvalidated collection of Rivet analyses [%default]")
+parser.add_option("--install-yoda", action="store_true", default=False, dest="INSTALL_YODA",
+                  help="Don't install Rivet! Useful to set up required packages, or AGILe only [install=%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE",
                   help="Install the AGILe interface system for Fortran generators [install=%default]")
 parser.add_option("--agile-version", default="1.4.0", dest="AGILE_VERSION",
@@ -186,11 +190,19 @@ parser.add_option("--install-boost", action="store_true", default=False, dest="I
                   help="Don't use a system copy of Boost (NB. it takes a long time to build) [%default]")
 parser.add_option("--boost-version", default="1.50.0", dest="BOOST_VERSION",
                   help="Explicitly specify version of Boost to use from LCG (or to get if --install-boost is used) [%default]")
+parser.add_option("--install-cython", action="store_true", default=False, dest="INSTALL_CYTHON",
+                  help="Don't use a system copy of Cython [%default]")
+parser.add_option("--cython-version", default="0.17.2", dest="CYTHON_VERSION",
+                  help="Explicitly specify version of Cython to use from LCG (or to get if --install-cython is used) [%default]")
 parser.add_option("-v", "--verbose", action="store_const", const=logging.DEBUG, dest="LOGLEVEL",
                   default=logging.INFO, help="print debug (very verbose) messages")
 parser.add_option("-q", "--quiet", action="store_const", const=logging.WARNING, dest="LOGLEVEL",
                   default=logging.INFO, help="be very quiet")
 opts, args = parser.parse_args()
+if opts.DEV_MODE_AIDA:
+    opts.DEV_MODE = True
+if opts.DEV_MODE and not opts.DEV_MODE_AIDA:
+    opts.INSTALL_YODA = True
 
 
 ## Configure logging
@@ -408,8 +420,19 @@ try:
                     logging.warn("A '%s' directory already exists in %s, but is not a symlink to an expanded tarball" % (rivetname, BUILDDIR))
                     sys.exit(1)
         else:
-            pkg_bootstrap_svn("http://rivet.hepforge.org/svn/trunk", rivetname, "Rivet") or sys.exit(2)
+            if not opts.DEV_MODE_AIDA:
+                pkg_bootstrap_svn("http://rivet.hepforge.org/svn/trunk", rivetname, "Rivet") or sys.exit(2)
+            else:
+                rivetname += "-aida"
+                pkg_bootstrap_svn("http://rivet.hepforge.org/svn/branches/2012-06-aidarivet", rivetname, "Aida Rivet") or sys.exit(2)
 
+    ## Get Yoda
+    if opts.INSTALL_YODA and opts.DEV_MODE and not opts.DEV_MODE_AIDA:
+        yodaname = "yoda"
+        os.chdir(BUILDDIR)
+        if os.path.islink(yodaname):
+            os.remove(yodaname)
+        pkg_bootstrap_svn("http://yoda.hepforge.org/svn/trunk", yodaname, "Yoda") or sys.exit(2)
 
     ## Get AGILe
     if opts.INSTALL_AGILE:
@@ -449,12 +472,24 @@ try:
         boostincdir = os.path.join(INCDIR, "boost")
         if not os.path.exists(boostincdir):
             shutil.copytree(os.path.join(boostbuilddir, "boost"), boostincdir)
-        else:
-            logging.warning("Boost header directory %s already exists... exiting" % boostincdir)
-            sys.exit(2)
+        #else:
+            #logging.warning("Boost header directory %s already exists... exiting" % boostincdir)
+            #sys.exit(2)
         logging.debug("Setting BOOST_DIR = " + PREFIX)
         opts.BOOST_DIR = PREFIX
 
+    ## Get Cython and include in paths
+    if opts.INSTALL_CYTHON:
+        cythonname = "Cython-" + opts.CYTHON_VERSION
+        os.chdir(BUILDDIR)
+        if not os.path.exists(cythonname):
+            cythontarname = cythonname + ".tar.gz"
+            cythonurl = "http://www.cython.org/release/" + cythontarname
+            get_unpack_tarball(cythonurl)
+        CYTHONPATH = BUILDDIR + "/" + cythonname
+        CYTHONBIN = CYTHONPATH + "/bin"
+        os.environ['PATH'] = CYTHONBIN + ":" + os.environ['PATH']
+        os.environ['PYTHONPATH'] = CYTHONPATH + ":" + os.environ['PYTHONPATH']
 
     ## Are we able to use pre-built packages from CERN AFS?
     if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):
@@ -511,7 +546,6 @@ try:
             conf_mk_mkinst(os.path.join(BUILDDIR, fastjetname), "--enable-shared --enable-allcxxplugins")
         FASTJETPATH = PREFIX
 
-
     ## This wouldn't be needed if Boost followed normal installation conventions...
     if opts.BOOST_DIR:
         logging.debug("Working out if Boost's headers are installed properly in " + opts.BOOST_DIR)
@@ -525,9 +559,9 @@ try:
                 logging.error("Couldn't work out location of Boost headers in %s" % boostincdir)
                 sys.exit(1)
 
-
     ## Get build flags for Rivet and AGILe
     RA_CONFIGURE_FLAGS = ""
+    YODA_CONFIGURE_FLAGS = ""
     ## LCG tag
     RA_CONFIGURE_FLAGS += " --with-lcgtag=%s" % opts.LCGTAG
     ## HepMC
@@ -537,13 +571,19 @@ try:
     if opts.BOOST_DIR:
         logging.debug("Boost path: " + opts.BOOST_DIR)
         RA_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
+        YODA_CONFIGURE_FLAGS += " --with-boost=%s" % opts.BOOST_DIR
     ## In case the Boost headers are not in the standard structure, also try this:
     if BOOSTFLAGS:
         logging.debug("Boost flags: " + BOOSTFLAGS)
         RA_CONFIGURE_FLAGS += " " + BOOSTFLAGS
+        YODA_CONFIGURE_FLAGS += " " + BOOSTFLAGS
     AGILE_CONFIGURE_FLAGS = RA_CONFIGURE_FLAGS
     RIVET_CONFIGURE_FLAGS = RA_CONFIGURE_FLAGS
 
+
+    ## Build and install Yoda
+    if opts.INSTALL_YODA:
+        conf_mk_mkinst(os.path.join(BUILDDIR, yodaname), YODA_CONFIGURE_FLAGS)
 
     ## Build and install Rivet
     if opts.INSTALL_RIVET:
@@ -556,7 +596,7 @@ try:
         if opts.GSL_DIR:
             logging.debug("Using GSL path: " + opts.GSL_DIR)
             RIVET_CONFIGURE_FLAGS += " --with-gsl=%s" % opts.GSL_DIR
-        conf_mk_mkinst(os.path.join(BUILDDIR, "rivet"), RIVET_CONFIGURE_FLAGS)
+        conf_mk_mkinst(os.path.join(BUILDDIR, rivetname), RIVET_CONFIGURE_FLAGS)
 
 
     ## Build and install AGILe

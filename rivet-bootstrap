@@ -188,7 +188,7 @@ parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR",
                   help="Explicit path to find Boost [%default]")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST",
                   help="Don't use a system copy of Boost (NB. it takes a long time to build) [%default]")
-parser.add_option("--boost-version", default="1.50.0", dest="BOOST_VERSION",
+parser.add_option("--boost-version", default="1.52.0", dest="BOOST_VERSION",
                   help="Explicitly specify version of Boost to use from LCG (or to get if --install-boost is used) [%default]")
 parser.add_option("--install-cython", action="store_true", default=False, dest="INSTALL_CYTHON",
                   help="Don't use a system copy of Cython [%default]")

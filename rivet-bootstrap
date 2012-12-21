@@ -156,7 +156,7 @@ parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="I
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--no-install-rivet", action="store_false", default=True, dest="INSTALL_RIVET",
                   help="Don't install Rivet! Useful to set up required packages, or AGILe only [install=%default]")
-parser.add_option("--rivet-version", default="1.8.1", dest="RIVET_VERSION",
+parser.add_option("--rivet-version", default="1.8.2", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
                   dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")
@@ -172,7 +172,7 @@ parser.add_option("--agile-version", default="1.4.0", dest="AGILE_VERSION",
                   help="Explicitly specify version of AGILe to get and use [%default]")
 parser.add_option("--agile-url", default="http://www.hepforge.org/archive/agile/",
                   dest="AGILE_URL", help="Base URL for AGILe tarball downloads [%default]")
-parser.add_option("--hepmc-version", default="2.06.05", dest="HEPMC_VERSION",
+parser.add_option("--hepmc-version", default="2.06.08", dest="HEPMC_VERSION",
                   help="Explicitly specify version of HepMC to get and use [%default]")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/",
                   dest="HEPMC_URL", help="Base URL for HepMC tarball downloads [%default]")

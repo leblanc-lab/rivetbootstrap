@@ -147,7 +147,7 @@ parser.add_option("--dev-mode", action="store_true", default=False, dest="DEV_MO
 parser.add_option("--devmode", action="store_true", default=False, dest="DEV_MODE",
                   help="Deprecated: alias for --dev-mode [%default]")
 parser.add_option("--dev-mode-aida", action="store_true", default=False, dest="DEV_MODE_AIDA",
-                  help="Use the aida SVN development head version of Rivet [%default]")
+                  help="Use the AIDA SVN development head version of Rivet [%default]")
 parser.add_option("--lcgextdir", default="/afs/cern.ch/sw/lcg/external", dest="LCGDIR",
                   help="Standard location of LCG external packages [%default]")
 parser.add_option("--lcgtag", default=compute_lcg_tag(), dest="LCGTAG",
@@ -156,7 +156,7 @@ parser.add_option("--ignore-lcgext", action="store_true", default=False, dest="I
                   help="Always bootstrap from sources, even if LCG versions are available [%default]")
 parser.add_option("--no-install-rivet", action="store_false", default=True, dest="INSTALL_RIVET",
                   help="Don't install Rivet! Useful to set up required packages, or AGILe only [install=%default]")
-parser.add_option("--rivet-version", default="1.8.2", dest="RIVET_VERSION",
+parser.add_option("--rivet-version", default="1.8.3", dest="RIVET_VERSION",
                   help="Explicitly specify version of Rivet to get and use [%default]")
 parser.add_option("--rivet-url", default="http://www.hepforge.org/archive/rivet/",
                   dest="RIVET_URL", help="Base URL for Rivet tarball downloads [%default]")

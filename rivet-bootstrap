@@ -497,6 +497,12 @@ try:
 
         logging.info("Using LCG platform tag = " + opts.LCGTAG)
 
+        ## Warn explicitly if this is not a standard LCG platform tag... just gcc checking for now
+        if "slc" in opts.LCGTAG and "gcc" in opts.LCGTAG:
+            if not any(v in opts.LCGTAG for v in ("gcc43", "gcc46")):
+            logging.warn("LCG platform tag %s seems to contain a 'non-standard' GCC version. " % opts.LCGTAG +
+                         "LCG builds of FastJet etc. may not be available, in which case this bootstrap script will fail!")
+
         ## Now work out paths to give to Rivet
         ## HepMC
         HEPMCPATH = os.path.join(opts.LCGDIR, "HepMC", opts.HEPMC_VERSION, opts.LCGTAG)

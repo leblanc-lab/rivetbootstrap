@@ -272,7 +272,8 @@ def get_tarball(url, outname=None):
     out = None
     try:
         logging.info("Downloading %s" % url)
-        hreq = urllib2.urlopen(url)
+        request = urllib2.Request(url, headers={"Accept" : "text/html"})
+        hreq = urllib2.urlopen(request)
         out = open(outpath, "w")
         out.write(hreq.read())
         out.close()

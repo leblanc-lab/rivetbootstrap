@@ -165,7 +165,7 @@ parser.add_option("--build-rivet-manual", default=False, action="store_true",
 parser.add_option("--build-unvalidated", default=False, action="store_true",
                   dest="BUILD_UNVALIDATED", help="Build the unvalidated collection of Rivet analyses [%default]")
 parser.add_option("--install-yoda", action="store_true", default=False, dest="INSTALL_YODA",
-                  help="Don't install Rivet! Useful to set up required packages, or AGILe only [install=%default]")
+                  help="Install the YODA histogramming system [install=%default]")
 parser.add_option("--install-agile", action="store_true", default=False, dest="INSTALL_AGILE",
                   help="Install the AGILe interface system for Fortran generators [install=%default]")
 parser.add_option("--agile-version", default="1.4.0", dest="AGILE_VERSION",

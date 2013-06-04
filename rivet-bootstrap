@@ -416,7 +416,7 @@ def pkg_bootstrap_hg(hgurl, branchname, pkgname, displayname=None):
         return False
     os.chdir(pkgname)
     logging.info("Updating %s hg working copy" % displayname)
-    st, op = commands.getstatusoutput("hg update %s" % branchname)
+    st, op = commands.getstatusoutput("hg pull -u %s" % branchname)
     if st != 0:
         logging.error(op)
         return False

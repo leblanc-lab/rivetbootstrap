@@ -526,8 +526,9 @@ try:
             cythontarname = cythonname + ".tar.gz"
             cythonurl = "http://www.cython.org/release/" + cythontarname
             get_unpack_tarball(cythonurl)
-        CYTHONPATH = BUILDDIR + "/" + cythonname
-        CYTHONBIN = CYTHONPATH + "/bin"
+            #os.system("python setup.py install --prefix=%s" % prefix)
+        CYTHONPATH = os.path.join(BUILDDIR, cythonname)
+        CYTHONBIN = os.path.join(CYTHONPATH, "bin")
         os.environ['PATH'] = CYTHONBIN + ":" + os.environ['PATH']
         os.environ['PYTHONPATH'] = CYTHONPATH + ":" + os.environ['PYTHONPATH']
 

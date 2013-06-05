@@ -183,8 +183,12 @@ parser.add_option("--with-gsl", metavar="DIR", default=None, dest="GSL_DIR",
                   help="Explicit path to find GSL -- overrides --gsl-version [%default]")
 parser.add_option("--with-boost", metavar="DIR", default=None, dest="BOOST_DIR",
                   help="Explicit path to find Boost [%default]")
+parser.add_option("--install-yamlcpp", action="store_true", default=False, dest="INSTALL_YAMLCPP",
+                  help="Don't use a system copy of yaml-cpp [%default]")
+parser.add_option("--yamlcpp-version", default="0.3.0", dest="YAMLCPP_VERSION",
+                  help="Explicitly specify version of yaml-cpp to get if --install-yamlcpp is used [%default]")
 parser.add_option("--install-boost", action="store_true", default=False, dest="INSTALL_BOOST",
-                  help="Don't use a system copy of Boost (NB. it takes a long time to build) [%default]")
+                  help="Don't use a system copy of Boost (NB. it's a big download!) [%default]")
 parser.add_option("--boost-version", default="1.50.0", dest="BOOST_VERSION",
                   help="Explicitly specify version of Boost to use from LCG (or to get if --install-boost is used) [%default]")
 parser.add_option("--install-autotools", action="store_true", default=False, dest="INSTALL_AUTOTOOLS",
@@ -356,7 +360,14 @@ def check_devtools():
             path = os.environ["path"].split(":")
         # TODO: Move AGILe -> hg and remove svn dependence
         # TODO: Eliminate SWIG dependence when we remove support for the AIDA Rivet branch
-        for pkg in ["svn", "hg", "autoconf", "autoreconf", "automake", "libtool", "swig"]:
+
+        pkgs = ["svn", "hg", "autoconf", "autoreconf", "automake", "libtool"]
+        if opts.DEV_MODE and not opts.DEV_MODE_AIDA:
+            pks.append("cython")
+        if not opts.DEV_MODE or opts.DEV_MODE_AIDA:
+            pks.append("swig")
+
+        for pkg in pkgs:
             found = False
             for d in path:
                 if os.access(os.path.join(d, pkg), os.X_OK):
@@ -403,6 +414,7 @@ def pkg_bootstrap_svn(svnurl, pkgname, displayname=None):
         logging.debug("autoreconf output:\n" + op)
     os.chdir(BUILDDIR)
     return True
+
 
 def pkg_bootstrap_hg(hgurl, branchname, pkgname, displayname=None):
     st = check_devtools()
@@ -463,6 +475,83 @@ try:
         get_unpack_tarball(LIBTOOL_URL)
         conf_mk_mkinst(os.path.join(BUILDDIR, LIBTOOL_NAME)
 
+
+    ## Get Cython and include in paths
+    if opts.INSTALL_CYTHON:
+        cythonname = "Cython-" + opts.CYTHON_VERSION
+        os.chdir(BUILDDIR)
+        if not os.path.exists(cythonname):
+            cythontarname = cythonname + ".tar.gz"
+            cythonurl = "http://www.cython.org/release/" + cythontarname
+            get_unpack_tarball(cythonurl)
+            #os.system("python setup.py install --prefix=%s" % prefix)
+        CYTHONPATH = os.path.join(BUILDDIR, cythonname)
+        CYTHONBIN = os.path.join(CYTHONPATH, "bin")
+        os.environ['PATH'] = CYTHONBIN + ":" + os.environ['PATH']
+        os.environ['PYTHONPATH'] = CYTHONPATH + ":" + os.environ['PYTHONPATH']
+
+
+    ## Get Boost
+    BOOSTFLAGS = None
+    if opts.INSTALL_BOOST:
+        logging.info("Installing a local copy of Boost")
+        boostname = "boost_%s" % opts.BOOST_VERSION.replace(".", "_")
+        boosttarname = boostname + ".tar.gz"
+        boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
+        get_unpack_tarball(boosturl)
+        boostbuilddir = os.path.join(BUILDDIR, boostname)
+        ## Don't do a full install --- just copy the headers into place
+        ## (the build system changes between versions, and usually cocks up the dir structure)
+        import shutil
+        boostincdir = os.path.join(INCDIR, "boost")
+        if not os.path.exists(boostincdir):
+            shutil.copytree(os.path.join(boostbuilddir, "boost"), boostincdir)
+        #else:
+            #logging.warning("Boost header directory %s already exists... exiting" % boostincdir)
+            #sys.exit(2)
+        logging.debug("Setting BOOST_DIR = " + PREFIX)
+        opts.BOOST_DIR = PREFIX
+
+
+    ## Get and install yaml-cpp
+    if opts.INSTALL_YAMLCPP and opts.DEV_MODE and not opts.DEV_MODE_AIDA:
+        ## NB. Rivet 1.x bundles its own version of yaml-cpp... and it's incompatible!
+        os.chdir(BUILDDIR)
+        YAMLCPP_NAME = "yaml-cpp--%s" % opts.YAMLCPP_VERSION
+        YAMLCPP_URL = urlparse.urljoin("https://yaml-cpp.googlecode.com/files", "%s.tar.gz" % YAMLCPP_NAME)
+        logging.info("Getting %s" % YAMLCPP_URL)
+        get_unpack_tarball(YAMLCPP_URL)
+        prevdir = os.getcwd()
+        if os.access(YAMLCPP_NAME, os.W_OK):
+            os.chdir(YAMLCPP_NAME)
+            cmakecmd = "cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=%s" % PREFIX
+            st, op = commands.getstatusoutput(cmakecmd)
+            if st != 0:
+                logging.error(op)
+                sys.exit(1)
+            logging.debug("Cmake output:\n" + op)
+            buildcmd = "make -j%s && make -j%s install" % (opts.JMAKE, opts.JMAKE)
+            st, op = commands.getstatusoutput(buildcmd)
+            if st != 0:
+                logging.error(op)
+                sys.exit(1)
+            logging.debug("Build output:\n" + op)
+            os.chdir(prevdir)
+        else:
+            logging.error("Couldn't find $1... exiting")
+            sys.exit(1)
+
+
+    ## Get YODA
+    if opts.INSTALL_YODA and opts.DEV_MODE and not opts.DEV_MODE_AIDA:
+        yodaname = "yoda"
+        os.chdir(BUILDDIR)
+        if os.path.islink(yodaname):
+            os.remove(yodaname)
+        pkg_bootstrap_hg("http://yoda.hepforge.org/hg/yoda","default",
+                         yodaname, "YODA") or sys.exit(2)
+
+
     ## Get Rivet
     if opts.INSTALL_RIVET:
         rivetname = "rivet"
@@ -493,14 +582,6 @@ try:
                                  "2012-06-aidarivet",
                                  rivetname, "AIDA Rivet") or sys.exit(2)
 
-    ## Get YODA
-    if opts.INSTALL_YODA and opts.DEV_MODE and not opts.DEV_MODE_AIDA:
-        yodaname = "yoda"
-        os.chdir(BUILDDIR)
-        if os.path.islink(yodaname):
-            os.remove(yodaname)
-        pkg_bootstrap_hg("http://yoda.hepforge.org/hg/yoda","default",
-                         yodaname, "YODA") or sys.exit(2)
 
     ## Get AGILe
     if opts.INSTALL_AGILE:
@@ -524,40 +605,6 @@ try:
         else:
             pkg_bootstrap_svn("http://agile.hepforge.org/svn/trunk", agilename, "AGILe") or sys.exit(2)
 
-    ## Get Boost
-    BOOSTFLAGS = None
-    if opts.INSTALL_BOOST:
-        logging.info("Installing a local copy of Boost")
-        boostname = "boost_%s" % opts.BOOST_VERSION.replace(".", "_")
-        boosttarname = boostname + ".tar.gz"
-        boosturl = "http://downloads.sourceforge.net/boost/%s?use_mirror=mesh" % boosttarname
-        get_unpack_tarball(boosturl)
-        boostbuilddir = os.path.join(BUILDDIR, boostname)
-        ## Don't do a full install --- just copy the headers into place
-        ## (the build system changes between versions, and usually cocks up the dir structure)
-        import shutil
-        boostincdir = os.path.join(INCDIR, "boost")
-        if not os.path.exists(boostincdir):
-            shutil.copytree(os.path.join(boostbuilddir, "boost"), boostincdir)
-        #else:
-            #logging.warning("Boost header directory %s already exists... exiting" % boostincdir)
-            #sys.exit(2)
-        logging.debug("Setting BOOST_DIR = " + PREFIX)
-        opts.BOOST_DIR = PREFIX
-
-    ## Get Cython and include in paths
-    if opts.INSTALL_CYTHON:
-        cythonname = "Cython-" + opts.CYTHON_VERSION
-        os.chdir(BUILDDIR)
-        if not os.path.exists(cythonname):
-            cythontarname = cythonname + ".tar.gz"
-            cythonurl = "http://www.cython.org/release/" + cythontarname
-            get_unpack_tarball(cythonurl)
-            #os.system("python setup.py install --prefix=%s" % prefix)
-        CYTHONPATH = os.path.join(BUILDDIR, cythonname)
-        CYTHONBIN = os.path.join(CYTHONPATH, "bin")
-        os.environ['PATH'] = CYTHONBIN + ":" + os.environ['PATH']
-        os.environ['PYTHONPATH'] = CYTHONPATH + ":" + os.environ['PYTHONPATH']
 
     ## Are we able to use pre-built packages from CERN AFS?
     if not opts.IGNORE_LCG and os.path.isdir(opts.LCGDIR):

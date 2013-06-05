@@ -463,17 +463,17 @@ try:
         AUTOCONF_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/autoconf", "%s.tar.gz" % AUTOCONF_NAME)
         logging.info("Getting %s" % AUTOCONF_URL)
         get_unpack_tarball(AUTOCONF_URL)
-        conf_mk_mkinst(os.path.join(BUILDDIR, AUTOCONF_NAME)
+        conf_mk_mkinst(os.path.join(BUILDDIR, AUTOCONF_NAME))
         AUTOMAKE_NAME = "automake-%s" % opts.AUTOMAKE_VERSION
         AUTOMAKE_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/automake", "%s.tar.gz" % AUTOMAKE_NAME)
         logging.info("Getting %s" % AUTOMAKE_URL)
         get_unpack_tarball(AUTOMAKE_URL)
-        conf_mk_mkinst(os.path.join(BUILDDIR, AUTOMAKE_NAME)
+        conf_mk_mkinst(os.path.join(BUILDDIR, AUTOMAKE_NAME))
         LIBTOOL_NAME = "libtool-%s" % opts.LIBTOOL_VERSION
         LIBTOOL_URL = urlparse.urljoin("http://mirror.ibcp.fr/pub/gnu/libtool", "%s.tar.gz" % LIBTOOL_NAME)
         logging.info("Getting %s" % LIBTOOL_URL)
         get_unpack_tarball(LIBTOOL_URL)
-        conf_mk_mkinst(os.path.join(BUILDDIR, LIBTOOL_NAME)
+        conf_mk_mkinst(os.path.join(BUILDDIR, LIBTOOL_NAME))
 
 
     ## Get Cython and include in paths

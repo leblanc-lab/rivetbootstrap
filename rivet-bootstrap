@@ -457,6 +457,7 @@ try:
 
     ## Get autotools
     if opts.INSTALL_AUTOTOOLS:
+        import urlparse
         os.environ["PATH"] = os.path.join(PREFIX, "bin") + ":" + os.environ["PATH"]
         os.chdir(BUILDDIR)
         AUTOCONF_NAME = "autoconf-%s" % opts.AUTOCONF_VERSION
@@ -516,6 +517,7 @@ try:
     ## Get and install yaml-cpp
     if opts.INSTALL_YAMLCPP and opts.DEV_MODE and not opts.DEV_MODE_AIDA:
         ## NB. Rivet 1.x bundles its own version of yaml-cpp... and it's incompatible!
+        import urlparse
         os.chdir(BUILDDIR)
         YAMLCPP_NAME = "yaml-cpp--%s" % opts.YAMLCPP_VERSION
         YAMLCPP_URL = urlparse.urljoin("https://yaml-cpp.googlecode.com/files", "%s.tar.gz" % YAMLCPP_NAME)

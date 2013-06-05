@@ -461,17 +461,17 @@ try:
         os.environ["PATH"] = os.path.join(PREFIX, "bin") + ":" + os.environ["PATH"]
         os.chdir(BUILDDIR)
         AUTOCONF_NAME = "autoconf-%s" % opts.AUTOCONF_VERSION
-        AUTOCONF_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/autoconf", "%s.tar.gz" % AUTOCONF_NAME)
+        AUTOCONF_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/autoconf/", "%s.tar.gz" % AUTOCONF_NAME)
         logging.info("Getting %s" % AUTOCONF_URL)
         get_unpack_tarball(AUTOCONF_URL)
         conf_mk_mkinst(os.path.join(BUILDDIR, AUTOCONF_NAME))
         AUTOMAKE_NAME = "automake-%s" % opts.AUTOMAKE_VERSION
-        AUTOMAKE_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/automake", "%s.tar.gz" % AUTOMAKE_NAME)
+        AUTOMAKE_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/automake/", "%s.tar.gz" % AUTOMAKE_NAME)
         logging.info("Getting %s" % AUTOMAKE_URL)
         get_unpack_tarball(AUTOMAKE_URL)
         conf_mk_mkinst(os.path.join(BUILDDIR, AUTOMAKE_NAME))
         LIBTOOL_NAME = "libtool-%s" % opts.LIBTOOL_VERSION
-        LIBTOOL_URL = urlparse.urljoin("http://mirror.ibcp.fr/pub/gnu/libtool", "%s.tar.gz" % LIBTOOL_NAME)
+        LIBTOOL_URL = urlparse.urljoin("http://mirror.ibcp.fr/pub/gnu/libtool/", "%s.tar.gz" % LIBTOOL_NAME)
         logging.info("Getting %s" % LIBTOOL_URL)
         get_unpack_tarball(LIBTOOL_URL)
         conf_mk_mkinst(os.path.join(BUILDDIR, LIBTOOL_NAME))
@@ -520,7 +520,7 @@ try:
         import urlparse
         os.chdir(BUILDDIR)
         YAMLCPP_NAME = "yaml-cpp--%s" % opts.YAMLCPP_VERSION
-        YAMLCPP_URL = urlparse.urljoin("https://yaml-cpp.googlecode.com/files", "%s.tar.gz" % YAMLCPP_NAME)
+        YAMLCPP_URL = urlparse.urljoin("https://yaml-cpp.googlecode.com/files/", "%s.tar.gz" % YAMLCPP_NAME)
         logging.info("Getting %s" % YAMLCPP_URL)
         get_unpack_tarball(YAMLCPP_URL)
         prevdir = os.getcwd()

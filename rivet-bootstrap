@@ -688,6 +688,7 @@ try:
                 logging.error("Couldn't work out location of Boost headers in %s" % boostincdir)
                 sys.exit(1)
 
+
     ## Get build flags for Rivet and AGILe
     RA_CONFIGURE_FLAGS = ""
     YODA_CONFIGURE_FLAGS = ""
@@ -710,9 +711,10 @@ try:
     RIVET_CONFIGURE_FLAGS = RA_CONFIGURE_FLAGS
 
 
-    ## Build and install Yoda
+    ## Build and install YODA
     if opts.INSTALL_YODA:
         conf_mk_mkinst(os.path.join(BUILDDIR, yodaname), YODA_CONFIGURE_FLAGS)
+
 
     ## Build and install Rivet
     if opts.INSTALL_RIVET:

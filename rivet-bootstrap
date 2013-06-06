@@ -622,7 +622,7 @@ try:
 
         ## Warn explicitly if this is not a standard LCG platform tag... just gcc checking for now
         if "slc" in opts.LCGTAG and "gcc" in opts.LCGTAG:
-            if not any(v in opts.LCGTAG for v in ("gcc43", "gcc46")):
+            if not "gcc43" in opts.LCGTAG and not "gcc46" in opts.LCGTAG:
                 logging.warn("LCG platform tag %s seems to contain a 'non-standard' GCC version. " % opts.LCGTAG +
                              "LCG builds of FastJet etc. may not be available, in which case this bootstrap script will fail!")
 

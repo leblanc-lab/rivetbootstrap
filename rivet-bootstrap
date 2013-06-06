@@ -527,8 +527,11 @@ try:
         logging.info("Getting %s" % YAMLCPP_URL)
         get_unpack_tarball(YAMLCPP_URL)
         prevdir = os.getcwd()
-        if os.access(YAMLCPP_NAME, os.W_OK):
-            os.chdir(YAMLCPP_NAME)
+        yamlcpp_name = "yaml-cpp"
+        if not os.path.exists(yamlcpp_name):
+            os.symlink(YAMLCPP_NAME, yamlcpp_name)
+        if os.access(yamlcpp_name, os.W_OK):
+            os.chdir(yamlcpp_name)
             cmakecmd = "cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=%s" % PREFIX
             st, op = commands.getstatusoutput(cmakecmd)
             if st != 0:
@@ -543,7 +546,7 @@ try:
             logging.debug("Build output:\n" + op)
             os.chdir(prevdir)
         else:
-            logging.error("Couldn't find %s... exiting" % YAML_CPPNAME)
+            logging.error("Couldn't find %s... exiting" % yamlcpp_name)
             sys.exit(1)
 
 

@@ -426,7 +426,7 @@ def pkg_bootstrap_hg(hgurl, branchname, pkgname, displayname=None):
     os.chdir(BUILDDIR)
     if not os.path.exists(pkgname):
         logging.info("Checking out %s from hg head" % displayname)
-        st, op = commands.getstatusoutput("hg clone -U %s %s" % (hgurl, pkgname))
+        st, op = commands.getstatusoutput("hg clone %s %s" % (hgurl, pkgname))
         if st != 0:
             logging.error(op)
             return False

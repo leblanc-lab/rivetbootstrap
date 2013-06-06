@@ -344,7 +344,7 @@ def conf_mk_mkinst(d, extraopts=""):
         logging.debug("Build output:\n" + op)
         os.chdir(prevdir)
     else:
-        logging.error("Couldn't find $1... exiting")
+        logging.error("Couldn't find %s... exiting" % d)
         sys.exit(1)
 
 
@@ -455,10 +455,13 @@ def pkg_bootstrap_hg(hgurl, branchname, pkgname, displayname=None):
 
 try:
 
+    ## Put the prefix bin in the path
+    os.environ["PATH"] = os.path.join(PREFIX, "bin") + ":" + os.environ["PATH"]
+
+
     ## Get autotools
     if opts.INSTALL_AUTOTOOLS:
         import urlparse
-        os.environ["PATH"] = os.path.join(PREFIX, "bin") + ":" + os.environ["PATH"]
         os.chdir(BUILDDIR)
         AUTOCONF_NAME = "autoconf-%s" % opts.AUTOCONF_VERSION
         AUTOCONF_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/autoconf/", "%s.tar.gz" % AUTOCONF_NAME)
@@ -540,7 +543,7 @@ try:
             logging.debug("Build output:\n" + op)
             os.chdir(prevdir)
         else:
-            logging.error("Couldn't find $1... exiting")
+            logging.error("Couldn't find %s... exiting" % YAML_CPPNAME)
             sys.exit(1)
 
 

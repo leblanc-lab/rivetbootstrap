@@ -519,7 +519,7 @@ try:
         ## NB. Rivet 1.x bundles its own version of yaml-cpp... and it's incompatible!
         import urlparse
         os.chdir(BUILDDIR)
-        YAMLCPP_NAME = "yaml-cpp--%s" % opts.YAMLCPP_VERSION
+        YAMLCPP_NAME = "yaml-cpp-%s" % opts.YAMLCPP_VERSION
         YAMLCPP_URL = urlparse.urljoin("https://yaml-cpp.googlecode.com/files/", "%s.tar.gz" % YAMLCPP_NAME)
         logging.info("Getting %s" % YAMLCPP_URL)
         get_unpack_tarball(YAMLCPP_URL)

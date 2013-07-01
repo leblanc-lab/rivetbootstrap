@@ -436,11 +436,15 @@ def pkg_bootstrap_hg(hgurl, branchname, pkgname, displayname=None):
         return False
     os.chdir(pkgname)
     logging.info("Updating %s hg working copy" % displayname)
-    st, op = commands.getstatusoutput("hg pull -u %s" % branchname)
+    st, op = commands.getstatusoutput("hg pull -u")
     if st != 0:
         logging.error(op)
         return False
     logging.debug("hg update output:\n" + op)
+    st, op = commands.getstatusoutput("hg update -r %s" % branchname)
+    if st != 0:
+        logging.error(op)
+        return False
     if not os.path.exists("configure"):
         logging.info("Bootstrapping autoconf files")
         st, op = commands.getstatusoutput("autoreconf -i")

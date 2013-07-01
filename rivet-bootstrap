@@ -173,7 +173,7 @@ parser.add_option("--hepmc-version", default="2.06.06", dest="HEPMC_VERSION",
                   help="Explicitly specify version of HepMC to get and use [%default]")
 parser.add_option("--hepmc-url", default="http://lcgapp.cern.ch/project/simu/HepMC/download/",
                   dest="HEPMC_URL", help="Base URL for HepMC tarball downloads [%default]")
-parser.add_option("--fastjet-version", default="3.0.3", dest="FASTJET_VERSION",
+parser.add_option("--fastjet-version", default="3.0.4", dest="FASTJET_VERSION",
                   help="Explicitly specify version of FastJet to get and use [%default]")
 parser.add_option("--fastjet-url", default="http://www.fastjet.fr/repo/",
                   dest="FASTJET_URL", help="Base URL for FastJet tarball downloads [%default]")
@@ -560,8 +560,7 @@ try:
         os.chdir(BUILDDIR)
         if os.path.islink(yodaname):
             os.remove(yodaname)
-        pkg_bootstrap_hg("http://yoda.hepforge.org/hg/yoda","default",
-                         yodaname, "YODA") or sys.exit(2)
+        pkg_bootstrap_hg("http://yoda.hepforge.org/hg/yoda", "default", yodaname, "YODA") or sys.exit(2)
 
 
     ## Get Rivet
@@ -717,7 +716,7 @@ try:
 
     ## Build and install YODA
     if opts.INSTALL_YODA:
-        conf_mk_mkinst(os.path.join(BUILDDIR, yodaname), YODA_CONFIGURE_FLAGS)
+        conf_mk_mkinst(os.path.join(BUILDDIR, "yoda"), YODA_CONFIGURE_FLAGS)
 
 
     ## Build and install Rivet

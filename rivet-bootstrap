@@ -496,7 +496,10 @@ try:
         CYTHONPATH = os.path.join(BUILDDIR, cythonname)
         CYTHONBIN = os.path.join(CYTHONPATH, "bin")
         os.environ['PATH'] = CYTHONBIN + ":" + os.environ['PATH']
-        os.environ['PYTHONPATH'] = CYTHONPATH + ":" + os.environ['PYTHONPATH']
+        if os.environ.has_key("PYTHONPATH"):
+            os.environ['PYTHONPATH'] = CYTHONPATH + ":" + os.environ['PYTHONPATH']
+        else:
+            os.environ['PYTHONPATH'] = CYTHONPATH
 
 
     ## Get Boost

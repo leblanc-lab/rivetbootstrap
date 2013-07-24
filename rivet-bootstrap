@@ -546,7 +546,7 @@ try:
             os.symlink(YAMLCPP_NAME, yamlcpp_name)
         if os.access(yamlcpp_name, os.W_OK):
             os.chdir(yamlcpp_name)
-            cmakecmd = "cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=%s" % PREFIX
+            cmakecmd = "cmake -DBUILD_SHARED_LIBS=ON -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_INSTALL_PREFIX=%s" % PREFIX
             st, op = commands.getstatusoutput(cmakecmd)
             if st != 0:
                 logging.error(op)

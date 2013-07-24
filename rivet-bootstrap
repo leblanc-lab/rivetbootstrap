@@ -199,6 +199,8 @@ parser.add_option("--automake-version", default="1.13.3", dest="AUTOMAKE_VERSION
                   help="Explicitly specify version of automake to get if --install-autotools is used [%default]")
 parser.add_option("--libtool-version", default="2.4.2", dest="LIBTOOL_VERSION",
                   help="Explicitly specify version of libtool to get if --install-autotools is used [%default]")
+parser.add_option("--m4-version", default="1.4.16", dest="M4_VERSION",
+                  help="Explicitly specify version of m4 to get if --install-autotools is used [%default]")
 parser.add_option("--install-cython", action="store_true", default=False, dest="INSTALL_CYTHON",
                   help="Don't use a system copy of Cython [%default]")
 parser.add_option("--cython-version", default="0.19.1", dest="CYTHON_VERSION",
@@ -361,7 +363,7 @@ def check_devtools():
         # TODO: Move AGILe -> hg and remove svn dependence
         # TODO: Eliminate SWIG dependence when we remove support for the AIDA Rivet branch
 
-        pkgs = ["svn", "hg", "autoconf", "autoreconf", "automake", "libtool"]
+        pkgs = ["svn", "hg", "autoconf", "autoreconf", "automake", "libtool", "m4"]
         if opts.DEV_MODE and not opts.DEV_MODE_AIDA:
             pkgs.append("cython")
         if not opts.DEV_MODE or opts.DEV_MODE_AIDA:
@@ -467,6 +469,11 @@ try:
     if opts.INSTALL_AUTOTOOLS:
         import urlparse
         os.chdir(BUILDDIR)
+        M4_NAME = "m4-%s" % opts.M4_VERSION
+        M4_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/m4/", "%s.tar.gz" % M4_NAME)
+        logging.info("Getting %s" % M4_URL)
+        get_unpack_tarball(M4_URL)
+        conf_mk_mkinst(os.path.join(BUILDDIR, M4_NAME))
         AUTOCONF_NAME = "autoconf-%s" % opts.AUTOCONF_VERSION
         AUTOCONF_URL = urlparse.urljoin("http://ftp.gnu.org/gnu/autoconf/", "%s.tar.gz" % AUTOCONF_NAME)
         logging.info("Getting %s" % AUTOCONF_URL)

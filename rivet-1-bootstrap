@@ -7,7 +7,7 @@ INSTALL_PREFIX="$PWD/local"
 MAKE="make -j3"
 LCGTAG="x86_64-slc6-gcc46-opt"
 
-RIVET_VERSION="1.8.3"
+RIVET_VERSION="1.9.0"
 RIVET_CONFFLAGS="--disable-pdfmanual" #--enable-unvalidated
 
 HEPMC_VERSION="2.06.06" # TODO: want 2.06.09

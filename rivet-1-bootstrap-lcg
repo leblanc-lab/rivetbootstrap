@@ -1,0 +1,84 @@
+#! /usr/bin/env bash
+
+## Boost and GSL are expected to be installed correctly, as is a sane suite of GNU build tools
+
+BUILD_PREFIX="$PWD"
+INSTALL_PREFIX="$PWD/local"
+MAKE="make -j3"
+LCGTAG="x86_64-slc6-gcc46-opt"
+
+INSTALL_AUTOTOOLS="1"
+
+RIVET_VERSION="1.9.0"
+RIVET_CONFFLAGS="--disable-pdfmanual" #--enable-unvalidated
+
+HEPMC_VERSION="2.06.06" # TODO: want 2.06.09
+FASTJET_VERSION="3.0.3" # TODO: want 3.0.4
+YAMLCPP_VERSION="0.3.0"
+BOOST_VERSION="1.50.0"
+
+
+###############
+
+
+## Immediate exit on a command (group) failure and optional debug mode
+set -e
+test -n "$DEBUG" && set -x
+export PATH=$INSTALL_PREFIX/bin:$PATH
+
+function wget_untar { wget $1 -O- | tar xz; }
+function conf { ./configure --prefix=$INSTALL_PREFIX $*; }
+function mmi { $MAKE $* && $MAKE install; }
+
+echo "Running Rivet 1.x bootstrap script"
+
+LCGDIR="/afs/cern.ch/sw/lcg/external"
+test -d "$LCGDIR" || { echo "LCG AFS filesystem not found: exiting..." 1>&2 ; exit 1; }
+
+source $LCGDIR/gcc/4.6/$LCGTAG/setup.sh
+PATH=$LCGDIR/Python/2.6.5p2/$LCGTAG/bin:$PATH
+PATH=$LCGDIR/swig/1.3.40/$LCGTAG/bin:$PATH
+
+PATH=$INSTALL_PREFIX/bin:$PATH
+LD_LIBRARY_PATH=$INSTALL_PREFIX/lib:$LD_LIBRARY_PATH
+PYTHONPATH=$INSTALL_PREFIX/lib64/python2.6/site-packages:$PYTHONPATH
+
+if [[ "$INSTALL_AUTOTOOLS" -eq 1 ]]; then
+    cd $BUILD_PREFIX
+    function _build_autotool() {
+        name=$1-$2
+        if [ ! -e $name ]; then wget_untar http://ftp.gnu.org/gnu/$1/$name.tar.gz; fi
+        cd $name
+        ./configure --prefix=$INSTALL_PREFIX
+        mmi
+        cd ..
+    }
+    test -e $INSTALL_PREFIX/bin/m4       || { echo; echo "Building m4"; _build_autotool m4 1.4.16; }
+    test -e $INSTALL_PREFIX/bin/autoconf || { echo; echo "Building autoconf"; _build_autotool autoconf 2.69; }
+    test -e $INSTALL_PREFIX/bin/automake || { echo; echo "Building automake"; _build_autotool automake 1.13.4; }
+    test -e $INSTALL_PREFIX/bin/libtool  || { echo; echo "Building libtool"; _build_autotool libtool 2.4.2; }
+fi
+
+HEPMCPATH=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGTAG
+FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGTAG
+BOOSTPATH=$LCGDIR/Boost/${BOOST_VERSION}_python2.6/$LCGTAG
+# YAMLCPPPATH=$LCGDIR/MCGenerators_lcgcmt66/yamlcpp/$YAMLCPP_VERSION/$LCGTAG
+
+## Install Rivet
+echo; echo "Building Rivet"
+cd $BUILD_PREFIX
+test -d Rivet-$RIVET_VERSION || wget_untar http://www.hepforge.org/archive/rivet/Rivet-$RIVET_VERSION.tar.gz
+cd Rivet-$RIVET_VERSION
+conf $RIVET_CONFFLAGS --with-hepmc=$HEPMCPATH --with-fastjet=$FASTJETPATH --with-boost=$BOOSTPATH
+mmi
+> $INSTALL_PREFIX/rivetenv.sh
+## Install setup script with GCC/Python env if on AFS
+if [[ "$USE_LCGAFS" = 1 ]]; then
+    echo "source $LCGDIR/gcc/4.6/$LCGTAG/setup.sh" >> $INSTALL_PREFIX/rivetenv.sh
+    echo "PATH=$LCGDIR/Python/2.6.5p2/$LCGTAG/bin:$PATH" >> $INSTALL_PREFIX/rivetenv.sh
+fi
+cat rivetenv.sh >> $INSTALL_PREFIX/rivetenv.sh
+
+
+## Announce the build success
+echo; echo "All done. Now set some variables in your shell by sourcing $INSTALL_PREFIX/rivetenv.(c)sh"

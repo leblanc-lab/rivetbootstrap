@@ -198,7 +198,6 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     autoreconf -i
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
-        --with-yaml_cpp=$YAMLCPPPATH \
         --with-hepmc=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH \
         --with-boost=$BOOSTPATH \

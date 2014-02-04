@@ -4,7 +4,6 @@ test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
 
-test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="1"
 test -z "$INSTALL_GSL" && INSTALL_GSL="1"
 test -z "$INSTALL_BOOST" && INSTALL_BOOST="1"
 test -z "$INSTALL_YAMLCPP" && INSTALL_YAMLCPP="1"
@@ -41,10 +40,16 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     INSTALL_RIVET="0"
     ## For rivetdev we don't need yamlcpp anymore
     INSTALL_YAMLCPP="0"
+    ## Might need to install some extra toolkit bits for dev mode
+    test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="1"
+    test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
+    test -z "$INSTALL_MERCURIAL" && INSTALL_MERCURIAL="1"
 fi
+
 
 ###############
 
+echo "Running Rivet 2.x bootstrap script"
 
 ## Immediate exit on a command (group) failure and optional debug mode
 set -e
@@ -55,24 +60,6 @@ function wget_untar { wget $1 -O- | tar xz; }
 function conf { ./configure --prefix=$INSTALL_PREFIX $*; }
 function mmi { $MAKE $* && $MAKE install; }
 
-echo "Running Rivet 2.x bootstrap script"
-
-## Install autotools
-if [[ "$INSTALL_AUTOTOOLS" -eq "1" ]]; then
-    cd $BUILD_PREFIX
-    function _build_autotool() {
-        name=$1-$2
-        if [ ! -e $name ]; then wget_untar http://ftpmirror.gnu.org/$1/$name.tar.gz; fi
-        cd $name
-        ./configure --prefix=$INSTALL_PREFIX
-        mmi
-        cd ..
-    }
-    test -e $INSTALL_PREFIX/bin/m4       || { echo; echo "Building m4"; _build_autotool m4 1.4.16; }
-    test -e $INSTALL_PREFIX/bin/autoconf || { echo; echo "Building autoconf"; _build_autotool autoconf 2.69; }
-    test -e $INSTALL_PREFIX/bin/automake || { echo; echo "Building automake"; _build_autotool automake 1.13.4; }
-    test -e $INSTALL_PREFIX/bin/libtool  || { echo; echo "Building libtool"; _build_autotool libtool 2.4.2; }
-fi
 
 ## Install Boost
 if [[ "$INSTALL_BOOST" -eq "1" ]]; then
@@ -161,19 +148,40 @@ fi
 
 ## Following block for dev mode only -- non-developers should ignore
 if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
-    if ! which hg > /dev/null; then
+    ## Install autotools
+    if [[ "$INSTALL_AUTOTOOLS" -eq "1" ]]; then
+        cd $BUILD_PREFIX
+        function _build_autotool() {
+            name=$1-$2
+            if [ ! -e $name ]; then wget_untar http://ftpmirror.gnu.org/$1/$name.tar.gz; fi
+            cd $name
+            ./configure --prefix=$INSTALL_PREFIX
+            mmi
+            cd ..
+        }
+        test -e $INSTALL_PREFIX/bin/m4       || { echo; echo "Building m4"; _build_autotool m4 1.4.16; }
+        test -e $INSTALL_PREFIX/bin/autoconf || { echo; echo "Building autoconf"; _build_autotool autoconf 2.69; }
+        test -e $INSTALL_PREFIX/bin/automake || { echo; echo "Building automake"; _build_autotool automake 1.13.4; }
+        test -e $INSTALL_PREFIX/bin/libtool  || { echo; echo "Building libtool"; _build_autotool libtool 2.4.2; }
+    fi
+
+    ## Install hg
+    if [[ "$INSTALL_MERCURIAL" -eq "1" ]]; then
         cd $BUILD_PREFIX
         wget_untar http://mercurial.selenic.com/release/mercurial-2.8.2.tar.gz
         cd mercurial-2.8.2
         $MAKE PREFIX=$INSTALL_PREFIX install-bin
     fi;
-    if ! which cython > /dev/null; then
+
+    ## Install Cython
+    if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
         cd $BUILD_PREFIX
         wget_untar http://cython.org/release/Cython-0.19.1.tar.gz
         export PATH=$BUILD_PREFIX/Cython-0.19.1/bin:$PATH
         export PYTHONPATH=$BUILD_PREFIX/Cython-0.19.1:$PATH
     fi;
 
+    ## Install dev YODA
     cd $BUILD_PREFIX
     hg clone http://yoda.hepforge.org/hg/yoda
     cd yoda
@@ -183,12 +191,14 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     cp yodaenv.sh $INSTALL_PREFIX/yodaenv.sh
     YODAPATH=$INSTALL_PREFIX
 
+    ## Install dev Rivet
     cd $BUILD_PREFIX
     hg clone -r release-2-0 http://rivet.hepforge.org/hg/rivet
     cd rivet
     autoreconf -i
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
+        --with-yaml_cpp=$YAMLCPPPATH \
         --with-hepmc=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH \
         --with-boost=$BOOSTPATH \

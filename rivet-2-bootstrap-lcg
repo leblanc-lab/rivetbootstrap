@@ -27,8 +27,8 @@ test -n "$DEBUG" && set -x
 export PATH=$INSTALL_PREFIX/bin:$PATH
 
 function wget_untar { wget $1 -O- | tar xz; }
-function conf { ./configure --prefix=$INSTALL_PREFIX $*; }
-function mmi { $MAKE $* && $MAKE install; }
+function conf { ./configure --prefix=$INSTALL_PREFIX "$@"; }
+function mmi { $MAKE "$@" && $MAKE install; }
 
 
 ## Define LCG platform etc. -- may need to be customised

@@ -6,18 +6,16 @@ test -z "$MAKE" && MAKE="make -j3"
 
 test -z "$INSTALL_GSL" && INSTALL_GSL="1"
 test -z "$INSTALL_BOOST" && INSTALL_BOOST="1"
-test -z "$INSTALL_YAMLCPP" && INSTALL_YAMLCPP="1"
 test -z "$INSTALL_HEPMC" && INSTALL_HEPMC="1"
 test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.0.0"
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.1.0"
 test -z "$YODA_VERSION" && YODA_VERSION="1.0.4"
 
 HEPMC_VERSION="2.06.06" # TODO: want 2.06.09
 FASTJET_VERSION="3.0.3" # TODO: want 3.0.4
-YAMLCPP_VERSION="0.3.0"
 BOOST_VERSION="1_55_0"
 GSL_VERSION="1.16"
 
@@ -25,7 +23,6 @@ GSL_VERSION="1.16"
 ## Paths for the case of existing installations
 test -z "$GSLPATH" && GSLPATH="/usr"
 test -z "$BOOSTPATH" && BOOSTPATH="/usr"
-test -z "$YAMLCPPPATH" && YAMLCPPPATH="/usr"
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"
 test -z "$FASTJETPATH" && FASTJETPATH="/usr"
 test -z "$YODAPATH" && YODAPATH="/usr"
@@ -38,8 +35,6 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## For rivetdev we skip the normal yoda/rivet installation
     INSTALL_YODA="0"
     INSTALL_RIVET="0"
-    ## For rivetdev we don't need yamlcpp anymore
-    INSTALL_YAMLCPP="0"
     ## Might need to install some extra toolkit bits for dev mode
     test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="1"
     test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
@@ -60,6 +55,14 @@ function wget_untar { wget $1 -O- | tar xz; }
 function conf { ./configure --prefix=$INSTALL_PREFIX "$@"; }
 function mmi { $MAKE "$@" && $MAKE install; }
 
+## Install cmake
+if ! which cmake > /dev/null; then
+    cd $BUILD_PREFIX
+    wget_untar http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
+    cd cmake-2.8.12.1
+    conf
+    mmi
+fi;
 
 ## Install Boost
 if [[ "$INSTALL_BOOST" -eq "1" ]]; then
@@ -80,23 +83,6 @@ if [[ "$INSTALL_GSL" -eq "1" ]]; then
     conf
     mmi
     GSLPATH=$INSTALL_PREFIX
-fi
-
-## Install yaml-cpp
-if [[ "$INSTALL_YAMLCPP" -eq "1" ]]; then
-    if ! which cmake > /dev/null; then
-        cd $BUILD_PREFIX
-        wget_untar http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
-        cd cmake-2.8.12.1
-        conf
-        mmi
-    fi;
-    cd $BUILD_PREFIX
-    wget_untar https://yaml-cpp.googlecode.com/files/yaml-cpp-$YAMLCPP_VERSION.tar.gz
-    cd yaml-cpp
-    cmake -DBUILD_SHARED_LIBS=ON -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
-    mmi
-    YAMLCPPPATH=$INSTALL_PREFIX
 fi
 
 ## Install HepMC
@@ -137,7 +123,6 @@ if [[ "$INSTALL_RIVET" -eq "1" ]]; then
     cd Rivet-$RIVET_VERSION
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
-        --with-yaml_cpp=$YAMLCPPPATH \
         --with-hepmc=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH \
         --with-boost=$BOOSTPATH \

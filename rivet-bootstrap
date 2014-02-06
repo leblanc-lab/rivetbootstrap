@@ -38,7 +38,6 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Might need to install some extra toolkit bits for dev mode
     test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="1"
     test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
-    test -z "$INSTALL_MERCURIAL" && INSTALL_MERCURIAL="1"
 fi
 
 
@@ -131,6 +130,7 @@ if [[ "$INSTALL_RIVET" -eq "1" ]]; then
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
 fi
 
+
 ## Following block for dev mode only -- non-developers should ignore
 if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Install autotools
@@ -151,7 +151,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     fi
 
     ## Install hg
-    if [[ "$INSTALL_MERCURIAL" -eq "1" ]]; then
+    if ! which hg > /dev/null; then
         cd $BUILD_PREFIX
         wget_untar http://mercurial.selenic.com/release/mercurial-2.8.2.tar.gz
         cd mercurial-2.8.2

@@ -6,29 +6,37 @@ test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.0.0"
-test -z "$YODA_VERSION" && YODA_VERSION="1.0.4"
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.3.0"
+test -z "$YODA_VERSION" && YODA_VERSION="1.4.0"
 
 test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
 test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
 
-HEPMC_VERSION="2.06.06" # TODO: want 2.06.09
-FASTJET_VERSION="3.0.3" # TODO: want 3.0.4
-BOOST_VERSION="1.50.0"
+test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.06" #< TODO: later versions not present on LCG AFS external area
+test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.0.6"
+test -z "$BOOST_VERSION" && BOOST_VERSION="1.50.0"
+
+## Disable asserts for production running
+export CPPFLAGS="$CPPFLAGS -DNDEBUG"
 
 
 ###############
 
-echo "Running Rivet 2.x bootstrap script"
+echo "Running Rivet 2.x bootstrap script with LCG HepMC, FastJet and Boost"
+echo "Building Rivet $RIVET_VERSION, YODA $YODA_VERSION"
 
 ## Immediate exit on a command (group) failure and optional debug mode
 set -e
 test -n "$DEBUG" && set -x
 export PATH=$INSTALL_PREFIX/bin:$PATH
 
-function wget_untar { wget $1 -O- | tar xz; }
+function wget_untar { wget --no-check-certificate $1 -O- | tar xz; }
 function conf { ./configure --prefix=$INSTALL_PREFIX "$@"; }
 function mmi { $MAKE "$@" && $MAKE install; }
+
+
+## Make installation directory, with an etc subdir so Rivet etc. will install bash completion scripts
+mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 
 
 ## Define LCG platform etc. -- may need to be customised
@@ -41,9 +49,6 @@ source $GCCSETUP
 ## Setup Python
 PYTHONBIN=$LCGDIR/Python/2.6.5p2/$LCGTAG/bin
 PATH=$PYTHONBIN:$PATH
-# Setup LCG cmake
-CMAKEBIN=$LCGDIR/CMake/2.8.9/Linux-i386/bin
-PATH=$CMAKEBIN:$PATH
 
 
 ## Add local dirs to the paths

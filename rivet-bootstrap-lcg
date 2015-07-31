@@ -12,10 +12,6 @@ test -z "$YODA_VERSION" && YODA_VERSION="1.4.0"
 test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
 test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
 
-test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.06" #< TODO: later versions not present on LCG AFS external area
-test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.0.6"
-test -z "$BOOST_VERSION" && BOOST_VERSION="1.50.0"
-
 ## Disable asserts for production running
 export CPPFLAGS="$CPPFLAGS -DNDEBUG"
 
@@ -40,27 +36,27 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 
 
 ## Define LCG platform etc. -- may need to be customised
-LCGTAG="x86_64-slc6-gcc46-opt"
-LCGDIR="/afs/cern.ch/sw/lcg/external"
+LCGTAG="x86_64-slc6-gcc48-opt"
+LCGVERSION="LCG_79"
+LCGDIR="/afs/cern.ch/sw/lcg/releases/$LCGVERSION"
 test -d "$LCGDIR" || { echo "LCG AFS filesystem not found: exiting..." 1>&2 ; exit 1; }
 ## Setup GCC
-GCCSETUP=$LCGDIR/gcc/4.6/$LCGTAG/setup.sh
-source $GCCSETUP
+SETUPCMD_GCC="source $LCGDIR/gcc/4.8.4/x86_64-slc6/setup.sh"
+$SETUPCMD_GCC
 ## Setup Python
-PYTHONBIN=$LCGDIR/Python/2.6.5p2/$LCGTAG/bin
-PATH=$PYTHONBIN:$PATH
-
+SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.9.p1/x86_64-slc6-gcc48-opt/Python-env.sh"
+$SETUPCMD_PYTHON
 
 ## Add local dirs to the paths
 PATH=$INSTALL_PREFIX/bin:$PATH
 LD_LIBRARY_PATH=$INSTALL_PREFIX/lib:$LD_LIBRARY_PATH
-PYTHONPATH=$INSTALL_PREFIX/lib64/python2.6/site-packages:$PYTHONPATH
+PYTHONPATH=$INSTALL_PREFIX/lib64/python2.7/site-packages:$PYTHONPATH
 
 
 ## LCG locations of standard HEP libraries
-HEPMCPATH=$LCGDIR/HepMC/$HEPMC_VERSION/$LCGTAG
-FASTJETPATH=$LCGDIR/fastjet/$FASTJET_VERSION/$LCGTAG
-BOOSTPATH=$LCGDIR/Boost/${BOOST_VERSION}_python2.6/$LCGTAG
+HEPMCPATH=$LCGDIR/HepMC/2.06.09/$LCGTAG
+FASTJETPATH=$LCGDIR/fastjet/3.1.1/$LCGTAG
+BOOSTPATH=$LCGDIR/Boost/1.55.0_python2.7/$LCGTAG
 
 
 ## Install YODA
@@ -96,5 +92,13 @@ fi
 cat rivetenv.sh >> $INSTALL_PREFIX/rivetenv.sh
 
 
+## Make a top-level environment setup script
+> $INSTALL_PREFIX/env.sh
+echo $SETUPCMD_GCC >> $INSTALL_PREFIX/env.sh
+echo $SETUPCMD_PYTHON >> $INSTALL_PREFIX/env.sh
+echo "source $INSTALL_PREFIX/yodaenv.sh" >> $INSTALL_PREFIX/env.sh
+echo "source $INSTALL_PREFIX/rivetenv.sh" >> $INSTALL_PREFIX/env.sh
+
+
 ## Announce the build success
-echo; echo "All done. Now set some variables in your shell by sourcing $INSTALL_PREFIX/rivetenv.(c)sh"
+echo; echo "All done. Now set some variables in your shell by sourcing $INSTALL_PREFIX/env.(c)sh"

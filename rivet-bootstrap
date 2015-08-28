@@ -12,7 +12,7 @@ test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
 test -z "$RIVET_VERSION" && RIVET_VERSION="2.3.0"
-test -z "$YODA_VERSION" && YODA_VERSION="1.4.0"
+test -z "$YODA_VERSION" && YODA_VERSION="1.5.0"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09"
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.0.6"
@@ -179,7 +179,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
 
     ## Install dev Rivet
     cd $BUILD_PREFIX
-    hg clone http://rivet.hepforge.org/hg/rivet
+    hg clone https://rivet.hepforge.org/hg/rivet
     cd rivet
     hg pull -u
     autoreconf -i

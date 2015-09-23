@@ -46,6 +46,9 @@ $SETUPCMD_GCC
 ## Setup Python
 SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.9.p1/x86_64-slc6-gcc48-opt/Python-env.sh"
 $SETUPCMD_PYTHON
+## Setup Boost
+SETUPCMD_BOOST="source $LCGDIR/Boost/1.55.0_python2.7/x86_64-slc6-gcc48-opt/Boost-env.sh"
+$SETUPCMD_BOOST
 
 ## Add local dirs to the paths
 PATH=$INSTALL_PREFIX/bin:$PATH

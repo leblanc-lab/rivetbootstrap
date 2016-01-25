@@ -7,7 +7,7 @@ test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
 
 test -z "$RIVET_VERSION" && RIVET_VERSION="2.4.0"
-test -z "$YODA_VERSION" && YODA_VERSION="1.5.5"
+test -z "$YODA_VERSION" && YODA_VERSION="1.5.8"
 
 test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
 test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
@@ -37,17 +37,17 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 
 ## Define LCG platform etc. -- may need to be customised
 LCGTAG="x86_64-slc6-gcc48-opt"
-LCGVERSION="LCG_79"
+LCGVERSION="LCG_82"
 LCGDIR="/afs/cern.ch/sw/lcg/releases/$LCGVERSION"
 test -d "$LCGDIR" || { echo "LCG AFS filesystem not found: exiting..." 1>&2 ; exit 1; }
 ## Setup GCC
 SETUPCMD_GCC="source $LCGDIR/gcc/4.8.4/x86_64-slc6/setup.sh"
 $SETUPCMD_GCC
 ## Setup Python
-SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.9.p1/x86_64-slc6-gcc48-opt/Python-env.sh"
+SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.10/x86_64-slc6-gcc48-opt/Python-env.sh"
 $SETUPCMD_PYTHON
 ## Setup Boost
-SETUPCMD_BOOST="source $LCGDIR/Boost/1.55.0_python2.7/x86_64-slc6-gcc48-opt/Boost-env.sh"
+SETUPCMD_BOOST="source $LCGDIR/Boost/1.59.0_python2.7/x86_64-slc6-gcc48-opt/Boost-env.sh"
 $SETUPCMD_BOOST
 export BOOST_ROOT=$BOOST_HOME  #< set value from
 
@@ -60,7 +60,7 @@ PYTHONPATH=$INSTALL_PREFIX/lib64/python2.7/site-packages:$PYTHONPATH
 ## LCG locations of standard HEP libraries
 HEPMCPATH=$LCGDIR/HepMC/2.06.09/$LCGTAG
 FASTJETPATH=$LCGDIR/fastjet/3.1.1/$LCGTAG
-BOOSTPATH=$LCGDIR/Boost/1.55.0_python2.7/$LCGTAG #< TODO: can set =$BOOST_HOME?
+BOOSTPATH=$LCGDIR/Boost/1.59.0_python2.7/$LCGTAG #< TODO: can set =$BOOST_HOME?
 
 
 ## Install YODA

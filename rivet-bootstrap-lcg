@@ -37,8 +37,9 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 
 ## Define LCG platform etc. -- may need to be customised
 LCGTAG="x86_64-slc6-gcc48-opt"
-LCGVERSION="LCG_82"
-LCGDIR="/afs/cern.ch/sw/lcg/releases/$LCGVERSION"
+LCGVERSION="LCG_82" #< TODO: -> LCG_83
+#LCGDIR="/afs/cern.ch/sw/lcg/releases/$LCGVERSION"
+LCGDIR="/cvmfs/sft.cern.ch/lcg/releases/$LCGVERSION"
 test -d "$LCGDIR" || { echo "LCG AFS filesystem not found: exiting..." 1>&2 ; exit 1; }
 ## Setup GCC
 SETUPCMD_GCC="source $LCGDIR/gcc/4.8.4/x86_64-slc6/setup.sh"

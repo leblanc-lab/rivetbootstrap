@@ -60,7 +60,7 @@ PYTHONPATH=$INSTALL_PREFIX/lib64/python2.7/site-packages:$PYTHONPATH
 
 ## LCG locations of standard HEP libraries
 HEPMCPATH=$LCGDIR/HepMC/2.06.09/$LCGTAG
-FASTJETPATH=$LCGDIR/fastjet/3.1.1/$LCGTAG
+FASTJETPATH=$LCGDIR/fastjet/3.1.1/$LCGTAG #< TODO: update to 3.2.0 when possible
 BOOSTPATH=$LCGDIR/Boost/1.59.0_python2.7/$LCGTAG #< TODO: can set =$BOOST_HOME?
 
 

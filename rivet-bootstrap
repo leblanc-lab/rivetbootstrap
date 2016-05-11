@@ -177,10 +177,11 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     cp yodaenv.sh $INSTALL_PREFIX/yodaenv.sh
     YODAPATH=$INSTALL_PREFIX
 
-    ## Install dev Rivet
+    ## Install 2.4.x dev Rivet
     cd $BUILD_PREFIX
     hg clone https://rivet.hepforge.org/hg/rivet
     cd rivet
+    hg up release-2-4-x
     hg pull -u
     autoreconf -i
     conf $RIVET_CONFFLAGS \

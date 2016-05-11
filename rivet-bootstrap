@@ -5,24 +5,21 @@ test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
 
 test -z "$INSTALL_GSL" && INSTALL_GSL="1"
-test -z "$INSTALL_BOOST" && INSTALL_BOOST="1"
 test -z "$INSTALL_HEPMC" && INSTALL_HEPMC="1"
 test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.1.0"
-test -z "$YODA_VERSION" && YODA_VERSION="1.0.5"
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.5.0beta1"
+test -z "$YODA_VERSION" && YODA_VERSION="1.6.1"
 
-HEPMC_VERSION="2.06.06" # TODO: want 2.06.09
-FASTJET_VERSION="3.0.3" # TODO: want 3.0.4
-BOOST_VERSION="1_55_0"
-GSL_VERSION="1.16"
+test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3 when stable releases available
+test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.2.0"
+test -z "$GSL_VERSION" && GSL_VERSION="1.16"
 
 
 ## Paths for the case of existing installations
 test -z "$GSLPATH" && GSLPATH="/usr"
-test -z "$BOOSTPATH" && BOOSTPATH="/usr"
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"
 test -z "$FASTJETPATH" && FASTJETPATH="/usr"
 test -z "$YODAPATH" && YODAPATH="/usr"
@@ -40,44 +37,33 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 fi
 
+## Disable asserts for production running
+export CPPFLAGS="$CPPFLAGS -DNDEBUG"
+
 
 ###############
 
-echo "Running Rivet 2.x bootstrap script"
+echo "Running Rivet bootstrap script"
+echo "Building Rivet $RIVET_VERSION, YODA $YODA_VERSION"
 
 ## Immediate exit on a command (group) failure and optional debug mode
 set -e
 test -n "$DEBUG" && set -x
 export PATH=$INSTALL_PREFIX/bin:$PATH
 
-function wget_untar { wget $1 -O- | tar xz; }
+function wget_untar { wget --no-check-certificate $1 -O- | tar xz; }
 function conf { ./configure --prefix=$INSTALL_PREFIX "$@"; }
 function mmi { $MAKE "$@" && $MAKE install; }
 
-## Install cmake
-if ! which cmake > /dev/null; then
-    cd $BUILD_PREFIX
-    wget_untar http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
-    cd cmake-2.8.12.1
-    conf
-    mmi
-fi;
 
-## Install Boost
-if [[ "$INSTALL_BOOST" -eq "1" ]]; then
-    cd $BUILD_PREFIX
-    wget http://downloads.sourceforge.net/boost/boost_$BOOST_VERSION.tar.gz
-    tar xzf boost_$BOOST_VERSION.tar.gz boost_$BOOST_VERSION/boost
-    mkdir -p $INSTALL_PREFIX/include
-    rm -rf $INSTALL_PREFIX/include/boost
-    mv boost_$BOOST_VERSION/boost $INSTALL_PREFIX/include/
-    BOOSTPATH=$INSTALL_PREFIX
-fi
+## Make installation directory, with an etc subdir so Rivet etc. will install bash completion scripts
+mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
+
 
 ## Install GSL
 if [[ "$INSTALL_GSL" -eq "1" ]]; then
     cd $BUILD_PREFIX
-    wget_untar http://ftpmirror.gnu.org/gsl/gsl-$GSL_VERSION.tar.gz
+    test -d gsl-$GSL_VERSION || wget_untar http://ftpmirror.gnu.org/gsl/gsl-$GSL_VERSION.tar.gz
     cd gsl-$GSL_VERSION
     conf
     mmi
@@ -97,9 +83,9 @@ fi
 ## Install FastJet
 if [[ "$INSTALL_FASTJET" -eq "1" ]]; then
     cd $BUILD_PREFIX
-    wget_untar http://www.fastjet.fr/repo/fastjet-$FASTJET_VERSION.tar.gz
+    test -d fastjet-$FASTJET_VERSION || wget_untar http://www.fastjet.fr/repo/fastjet-$FASTJET_VERSION.tar.gz
     cd fastjet-$FASTJET_VERSION
-    conf --enable-shared --enable-allcxxplugins
+    conf --enable-shared --disable-auto-ptr --enable-allcxxplugins
     mmi
     FASTJETPATH=$INSTALL_PREFIX
 fi
@@ -107,9 +93,9 @@ fi
 ## Install YODA
 if [[ "$INSTALL_YODA" -eq "1" ]]; then
     cd $BUILD_PREFIX
-    wget_untar http://www.hepforge.org/archive/yoda/YODA-$YODA_VERSION.tar.gz
+    test -d YODA-$YODA_VERSION || wget_untar http://www.hepforge.org/archive/yoda/YODA-$YODA_VERSION.tar.gz
     cd YODA-$YODA_VERSION
-    conf $YODA_CONFFLAGS --with-boost=$BOOSTPATH
+    conf $YODA_CONFFLAGS
     mmi
     cp yodaenv.sh $INSTALL_PREFIX/yodaenv.sh
     YODAPATH=$INSTALL_PREFIX
@@ -118,13 +104,12 @@ fi
 ## Install Rivet
 if [[ "$INSTALL_RIVET" -eq "1" ]]; then
     cd $BUILD_PREFIX
-    wget_untar http://www.hepforge.org/archive/rivet/Rivet-$RIVET_VERSION.tar.gz
+    test -d Rivet-$RIVET_VERSION || wget_untar http://www.hepforge.org/archive/rivet/Rivet-$RIVET_VERSION.tar.gz
     cd Rivet-$RIVET_VERSION
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
         --with-hepmc=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH \
-        --with-boost=$BOOSTPATH \
         --with-gsl=$GSLPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
@@ -153,7 +138,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Install hg
     if ! which hg > /dev/null; then
         cd $BUILD_PREFIX
-        wget_untar http://mercurial.selenic.com/release/mercurial-2.8.2.tar.gz
+        test -d mercurial-2.8.2 || wget_untar http://mercurial.selenic.com/release/mercurial-2.8.2.tar.gz
         cd mercurial-2.8.2
         $MAKE PREFIX=$INSTALL_PREFIX install-bin
     fi;
@@ -161,31 +146,32 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Install Cython
     if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
         cd $BUILD_PREFIX
-        wget_untar http://cython.org/release/Cython-0.19.1.tar.gz
-        export PATH=$BUILD_PREFIX/Cython-0.19.1/bin:$PATH
-        export PYTHONPATH=$BUILD_PREFIX/Cython-0.19.1:$PATH
+        test -d Cython-0.20.2 || wget_untar http://cython.org/release/Cython-0.20.2.tar.gz
+        export PATH=$BUILD_PREFIX/Cython-0.20.2/bin:$PATH
+        export PYTHONPATH=$BUILD_PREFIX/Cython-0.20.2:$PATH
     fi;
 
     ## Install dev YODA
     cd $BUILD_PREFIX
     hg clone http://yoda.hepforge.org/hg/yoda
     cd yoda
+    hg pull -u
     autoreconf -i
-    conf $YODA_CONFFLAGS --with-boost=$BOOSTPATH
+    conf $YODA_CONFFLAGS
     mmi
     cp yodaenv.sh $INSTALL_PREFIX/yodaenv.sh
     YODAPATH=$INSTALL_PREFIX
 
     ## Install dev Rivet
     cd $BUILD_PREFIX
-    hg clone -r release-2-0 http://rivet.hepforge.org/hg/rivet
+    hg clone https://rivet.hepforge.org/hg/rivet
     cd rivet
+    hg pull -u
     autoreconf -i
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
         --with-hepmc=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH \
-        --with-boost=$BOOSTPATH \
         --with-gsl=$GSLPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/

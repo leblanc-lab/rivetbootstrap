@@ -144,10 +144,10 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
             mmi
             cd ..
         }
-        test -e $INSTALL_PREFIX/bin/m4       || { echo; echo "Building m4"; _build_autotool m4 1.4.16; }
+        test -e $INSTALL_PREFIX/bin/m4       || { echo; echo "Building m4"; _build_autotool m4 1.4.17; }
         test -e $INSTALL_PREFIX/bin/autoconf || { echo; echo "Building autoconf"; _build_autotool autoconf 2.69; }
-        test -e $INSTALL_PREFIX/bin/automake || { echo; echo "Building automake"; _build_autotool automake 1.13.4; }
-        test -e $INSTALL_PREFIX/bin/libtool  || { echo; echo "Building libtool"; _build_autotool libtool 2.4.2; }
+        test -e $INSTALL_PREFIX/bin/automake || { echo; echo "Building automake"; _build_autotool automake 1.15; }
+        test -e $INSTALL_PREFIX/bin/libtool  || { echo; echo "Building libtool"; _build_autotool libtool 2.4.6; }
     fi
 
     ## Install hg
@@ -161,27 +161,27 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Install Cython
     if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
         cd $BUILD_PREFIX
-        test -d Cython-0.20.2 || wget_untar http://cython.org/release/Cython-0.20.2.tar.gz
-        export PATH=$BUILD_PREFIX/Cython-0.20.2/bin:$PATH
-        export PYTHONPATH=$BUILD_PREFIX/Cython-0.20.2:$PATH
+        test -d Cython-0.23.5 || wget_untar http://cython.org/release/Cython-0.23.5.tar.gz
+        export PATH=$BUILD_PREFIX/Cython-0.23.5/bin:$PATH
+        export PYTHONPATH=$BUILD_PREFIX/Cython-0.23.5:$PATH
     fi;
 
     ## Install dev YODA
     cd $BUILD_PREFIX
-    hg clone http://yoda.hepforge.org/hg/yoda
+    hg clone http://yoda.hepforge.org/hg/yoda --insecure
     cd yoda
     hg pull -u
     autoreconf -i
-    conf $YODA_CONFFLAGS --with-boost=$BOOSTPATH
+    conf $YODA_CONFFLAGS --with-boost=$BOOSTPATH --insecure
     mmi
     cp yodaenv.sh $INSTALL_PREFIX/yodaenv.sh
     YODAPATH=$INSTALL_PREFIX
 
     ## Install head of 2.4.x Rivet branch
     cd $BUILD_PREFIX
-    hg clone https://rivet.hepforge.org/hg/rivet
+    hg clone https://rivet.hepforge.org/hg/rivet --insecure
     cd rivet
-    hg up release-2-4-x
+    hg up release-2-4-x --insecure
     hg pull -u
     autoreconf -i
     conf $RIVET_CONFFLAGS \

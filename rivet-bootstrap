@@ -153,9 +153,9 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
 
     ## Install dev YODA
     cd $BUILD_PREFIX
-    hg clone --insecure http://yoda.hepforge.org/hg/yoda
+    hg clone http://yoda.hepforge.org/hg/yoda --insecure
     cd yoda
-    hg pull -u
+    hg pull -u --insecure
     autoreconf -i
     conf $YODA_CONFFLAGS
     mmi
@@ -164,9 +164,9 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
 
     ## Install dev Rivet
     cd $BUILD_PREFIX
-    hg clone --insecure https://rivet.hepforge.org/hg/rivet
+    hg clone https://rivet.hepforge.org/hg/rivet --insecure
     cd rivet
-    hg pull -u
+    hg pull -u --insecure
     autoreconf -i
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \

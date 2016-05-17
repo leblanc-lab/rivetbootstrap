@@ -181,7 +181,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     cd $BUILD_PREFIX
     hg clone https://rivet.hepforge.org/hg/rivet --insecure
     cd rivet
-    hg up release-2-4-x --insecure
+    hg up release-2-4-x
     hg pull -u --insecure
     autoreconf -i
     conf $RIVET_CONFFLAGS \

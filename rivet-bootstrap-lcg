@@ -1,13 +1,13 @@
 #! /usr/bin/env bash
 
-## Boost and GSL are expected to be installed correctly, as is a sane suite of GNU build tools
+## GSL is expected to be installed and set up correctly, as is a sane suite of GNU build tools
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.4.3"
-test -z "$YODA_VERSION" && YODA_VERSION="1.5.9"
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.5.0"
+test -z "$YODA_VERSION" && YODA_VERSION="1.6.2"
 
 test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
 test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
@@ -18,7 +18,7 @@ export CPPFLAGS="$CPPFLAGS -DNDEBUG"
 
 ###############
 
-echo "Running Rivet 2.x bootstrap script with LCG HepMC, FastJet and Boost"
+echo "Running Rivet bootstrap script with LCG HepMC, FastJet, and GSL"
 echo "Building Rivet $RIVET_VERSION, YODA $YODA_VERSION"
 
 ## Immediate exit on a command (group) failure and optional debug mode
@@ -47,10 +47,6 @@ $SETUPCMD_GCC
 ## Setup Python
 SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.10/x86_64-slc6-gcc48-opt/Python-env.sh"
 $SETUPCMD_PYTHON
-## Setup Boost
-SETUPCMD_BOOST="source $LCGDIR/Boost/1.59.0_python2.7/x86_64-slc6-gcc48-opt/Boost-env.sh"
-$SETUPCMD_BOOST
-export BOOST_ROOT=$BOOST_HOME  #< set value from
 
 ## Add local dirs to the paths
 PATH=$INSTALL_PREFIX/bin:$PATH
@@ -60,8 +56,7 @@ PYTHONPATH=$INSTALL_PREFIX/lib64/python2.7/site-packages:$PYTHONPATH
 
 ## LCG locations of standard HEP libraries
 HEPMCPATH=$LCGDIR/HepMC/2.06.09/$LCGTAG
-FASTJETPATH=$LCGDIR/fastjet/3.1.1/$LCGTAG #< TODO: update to 3.2.0 when possible
-BOOSTPATH=$LCGDIR/Boost/1.59.0_python2.7/$LCGTAG #< TODO: can set =$BOOST_HOME?
+FASTJETPATH=$LCGDIR/fastjet/3.1.1/$LCGTAG #< TODO: update to 3.2.0 when available
 
 
 ## Install YODA
@@ -69,7 +64,7 @@ echo; echo "Building YODA"
 cd $BUILD_PREFIX
 test -d YODA-$YODA_VERSION || wget_untar http://www.hepforge.org/archive/yoda/YODA-$YODA_VERSION.tar.gz
 cd YODA-$YODA_VERSION
-conf $YODA_CONFFLAGS --with-boost=$BOOSTPATH #< TODO: can we remove --with-boost now that BOOST_ROOT is set?
+conf $YODA_CONFFLAGS
 mmi
 > $INSTALL_PREFIX/yodaenv.sh
 ## Install setup script with GCC/Python env if on AFS
@@ -85,8 +80,7 @@ echo; echo "Building Rivet"
 cd $BUILD_PREFIX
 test -d Rivet-$RIVET_VERSION || wget_untar http://www.hepforge.org/archive/rivet/Rivet-$RIVET_VERSION.tar.gz
 cd Rivet-$RIVET_VERSION
-conf $RIVET_CONFFLAGS --with-yoda=$INSTALL_PREFIX \
-  --with-hepmc=$HEPMCPATH --with-fastjet=$FASTJETPATH --with-boost=$BOOSTPATH #< TODO: can we remove --with-boost now that BOOST_ROOT is set?
+conf $RIVET_CONFFLAGS --with-yoda=$INSTALL_PREFIX --with-hepmc=$HEPMCPATH --with-fastjet=$FASTJETPATH
 mmi
 > $INSTALL_PREFIX/rivetenv.sh
 ## Install setup script with GCC/Python env if on AFS

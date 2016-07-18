@@ -161,7 +161,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Install Cython
     if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
         cd $BUILD_PREFIX
-        test -d Cython-0.23.5 || wget_untar http://cython.org/release/Cython-0.23.5.tar.gz
+        test -d Cython-0.23.5 || wget_untar https://pypi.python.org/packages/e1/cb/40463287f646d360889a41e820ac32f3015787c15e51dda89662314d889d/Cython-0.23.5.tar.gz
         export PATH=$BUILD_PREFIX/Cython-0.23.5/bin:$PATH
         export PYTHONPATH=$BUILD_PREFIX/Cython-0.23.5:$PATH
     fi;

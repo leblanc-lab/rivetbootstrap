@@ -10,8 +10,8 @@ test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.5.0"
-test -z "$YODA_VERSION" && YODA_VERSION="1.6.2"
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.5.1"
+test -z "$YODA_VERSION" && YODA_VERSION="1.6.3"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3 when stable releases available
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.2.0"
@@ -138,7 +138,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Install hg
     if ! which hg > /dev/null; then
         cd $BUILD_PREFIX
-        test -d mercurial-2.8.2 || wget_untar http://mercurial.selenic.com/release/mercurial-2.8.2.tar.gz
+        test -d mercurial-2.8.2 || wget_untar http://mercurial-scm.org/release/mercurial-2.8.2.tar.gz
         cd mercurial-2.8.2
         $MAKE PREFIX=$INSTALL_PREFIX install-bin
     fi;

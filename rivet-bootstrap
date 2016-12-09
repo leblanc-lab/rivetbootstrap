@@ -34,6 +34,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     INSTALL_RIVET="0"
     ## Might need to install some extra toolkit bits for dev mode
     test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="1"
+    test -z "$INSTALL_HG" && INSTALL_HG="1"
     test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 fi
 
@@ -136,7 +137,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     fi
 
     ## Install hg
-    if ! which hg > /dev/null; then
+    if [[ "$INSTALL_HG" -eq "1" ]]; then
         cd $BUILD_PREFIX
         HG_VERSION=2.8.2
         test -d mercurial-$HG_VERSION || wget_untar http://mercurial-scm.org/release/mercurial-2.8.2.tar.gz

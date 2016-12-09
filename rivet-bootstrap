@@ -148,7 +148,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
         cd $BUILD_PREFIX
         CYTHON_VERSION=0.25.1
-        test -d cython-$CYTHON_VERSION || wget https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz -O - | tar x
+        test -d cython-$CYTHON_VERSION || { wget https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz | tar xz
         export PATH=$BUILD_PREFIX/cython-$CYTHON_VERSION/bin:$PATH
         export PYTHONPATH=$BUILD_PREFIX/cython-$CYTHON_VERSION:$PATH
     fi;

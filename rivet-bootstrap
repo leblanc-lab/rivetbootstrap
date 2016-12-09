@@ -142,16 +142,16 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
         test -d mercurial-$HG_VERSION || wget_untar http://mercurial-scm.org/release/mercurial-2.8.2.tar.gz
         cd mercurial-$HG_VERSION
         $MAKE PREFIX=$INSTALL_PREFIX install-bin
-    fi;
+    fi
 
     ## Install Cython
     if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
         cd $BUILD_PREFIX
         CYTHON_VERSION=0.25.1
-        test -d cython-$CYTHON_VERSION || { wget https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz | tar xz
+        test -d cython-$CYTHON_VERSION || { wget https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz -O - | tar xz; }
         export PATH=$BUILD_PREFIX/cython-$CYTHON_VERSION/bin:$PATH
         export PYTHONPATH=$BUILD_PREFIX/cython-$CYTHON_VERSION:$PATH
-    fi;
+    fi
 
     ## Install dev YODA
     cd $BUILD_PREFIX

@@ -14,7 +14,7 @@ test -z "$RIVET_VERSION" && RIVET_VERSION="2.5.4" #
 test -z "$YODA_VERSION" && YODA_VERSION="1.6.6" #
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3 when stable releases available
-test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.2.0"
+test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.2.2"
 test -z "$GSL_VERSION" && GSL_VERSION="1.16"
 
 

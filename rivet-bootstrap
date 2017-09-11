@@ -18,6 +18,20 @@ test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.2.2"
 test -z "$GSL_VERSION" && GSL_VERSION="1.16"
 
 
+## Rivet needs C++11 now: first run a simple test for that
+test -z "$CXX" && CXX="g++"
+echo "int main() { return 0; }" > cxxtest.cc
+CXX11=1
+$CXX -std=c++11 cxxtest.cc -o cxxtest &> /dev/null || CXX11=0
+rm -f cxxtest cxxtest.cc
+if [[ "$CXX11" -ne 1 ]]; then
+    echo "$CXX does not accept the -std=c++11 flag. You need C++ to build Rivet: exiting installation :-("
+    exit 1
+else
+    echo "$CXX accepts the -std=c++11 flag: hurrah! Continuing installation..."
+fi
+
+
 ## Paths for the case of existing installations
 test -z "$GSLPATH" && GSLPATH="/usr"
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"

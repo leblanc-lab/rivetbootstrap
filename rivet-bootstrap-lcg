@@ -27,6 +27,7 @@ if [[ "$CXX11" -ne 1 ]]; then
     exit 1
 else
     echo "$CXX accepts the -std=c++11 flag: hurrah! Continuing installation..."
+    echo
 fi
 
 

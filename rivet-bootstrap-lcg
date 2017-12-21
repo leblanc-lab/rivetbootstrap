@@ -6,8 +6,8 @@ test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.0b1" #
-test -z "$YODA_VERSION" && YODA_VERSION="1.7.0b1" #
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.0" #
+test -z "$YODA_VERSION" && YODA_VERSION="1.7.0" #
 
 test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
 test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""

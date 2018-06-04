@@ -38,7 +38,7 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 ## Define LCG platform etc. -- may need to be customised
 SHORTLCGTAG="x86_64-slc6"
 LCGTAG="$SHORTLCGTAG-gcc49-opt"
-LCGVERSION="LCG_85"
+LCGVERSION="LCG_88"
 #LCGDIR="/afs/cern.ch/sw/lcg/releases/$LCGVERSION"
 LCGDIR="/cvmfs/sft.cern.ch/lcg/releases/$LCGVERSION"
 test -d "$LCGDIR" || { echo "LCG filesystem at $LCGDIR not found: exiting..." 1>&2 ; exit 1; }
@@ -46,7 +46,7 @@ test -d "$LCGDIR" || { echo "LCG filesystem at $LCGDIR not found: exiting..." 1>
 SETUPCMD_GCC="source $LCGDIR/gcc/4.9.3/$SHORTLCGTAG/setup.sh"
 $SETUPCMD_GCC
 ## Setup Python
-SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.10/$LCGTAG/Python-env.sh"
+SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.13/$LCGTAG/Python-env.sh"
 $SETUPCMD_PYTHON
 
 ## Add local dirs to the paths

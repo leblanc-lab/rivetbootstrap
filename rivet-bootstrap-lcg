@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-## GSL is expected to be installed and set up correctly, as is a sane suite of GNU build tools
+## Build tools are expected to be installed and set up correctly
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
@@ -18,7 +18,7 @@ export CPPFLAGS="$CPPFLAGS -DNDEBUG"
 
 ###############
 
-echo "Running Rivet bootstrap script with LCG HepMC, FastJet, and GSL"
+echo "Running Rivet bootstrap script with LCG HepMC and FastJet"
 echo "Building Rivet $RIVET_VERSION, YODA $YODA_VERSION"
 
 ## Immediate exit on a command (group) failure and optional debug mode

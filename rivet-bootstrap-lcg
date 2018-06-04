@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-## GSL is expected to be installed and set up correctly, as is a sane suite of GNU build tools
+## Build tools are expected to be installed and set up correctly
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
@@ -33,7 +33,7 @@ fi
 
 ###############
 
-echo "Running Rivet bootstrap script with LCG HepMC, FastJet, and GSL"
+echo "Running Rivet bootstrap script with LCG HepMC and FastJet"
 echo "Building Rivet $RIVET_VERSION, YODA $YODA_VERSION"
 
 ## Immediate exit on a command (group) failure and optional debug mode
@@ -53,7 +53,7 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 ## Define LCG platform etc. -- may need to be customised
 SHORTLCGTAG="x86_64-slc6"
 LCGTAG="$SHORTLCGTAG-gcc49-opt"
-LCGVERSION="LCG_85"
+LCGVERSION="LCG_88"
 #LCGDIR="/afs/cern.ch/sw/lcg/releases/$LCGVERSION"
 LCGDIR="/cvmfs/sft.cern.ch/lcg/releases/$LCGVERSION"
 test -d "$LCGDIR" || { echo "LCG filesystem at $LCGDIR not found: exiting..." 1>&2 ; exit 1; }
@@ -61,7 +61,7 @@ test -d "$LCGDIR" || { echo "LCG filesystem at $LCGDIR not found: exiting..." 1>
 SETUPCMD_GCC="source $LCGDIR/gcc/4.9.3/$SHORTLCGTAG/setup.sh"
 $SETUPCMD_GCC
 ## Setup Python
-SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.10/$LCGTAG/Python-env.sh"
+SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.13/$LCGTAG/Python-env.sh"
 $SETUPCMD_PYTHON
 
 ## Add local dirs to the paths

@@ -4,7 +4,6 @@ test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
 
-test -z "$INSTALL_GSL" && INSTALL_GSL="1"
 test -z "$INSTALL_HEPMC" && INSTALL_HEPMC="1"
 test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
@@ -14,8 +13,7 @@ test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.0" #
 test -z "$YODA_VERSION" && YODA_VERSION="1.7.0" #
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3 when stable releases available
-test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.2.2"
-test -z "$GSL_VERSION" && GSL_VERSION="1.16"
+test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.1"
 
 
 ## Rivet needs C++11 now: first run a simple test for that
@@ -34,7 +32,6 @@ fi
 
 
 ## Paths for the case of existing installations
-test -z "$GSLPATH" && GSLPATH="/usr"
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"
 test -z "$FASTJETPATH" && FASTJETPATH="/usr"
 test -z "$YODAPATH" && YODAPATH="/usr"
@@ -76,16 +73,6 @@ function mmi { $MAKE "$@" && $MAKE install; }
 mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 
 
-## Install GSL
-if [[ "$INSTALL_GSL" -eq "1" ]]; then
-    cd $BUILD_PREFIX
-    test -d gsl-$GSL_VERSION || wget_untar http://ftpmirror.gnu.org/gsl/gsl-$GSL_VERSION.tar.gz
-    cd gsl-$GSL_VERSION
-    conf
-    mmi
-    GSLPATH=$INSTALL_PREFIX
-fi
-
 ## Install HepMC
 if [[ "$INSTALL_HEPMC" -eq "1" ]]; then
     cd $BUILD_PREFIX
@@ -125,8 +112,7 @@ if [[ "$INSTALL_RIVET" -eq "1" ]]; then
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
         --with-hepmc=$HEPMCPATH \
-        --with-fastjet=$FASTJETPATH \
-        --with-gsl=$GSLPATH
+        --with-fastjet=$FASTJETPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
 fi
@@ -171,7 +157,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
 
     ## Install dev YODA
     cd $BUILD_PREFIX
-    hg clone http://yoda.hepforge.org/hg/yoda -b release-1-6 --insecure
+    hg clone http://yoda.hepforge.org/hg/yoda -b release-1-7 --insecure
     cd yoda
     hg pull -u --insecure
     autoreconf -i
@@ -182,15 +168,14 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
 
     ## Install dev Rivet
     cd $BUILD_PREFIX
-    hg clone https://rivet.hepforge.org/hg/rivet -b release-2-5-x --insecure
+    hg clone https://rivet.hepforge.org/hg/rivet -b release-2-6-x --insecure
     cd rivet
     hg pull -u --insecure
     autoreconf -i
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
         --with-hepmc=$HEPMCPATH \
-        --with-fastjet=$FASTJETPATH \
-        --with-gsl=$GSLPATH
+        --with-fastjet=$FASTJETPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
 fi

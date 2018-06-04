@@ -1,13 +1,13 @@
 #! /usr/bin/env bash
 
-## GSL is expected to be installed and set up correctly, as is a sane suite of GNU build tools
+## Build tools are expected to be installed and set up correctly
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.5.2"
-test -z "$YODA_VERSION" && YODA_VERSION="1.6.5"
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.0" #
+test -z "$YODA_VERSION" && YODA_VERSION="1.7.0" #
 
 test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
 test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
@@ -16,9 +16,24 @@ test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
 export CPPFLAGS="$CPPFLAGS -DNDEBUG"
 
 
+## Rivet needs C++11 now: first run a simple test for that
+test -z "$CXX" && CXX="g++"
+echo "int main() { return 0; }" > cxxtest.cc
+CXX11=1
+$CXX -std=c++11 cxxtest.cc -o cxxtest &> /dev/null || CXX11=0
+rm -f cxxtest cxxtest.cc
+if [[ "$CXX11" -ne 1 ]]; then
+    echo "$CXX does not accept the -std=c++11 flag. You need C++ to build Rivet: exiting installation :-("
+    exit 1
+else
+    echo "$CXX accepts the -std=c++11 flag: hurrah! Continuing installation..."
+    echo
+fi
+
+
 ###############
 
-echo "Running Rivet bootstrap script with LCG HepMC, FastJet, and GSL"
+echo "Running Rivet bootstrap script with LCG HepMC and FastJet"
 echo "Building Rivet $RIVET_VERSION, YODA $YODA_VERSION"
 
 ## Immediate exit on a command (group) failure and optional debug mode
@@ -36,27 +51,28 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 
 
 ## Define LCG platform etc. -- may need to be customised
-LCGTAG="x86_64-slc6-gcc48-opt"
-LCGVERSION="LCG_82" #< TODO: -> LCG_83
+SHORTLCGTAG="x86_64-slc6"
+LCGTAG="$SHORTLCGTAG-gcc49-opt"
+LCGVERSION="LCG_88"
 #LCGDIR="/afs/cern.ch/sw/lcg/releases/$LCGVERSION"
 LCGDIR="/cvmfs/sft.cern.ch/lcg/releases/$LCGVERSION"
-test -d "$LCGDIR" || { echo "LCG AFS filesystem not found: exiting..." 1>&2 ; exit 1; }
+test -d "$LCGDIR" || { echo "LCG filesystem at $LCGDIR not found: exiting..." 1>&2 ; exit 1; }
 ## Setup GCC
-SETUPCMD_GCC="source $LCGDIR/gcc/4.8.4/x86_64-slc6/setup.sh"
+SETUPCMD_GCC="source $LCGDIR/gcc/4.9.3/$SHORTLCGTAG/setup.sh"
 $SETUPCMD_GCC
 ## Setup Python
-SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.10/x86_64-slc6-gcc48-opt/Python-env.sh"
+SETUPCMD_PYTHON="source $LCGDIR/Python/2.7.13/$LCGTAG/Python-env.sh"
 $SETUPCMD_PYTHON
 
 ## Add local dirs to the paths
 PATH=$INSTALL_PREFIX/bin:$PATH
 LD_LIBRARY_PATH=$INSTALL_PREFIX/lib:$LD_LIBRARY_PATH
-PYTHONPATH=$INSTALL_PREFIX/lib64/python2.7/site-packages:$PYTHONPATH
+PYTHONPATH=$INSTALL_PREFIX/lib64/python2.7/site-packages:$INSTALL_PREFIX/lib/python2.7/site-packages:$PYTHONPATH
 
 
 ## LCG locations of standard HEP libraries
 HEPMCPATH=$LCGDIR/HepMC/2.06.09/$LCGTAG
-FASTJETPATH=$LCGDIR/fastjet/3.1.1/$LCGTAG #< TODO: update to 3.2.0 when available
+FASTJETPATH=$LCGDIR/fastjet/3.2.0/$LCGTAG
 
 
 ## Install YODA

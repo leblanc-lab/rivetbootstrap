@@ -9,8 +9,8 @@ test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.1beta1"
-test -z "$YODA_VERSION" && YODA_VERSION="1.7.1beta1"
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.1"
+test -z "$YODA_VERSION" && YODA_VERSION="1.7.1"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3 when stable releases available
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.1"

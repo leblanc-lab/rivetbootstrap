@@ -9,8 +9,8 @@ test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.0" #
-test -z "$YODA_VERSION" && YODA_VERSION="1.7.0" #
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.1"
+test -z "$YODA_VERSION" && YODA_VERSION="1.7.3"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3 when stable releases available
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.1"
@@ -29,7 +29,6 @@ else
     echo "$CXX accepts the -std=c++11 flag: hurrah! Continuing installation..."
     echo
 fi
-
 
 ## Paths for the case of existing installations
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"
@@ -140,7 +139,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Install hg
     if [[ "$INSTALL_HG" -eq "1" ]]; then
         cd $BUILD_PREFIX
-        HG_VERSION=2.8.2 # TODO: -> 4.1.3 or similar?
+        HG_VERSION=4.6.2
         test -d mercurial-$HG_VERSION || wget_untar http://mercurial-scm.org/release/mercurial-$HG_VERSION.tar.gz
         cd mercurial-$HG_VERSION
         $MAKE PREFIX=$INSTALL_PREFIX install-bin
@@ -149,7 +148,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## Install Cython
     if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
         cd $BUILD_PREFIX
-        CYTHON_VERSION=0.25.1
+        CYTHON_VERSION=0.28.5
         test -d cython-$CYTHON_VERSION || { wget https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz -O - | tar xz; }
         export PATH=$BUILD_PREFIX/cython-$CYTHON_VERSION/bin:$PATH
         export PYTHONPATH=$BUILD_PREFIX/cython-$CYTHON_VERSION:$PYTHONPATH

@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+## Rivet bootstrapping / installation script for version 2.7.0
+
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
@@ -167,7 +169,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
 
     ## Install dev Rivet
     cd $BUILD_PREFIX
-    hg clone https://rivet.hepforge.org/hg/rivet -b release-2-6-x --insecure
+    hg clone https://rivet.hepforge.org/hg/rivet -b release-2-7-x --insecure
     cd rivet
     hg pull -u --insecure
     autoreconf -i

@@ -9,10 +9,10 @@ test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.6.2"
+test -z "$RIVET_VERSION" && RIVET_VERSION="2.7.0"
 test -z "$YODA_VERSION" && YODA_VERSION="1.7.4"
 
-test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3 when stable releases available
+test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3.1 when stable releases available
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.1"
 
 
@@ -75,8 +75,8 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 ## Install HepMC
 if [[ "$INSTALL_HEPMC" -eq "1" ]]; then
     cd $BUILD_PREFIX
-    test -d HepMC-$HEPMC_VERSION || wget_untar http://lcgapp.cern.ch/project/simu/HepMC/download/HepMC-$HEPMC_VERSION.tar.gz
-    cd HepMC-$HEPMC_VERSION
+    test -d hepmc$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/hepmc$HEPMC_VERSION.tgz
+    cd hepmc$HEPMC_VERSION
     conf --with-momentum=GEV --with-length=MM
     mmi
     HEPMCPATH=$INSTALL_PREFIX

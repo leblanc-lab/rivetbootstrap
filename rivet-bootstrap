@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Rivet bootstrapping / installation script for version 2.7.2
+# Rivet bootstrapping / installation script for version 3.0.0
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
@@ -8,14 +8,16 @@ test -z "$MAKE" && MAKE="make -j3"
 
 test -z "$INSTALL_HEPMC" && INSTALL_HEPMC="1"
 test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
+test -z "$INSTALL_FJCONTRIB" && INSTALL_FJCONTRIB="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="2.7.2b"
+test -z "$RIVET_VERSION" && RIVET_VERSION="3.0.0"
 test -z "$YODA_VERSION" && YODA_VERSION="1.7.5"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3.1 when stable releases available
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.2"
+test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.041"
 
 
 ## Rivet needs C++11 now: first run a simple test for that
@@ -92,6 +94,16 @@ if [[ "$INSTALL_FASTJET" -eq "1" ]]; then
     conf --enable-shared --disable-auto-ptr --enable-allcxxplugins
     mmi
     FASTJETPATH=$INSTALL_PREFIX
+fi
+
+## Install fjcontrib
+if [[ "$INSTALL_FJCONTRIB" -eq "1" ]]; then
+    cd $BUILD_PREFIX
+    test -d fastjet-$FJCONTRIB_VERSION || wget_untar http://fastjet.hepforge.org/contrib/downloads/fjcontrib-$FJCONTRIB_VERSION.tar.gz
+    cd fjcontrib-$FJCONTRIB_VERSION
+    ./configure --fastjet-config=$FASTJETPATH/bin/fastjet-config # fastjet-config already contains INSTALL_PREFIX
+    mmi fragile-shared-install
+    # does not need FJCONTRIBPATH because the relevant includes/libraries are merged with regular FastJet structure
 fi
 
 ## Install YODA

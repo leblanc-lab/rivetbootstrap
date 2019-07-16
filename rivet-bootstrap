@@ -12,7 +12,7 @@ test -z "$INSTALL_FJCONTRIB" && INSTALL_FJCONTRIB="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="3.0.0"
+test -z "$RIVET_VERSION" && RIVET_VERSION="3.0.1"
 test -z "$YODA_VERSION" && YODA_VERSION="1.7.7"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to 2.07 or 3.1 when stable releases available

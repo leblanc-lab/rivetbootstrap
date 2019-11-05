@@ -101,7 +101,7 @@ if [[ "$INSTALL_FJCONTRIB" -eq "1" ]]; then
     cd $BUILD_PREFIX
     test -d fastjet-$FJCONTRIB_VERSION || wget_untar http://fastjet.hepforge.org/contrib/downloads/fjcontrib-$FJCONTRIB_VERSION.tar.gz
     cd fjcontrib-$FJCONTRIB_VERSION
-    ./configure --fastjet-config=$FASTJETPATH/bin/fastjet-config # fastjet-config already contains INSTALL_PREFIX
+    ./configure --fastjet-config=$FASTJETPATH/bin/fastjet-config CXXFLAGS=-fPIC # fastjet-config already contains INSTALL_PREFIX
     mmi fragile-shared-install
     # does not need FJCONTRIBPATH because the relevant includes/libraries are merged with regular FastJet structure
 fi

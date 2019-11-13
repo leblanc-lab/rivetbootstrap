@@ -146,7 +146,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
         }
         test -e $INSTALL_PREFIX/bin/m4       || { echo; echo "Building m4"; _build_autotool m4 1.4.18; }
         test -e $INSTALL_PREFIX/bin/autoconf || { echo; echo "Building autoconf"; _build_autotool autoconf 2.69; }
-        test -e $INSTALL_PREFIX/bin/automake || { echo; echo "Building automake"; _build_autotool automake 1.16; }
+        test -e $INSTALL_PREFIX/bin/automake || { echo; echo "Building automake"; _build_autotool automake 1.16.1; }
         test -e $INSTALL_PREFIX/bin/libtool  || { echo; echo "Building libtool"; _build_autotool libtool 2.4.6; }
     fi
 
@@ -170,7 +170,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
 
     ## Install dev YODA
     cd $BUILD_PREFIX
-    hg clone https://phab.hepforge.org/source/yodahg/yoda -b release-1-7 --insecure
+    test -d yoda || hg clone https://phab.hepforge.org/source/yodahg/yoda -b release-1-7 --insecure
     cd yoda
     hg pull -u --insecure
     autoreconf -i
@@ -181,7 +181,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
 
     ## Install dev Rivet
     cd $BUILD_PREFIX
-    hg clone https://phab.hepforge.org/source/rivethg/rivet -u release-3-0-x --insecure
+    test -d rivet || hg clone https://phab.hepforge.org/source/rivethg/rivet -u release-3-0-x --insecure
     cd rivet
     hg pull -u --insecure
     autoreconf -i

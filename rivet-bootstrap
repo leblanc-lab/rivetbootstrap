@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Rivet bootstrapping / installation script for version 3.0.x
+# Rivet bootstrapping / installation script for version 3.1.x
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
@@ -12,25 +12,26 @@ test -z "$INSTALL_FJCONTRIB" && INSTALL_FJCONTRIB="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="3.0.2"
-test -z "$YODA_VERSION" && YODA_VERSION="1.7.7"
+test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.0"
+test -z "$YODA_VERSION" && YODA_VERSION="1.8.0"
 
-test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to v3 when stable
-test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.2"
-test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.041"
+test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to v3
+test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.3"
+test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.042"
 
 
-## Rivet needs C++11 now: first run a simple test for that
-test -z "$CXX" && CXX="g++"
+## Rivet needs C++14 now: first run a simple test for that
+test -n "$CXX" || CXX="g++"
 echo "int main() { return 0; }" > cxxtest.cc
-CXX11=1
-$CXX -std=c++11 cxxtest.cc -o cxxtest &> /dev/null || CXX11=0
+CXXVERSION=c++14
+GOODCXX=1
+$CXX -std=$CXXVERSION cxxtest.cc -o cxxtest &> /dev/null || GOODCXX=0
 rm -f cxxtest cxxtest.cc
-if [[ "$CXX11" -ne 1 ]]; then
-    echo "$CXX does not accept the -std=c++11 flag. You need C++ to build Rivet: exiting installation :-("
+if [[ "$GOODCXX" -ne 1 ]]; then
+    echo "$CXX does not accept the -std=$CXXVERSION flag. You need C++ to build Rivet: exiting installation :-("
     exit 1
 else
-    echo "$CXX accepts the -std=c++11 flag: hurrah! Continuing installation..."
+    echo "$CXX accepts the -std=$CXXVERSION flag: hurrah! Continuing installation..."
     echo
 fi
 

@@ -16,7 +16,7 @@ test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.0"
 test -z "$YODA_VERSION" && YODA_VERSION="1.8.0"
 
-test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.09" #< TODO: update to v3
+test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.10" #< TODO: update to v3
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.3"
 test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.042"
 
@@ -82,45 +82,55 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 
 ## Install HepMC
 if [[ "$INSTALL_HEPMC" -eq "1" ]]; then
+    echo "INSTALLING HEPMC $HEPMC_VERSION"
     cd $BUILD_PREFIX
-    test -d hepmc$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/hepmc$HEPMC_VERSION.tgz
-    cd hepmc$HEPMC_VERSION
-    conf --with-momentum=GEV --with-length=MM
+    test -d HepMC-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/HepMC-$HEPMC_VERSION.tgz
+    mkdir HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build
+    #conf --with-momentum=GEV --with-length=MM
+    cmake ../HepMC-$HEPMC_VERSION -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -Dmomentum=GEV --Dlength=MM
     mmi
     HEPMCPATH=$INSTALL_PREFIX
+    echo
 fi
 
 ## Install FastJet
 if [[ "$INSTALL_FASTJET" -eq "1" ]]; then
+    echo "INSTALLING FASTJET $FASTJET_VERSION"
     cd $BUILD_PREFIX
     test -d fastjet-$FASTJET_VERSION || wget_untar http://www.fastjet.fr/repo/fastjet-$FASTJET_VERSION.tar.gz
     cd fastjet-$FASTJET_VERSION
     conf --enable-shared --disable-auto-ptr --enable-allcxxplugins
     mmi
     FASTJETPATH=$INSTALL_PREFIX
+    echo
 fi
 
 ## Install fjcontrib
 if [[ "$INSTALL_FJCONTRIB" -eq "1" ]]; then
+    echo "INSTALLING FASTJET CONTRIB $FJCONTRIB_VERSION"
     cd $BUILD_PREFIX
     test -d fastjet-$FJCONTRIB_VERSION || wget_untar http://fastjet.hepforge.org/contrib/downloads/fjcontrib-$FJCONTRIB_VERSION.tar.gz
     cd fjcontrib-$FJCONTRIB_VERSION
     ./configure --fastjet-config=$FASTJETPATH/bin/fastjet-config CXXFLAGS=-fPIC # fastjet-config already contains INSTALL_PREFIX
     mmi fragile-shared-install
     # does not need FJCONTRIBPATH because the relevant includes/libraries are merged with regular FastJet structure
+    echo
 fi
 
 ## Install Cython
 if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
-    cd $BUILD_PREFIX
     CYTHON_VERSION=0.28.5
+    echo "INSTALLING CYTHON $CYTHON_VERSION"
+    cd $BUILD_PREFIX
     test -d cython-$CYTHON_VERSION || { wget https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz -O - | tar xz; }
     export PATH=$BUILD_PREFIX/cython-$CYTHON_VERSION/bin:$PATH
     export PYTHONPATH=$BUILD_PREFIX/cython-$CYTHON_VERSION:$PYTHONPATH
+    echo
 fi
 
 ## Install YODA
 if [[ "$INSTALL_YODA" -eq "1" ]]; then
+    echo "INSTALLING YODA $YODA_VERSION"
     cd $BUILD_PREFIX
     test -d YODA-$YODA_VERSION || wget_untar http://www.hepforge.org/archive/yoda/YODA-$YODA_VERSION.tar.gz
     cd YODA-$YODA_VERSION
@@ -128,10 +138,12 @@ if [[ "$INSTALL_YODA" -eq "1" ]]; then
     mmi
     cp yodaenv.sh $INSTALL_PREFIX/yodaenv.sh
     YODAPATH=$INSTALL_PREFIX
+    echo
 fi
 
 ## Install Rivet
 if [[ "$INSTALL_RIVET" -eq "1" ]]; then
+    echo "INSTALLING RIVET $RIVET_VERSION"
     cd $BUILD_PREFIX
     test -d Rivet-$RIVET_VERSION || wget_untar http://www.hepforge.org/archive/rivet/Rivet-$RIVET_VERSION.tar.gz
     cd Rivet-$RIVET_VERSION
@@ -141,6 +153,7 @@ if [[ "$INSTALL_RIVET" -eq "1" ]]; then
         --with-fastjet=$FASTJETPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
+    echo
 fi
 
 
@@ -162,10 +175,12 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
         test -e $INSTALL_PREFIX/bin/autoconf || { echo; echo "Building autoconf"; _build_autotool autoconf 2.69; }
         test -e $INSTALL_PREFIX/bin/automake || { echo; echo "Building automake"; _build_autotool automake 1.16.1; }
         test -e $INSTALL_PREFIX/bin/libtool  || { echo; echo "Building libtool"; _build_autotool libtool 2.4.6; }
+        echo
     fi
 
     ## Install dev YODA
     cd $BUILD_PREFIX
+    echo "INSTALLING YODA $YODA_VERSION"
     # test -d yoda || hg clone https://phab.hepforge.org/source/yodahg/yoda -b release-1-7 --insecure
     # cd yoda
     # hg pull -u --insecure
@@ -177,9 +192,11 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     mmi
     cp yodaenv.sh $INSTALL_PREFIX/yodaenv.sh
     YODAPATH=$INSTALL_PREFIX
+    echo
 
     ## Install dev Rivet
     cd $BUILD_PREFIX
+    echo "INSTALLING RIVET $RIVET_VERSION"
     # test -d rivet || hg clone https://phab.hepforge.org/source/rivethg/rivet -u release-3-0-x --insecure
     # cd rivet
     # hg pull -u --insecure
@@ -193,7 +210,8 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
         --with-fastjet=$FASTJETPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
+    echo
 fi
 
 ## Announce the build success
-echo; echo "All done. Now set some variables in your shell by sourcing $INSTALL_PREFIX/rivetenv.(c)sh"
+echo "All done. Now set some variables in your shell by sourcing $INSTALL_PREFIX/rivetenv.(c)sh"

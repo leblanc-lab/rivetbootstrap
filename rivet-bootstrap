@@ -65,6 +65,7 @@ export CPPFLAGS="$CPPFLAGS -DNDEBUG"
 
 echo "Running Rivet bootstrap script"
 echo "Building Rivet $RIVET_VERSION, YODA $YODA_VERSION"
+echo
 
 ## Immediate exit on a command (group) failure and optional debug mode
 set -e
@@ -84,10 +85,10 @@ mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 if [[ "$INSTALL_HEPMC" -eq "1" ]]; then
     echo "INSTALLING HEPMC $HEPMC_VERSION"
     cd $BUILD_PREFIX
-    test -d HepMC-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/HepMC-$HEPMC_VERSION.tgz
-    mkdir HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build
+    test -d HepMC-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/hepmc$HEPMC_VERSION.tgz
+    mkdir -p HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build
     #conf --with-momentum=GEV --with-length=MM
-    cmake ../HepMC-$HEPMC_VERSION -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -Dmomentum=GEV --Dlength=MM
+    cmake ../HepMC-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -Dmomentum=GEV -Dlength=MM
     mmi
     HEPMCPATH=$INSTALL_PREFIX
     echo

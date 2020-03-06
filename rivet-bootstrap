@@ -11,7 +11,6 @@ test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_FJCONTRIB" && INSTALL_FJCONTRIB="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
-test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 
 test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.0"
 test -z "$YODA_VERSION" && YODA_VERSION="1.8.0"
@@ -19,6 +18,10 @@ test -z "$YODA_VERSION" && YODA_VERSION="1.8.0"
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.10" #< TODO: update to v3
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.3"
 test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.042"
+test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.15"
+
+test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
+test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
 
 
 ## Rivet needs C++14 now: first run a simple test for that
@@ -36,6 +39,7 @@ else
     echo
 fi
 
+
 ## Paths for the case of existing installations
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"
 test -z "$FASTJETPATH" && FASTJETPATH="/usr"
@@ -45,17 +49,33 @@ test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
 test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
 
 
+## Developer mode
 if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     ## For rivetdev we skip the normal yoda/rivet installation
     INSTALL_YODA="0"
     INSTALL_RIVET="0"
     YODA_VERSION="dev"
     RIVET_VERSION="dev"
-    ## TODO: Test that git exists
-    ## Might need to install some extra toolkit bits for dev mode
-    test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="1"
-    test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
+
+    ## Test that necessary build tools exist or are requested for installation
+    if [[ -z "$(which git 2> /dev/null)" ]]; then
+        echo "git not found: you need a git installation to install Rivet+YODA in dev mode"
+        exit 2
+    fi
+    if [[ "$INSTALL_AUTOTOOLS" != "1" ]]; then
+        if [[ -z "$(which autoconf 2> /dev/null)" || -z "$(which autoreconf 2> /dev/null)" || -z "$(which automake 2> /dev/null)" || -z "$(which libtoolize 2> /dev/null)" ]]; then
+            echo "autotools (i.e. autoconf, automake, etc.) not found: you need these to install Rivet+YODA in dev mode. Maybe run with INSTALL_AUTOTOOLS=1?"
+            exit 2
+        fi
+    fi
+    if [[ "$INSTALL_CYTHON" != "1" ]]; then
+        if [[ -z "$(which cython 2> /dev/null)" ]]; then
+            echo "cython not found: you need a cython installation to install Rivet+YODA in dev mode. Maybe run with INSTALL_CYTHON=1?"
+            exit 1
+        fi
+    fi
 fi
+
 
 ## Disable asserts for production running
 export CPPFLAGS="$CPPFLAGS -DNDEBUG"
@@ -120,7 +140,6 @@ fi
 
 ## Install Cython
 if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
-    CYTHON_VERSION=0.28.5
     echo "INSTALLING CYTHON $CYTHON_VERSION"
     cd $BUILD_PREFIX
     test -d cython-$CYTHON_VERSION || { wget https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz -O - | tar xz; }
@@ -185,7 +204,9 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     # test -d yoda || hg clone https://phab.hepforge.org/source/yodahg/yoda -b release-1-7 --insecure
     # cd yoda
     # hg pull -u --insecure
-    test -d yoda || git clone git@gitlab.com:hepcedar/yoda.git yoda
+    #
+    #test -d yoda || git clone git@gitlab.com:hepcedar/yoda.git yoda
+    test -d yoda || git clone https://gitlab.com/hepcedar/yoda.git yoda
     cd yoda
     git pull
     autoreconf -i
@@ -201,7 +222,9 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     # test -d rivet || hg clone https://phab.hepforge.org/source/rivethg/rivet -u release-3-0-x --insecure
     # cd rivet
     # hg pull -u --insecure
-    test -d rivet || git clone git@gitlab.com:hepcedar/rivet.git rivet
+    #
+    #test -d rivet || git clone git@gitlab.com:hepcedar/rivet.git rivet
+    test -d rivet || git clone https://gitlab.com/hepcedar/rivet.git rivet
     cd rivet
     git pull
     autoreconf -i

@@ -99,16 +99,30 @@ function mmi { $MAKE "$@" && $MAKE install; }
 
 ## Make installation directory, with an etc subdir so Rivet etc. will install bash completion scripts
 mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
+mkdir -p $INSTALL_PREFIX/lib
+(cd $INSTALL_PREFIX && ln -s lib lib64)
 
 
 ## Install HepMC
+if [[ ${HEPMC_VERSION::1} = 2 ]]; then
+  HEPMC3=0
+  HEPMCNAME=hepmc
+else
+  HEPMC3=1
+  HEPMCNAME=hepmc3
+fi
 if [[ "$INSTALL_HEPMC" -eq "1" ]]; then
     echo "INSTALLING HEPMC $HEPMC_VERSION"
     cd $BUILD_PREFIX
-    test -d HepMC-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/hepmc$HEPMC_VERSION.tgz
-    mkdir -p HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build
-    #conf --with-momentum=GEV --with-length=MM
-    cmake ../HepMC-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -Dmomentum=GEV -Dlength=MM
+    if [[ $HEPMC3 = 1 ]]; then
+        test -d HepMC3-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/HepMC3-$HEPMC_VERSION.tar.gz
+        mkdir -p HepMC3-$HEPMC_VERSION-build && cd HepMC3-$HEPMC_VERSION-build
+        cmake ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF -DHEPMC3_ENABLE_PYTHON=OFF -Dmomentum=GEV -Dlength=MM
+    else
+        test -d HepMC-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/hepmc$HEPMC_VERSION.tgz
+        mkdir -p HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build
+        cmake ../HepMC-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -Dmomentum=GEV -Dlength=MM
+    fi
     mmi
     HEPMCPATH=$INSTALL_PREFIX
     echo
@@ -169,7 +183,7 @@ if [[ "$INSTALL_RIVET" -eq "1" ]]; then
     cd Rivet-$RIVET_VERSION
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
-        --with-hepmc=$HEPMCPATH \
+        --with-$HEPMCNAME=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
@@ -230,7 +244,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     autoreconf -i
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
-        --with-hepmc=$HEPMCPATH \
+        --with-$HEPMCNAME=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/

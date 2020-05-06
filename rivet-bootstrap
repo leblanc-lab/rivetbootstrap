@@ -100,7 +100,7 @@ function mmi { $MAKE "$@" && $MAKE install; }
 ## Make installation directory, with an etc subdir so Rivet etc. will install bash completion scripts
 mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
 mkdir -p $INSTALL_PREFIX/lib
-(cd $INSTALL_PREFIX && ln -s lib lib64)
+if [[ ! -e $INSTALL_PREFIX/lib64 ]]; then ln -s lib $INSTALL_PREFIX/lib64; fi
 
 
 ## Install HepMC

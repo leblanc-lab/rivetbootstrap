@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Rivet bootstrapping / installation script for version 3.1.x
+# Rivet bootstrapping / installation script for version 3.1.4
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"

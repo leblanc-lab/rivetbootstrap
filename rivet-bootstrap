@@ -25,7 +25,7 @@ test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
 
 test -z "$INSTALL_RIVETDEV" && INSTALL_RIVETDEV="0"  #< mostly here just for documentation!
 test -z "$YODA_BRANCH" && YODA_BRANCH="release-1-9-x"
-test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-3-1-x"
+test -z "$RIVET_BRANCH" && RIVET_BRANCH="master"
 
 
 ## Rivet needs C++14 now: first run a simple test for that

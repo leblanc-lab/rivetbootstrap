@@ -23,6 +23,10 @@ test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.21"
 test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
 
+test -z "$INSTALL_RIVETDEV" && INSTALL_RIVETDEV="0"  #< mostly here just for documentation!
+test -z "$YODA_BRANCH" && YODA_BRANCH="release-1-9-x"
+test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-3-1-x"
+
 
 ## Rivet needs C++14 now: first run a simple test for that
 test -n "$CXX" || CXX="g++"
@@ -224,6 +228,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     #test -d yoda || git clone git@gitlab.com:hepcedar/yoda.git yoda
     test -d yoda || git clone https://gitlab.com/hepcedar/yoda.git yoda
     cd yoda
+    git checkout $YODA_BRANCH
     git pull
     autoreconf -i
     conf $YODA_CONFFLAGS
@@ -242,6 +247,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     #test -d rivet || git clone git@gitlab.com:hepcedar/rivet.git rivet
     test -d rivet || git clone https://gitlab.com/hepcedar/rivet.git rivet
     cd rivet
+    git checkout $RIVET_BRANCH
     git pull
     autoreconf -i
     conf $RIVET_CONFFLAGS \

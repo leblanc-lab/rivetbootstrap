@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Rivet bootstrapping / installation script for version 3.1.4
+# Rivet bootstrapping / installation script for version 3.1.x
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
@@ -26,7 +26,7 @@ test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
 
 ## Rivet needs C++14 now: first run a simple test for that
 test -n "$CXX" || CXX="g++"
-CXXVERSION=$($CXX -dumpfullversion -dumpversion &> /dev/null)
+CXXVERSION=$($CXX -dumpfullversion -dumpversion 2> /dev/null)
 test -n "$CXXVERSION" && CXXVERSION=" $CXXVERSION" #< get spacing right in printout below
 echo "int main() { return 0; }" > cxxtest.cc
 CXXDIALECT=c++14

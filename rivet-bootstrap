@@ -26,16 +26,18 @@ test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
 
 ## Rivet needs C++14 now: first run a simple test for that
 test -n "$CXX" || CXX="g++"
+CXXVERSION=$($CXX -dumpfullversion -dumpversion &> /dev/null)
+test -n "$CXXVERSION" && CXXVERSION=" $CXXVERSION" #< get spacing right in printout below
 echo "int main() { return 0; }" > cxxtest.cc
-CXXVERSION=c++14
+CXXDIALECT=c++14
 GOODCXX=1
-$CXX -std=$CXXVERSION cxxtest.cc -o cxxtest &> /dev/null || GOODCXX=0
+$CXX -std=$CXXDIALECT cxxtest.cc -o cxxtest &> /dev/null || GOODCXX=0
 rm -f cxxtest cxxtest.cc
 if [[ "$GOODCXX" -ne 1 ]]; then
-    echo "$CXX does not accept the -std=$CXXVERSION flag. You need C++ to build Rivet: exiting installation :-("
+    echo "$CXX$CXXVERSION does not accept the -std=$CXXDIALECT flag. You need C++ to build Rivet: exiting installation :-("
     exit 1
 else
-    echo "$CXX accepts the -std=$CXXVERSION flag: hurrah! Continuing installation..."
+    echo "$CXX$CXXVERSION accepts the -std=$CXXDIALECT flag: hurrah! Continuing installation..."
     echo
 fi
 

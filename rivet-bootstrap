@@ -12,10 +12,10 @@ test -z "$INSTALL_FJCONTRIB" && INSTALL_FJCONTRIB="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.4"
-test -z "$YODA_VERSION" && YODA_VERSION="1.9.0"
+test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.5"
+test -z "$YODA_VERSION" && YODA_VERSION="1.9.2"
 
-test -z "$HEPMC_VERSION" && HEPMC_VERSION="2.06.11" #< TODO: update to v3
+test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.2.4" #"2.06.11"
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.4"
 test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.045"
 test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.21"
@@ -25,7 +25,7 @@ test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
 
 test -z "$INSTALL_RIVETDEV" && INSTALL_RIVETDEV="0"  #< mostly here just for documentation!
 test -z "$YODA_BRANCH" && YODA_BRANCH="release-1-9-x"
-test -z "$RIVET_BRANCH" && RIVET_BRANCH="master"
+test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-3-1-x"
 
 
 ## Rivet needs C++14 now: first run a simple test for that

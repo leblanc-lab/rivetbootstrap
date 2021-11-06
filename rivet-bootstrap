@@ -2,6 +2,9 @@
 
 # Rivet bootstrapping / installation script for version 3.1.x
 
+# On LCG SL/CentOS platforms, set up newer build tools and a functioning ROOT first, e.g. gcc+Py+ROOT with
+#   source /cvmfs/sft.cern.ch/lcg/releases/LCG_99/ROOT/v6.22.06/x86_64-centos7-gcc10-opt/ROOT-env.sh
+
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
@@ -15,10 +18,10 @@ test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.5"
 test -z "$YODA_VERSION" && YODA_VERSION="1.9.2"
 
-test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.2.4" #"2.06.11"
-test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.3.4"
-test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.045"
-test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.21"
+test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.2.4" # 2.06.11
+test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.4.0"
+test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.046"
+test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.24" # update to v3?
 
 test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
@@ -259,5 +262,8 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
     echo
 fi
 
-## Announce the build success
-echo "All done. Now set some variables in your shell by sourcing $INSTALL_PREFIX/rivetenv.(c)sh"
+## Announce the build success (using the parent shell syntax, not necessarily bash)
+echo "All done. Now set some variables in your shell with"
+ext="sh"
+if [[ "$SHELL" =~ ".*csh.*" ]]; then ext="csh"; fi
+echo "  source $INSTALL_PREFIX/rivetenv.$ext"

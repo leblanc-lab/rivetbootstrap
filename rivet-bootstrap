@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Rivet bootstrapping / installation script for version 3.1.5
+# Rivet bootstrapping / installation script for version 3.1.x
 
 # On LCG SL/CentOS platforms, set up newer build tools and a functioning ROOT first, e.g. gcc+Py+ROOT with
 #   source /cvmfs/sft.cern.ch/lcg/releases/LCG_99/ROOT/v6.22.06/x86_64-centos7-gcc10-opt/ROOT-env.sh

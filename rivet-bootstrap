@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Rivet bootstrapping / installation script for version 3.1.x
+# Rivet bootstrapping / installation script for version 3.1.5
 
 # On LCG SL/CentOS platforms, set up newer build tools and a functioning ROOT first, e.g. gcc+Py+ROOT with
 #   source /cvmfs/sft.cern.ch/lcg/releases/LCG_99/ROOT/v6.22.06/x86_64-centos7-gcc10-opt/ROOT-env.sh
@@ -16,7 +16,7 @@ test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
 test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.5"
-test -z "$YODA_VERSION" && YODA_VERSION="1.9.2"
+test -z "$YODA_VERSION" && YODA_VERSION="1.9.3"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.2.4" # 2.06.11
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.4.0"

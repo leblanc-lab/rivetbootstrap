@@ -101,7 +101,7 @@ set -e
 test -n "$DEBUG" && set -x
 export PATH=$INSTALL_PREFIX/bin:$PATH
 
-function wget_untar { wget --no-check-certificate $1 -O- | tar --no-same-owner -xz; }
+function wget_untar { wget --no-check-certificate --no-verbose $1 -O- | tar --no-same-owner -xz; }
 function conf { ./configure --prefix=$INSTALL_PREFIX "$@"; }
 function mmi { $MAKE "$@" && $MAKE install; }
 
@@ -165,7 +165,7 @@ fi
 if [[ "$INSTALL_CYTHON" -eq "1" ]]; then
     echo "INSTALLING CYTHON $CYTHON_VERSION"
     cd $BUILD_PREFIX
-    test -d cython-$CYTHON_VERSION || { wget https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz -O - | tar xz; }
+    test -d cython-$CYTHON_VERSION || { wget-untar https://github.com/cython/cython/archive/$CYTHON_VERSION.tar.gz ; }
     export PATH=$BUILD_PREFIX/cython-$CYTHON_VERSION/bin:$PATH
     export PYTHONPATH=$BUILD_PREFIX/cython-$CYTHON_VERSION:$PYTHONPATH
     echo

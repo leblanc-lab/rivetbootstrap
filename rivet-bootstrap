@@ -2,8 +2,9 @@
 
 # Rivet bootstrapping / installation script for version 3.1.x
 
-# On LCG SL/CentOS platforms, set up newer build tools and a functioning ROOT first, e.g. gcc+Py+ROOT with
-#   source /cvmfs/sft.cern.ch/lcg/releases/LCG_99/ROOT/v6.22.06/x86_64-centos7-gcc10-opt/ROOT-env.sh
+# On CentOS platforms, set up newer build tools first, e.g. gcc9.3+Py3.8 with
+#   source /opt/rh/devtoolset-9/enable
+#   source /opt/rh/rh-python38/enable
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"

@@ -5,6 +5,8 @@
 # On CentOS platforms, set up newer build tools first, e.g. gcc9.3+Py3.8 with
 #   source /opt/rh/devtoolset-9/enable
 #   source /opt/rh/rh-python38/enable
+# or use one of the more recent LCG "views", e.g.:
+#   source source /cvmfs/sft.cern.ch/lcg/views/LCG_100/x86_64-centos7-gcc10-opt/setup.sh
 
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
@@ -16,12 +18,12 @@ test -z "$INSTALL_FJCONTRIB" && INSTALL_FJCONTRIB="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.5"
-test -z "$YODA_VERSION" && YODA_VERSION="1.9.4"
+test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.6"
+test -z "$YODA_VERSION" && YODA_VERSION="1.9.5"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.2.4" # 2.06.11
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.4.0"
-test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.046"
+test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.048"
 test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.24" # update to v3?
 
 test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
@@ -154,7 +156,8 @@ fi
 if [[ "$INSTALL_FJCONTRIB" -eq "1" ]]; then
     echo "INSTALLING FASTJET CONTRIB $FJCONTRIB_VERSION"
     cd $BUILD_PREFIX
-    test -d fastjet-$FJCONTRIB_VERSION || wget_untar http://fastjet.hepforge.org/contrib/downloads/fjcontrib-$FJCONTRIB_VERSION.tar.gz
+    #test -d fastjet-$FJCONTRIB_VERSION || wget_untar http://fastjet.hepforge.org/contrib/downloads/fjcontrib-$FJCONTRIB_VERSION.tar.gz
+    test -d fastjet-$FJCONTRIB_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/fjcontrib-$FJCONTRIB_VERSION.tar.gz
     cd fjcontrib-$FJCONTRIB_VERSION
     ./configure --fastjet-config=$FASTJETPATH/bin/fastjet-config CXXFLAGS=-fPIC # fastjet-config already contains INSTALL_PREFIX
     mmi fragile-shared-install
@@ -176,7 +179,7 @@ fi
 if [[ "$INSTALL_YODA" -eq "1" ]]; then
     echo "INSTALLING YODA $YODA_VERSION"
     cd $BUILD_PREFIX
-    test -d YODA-$YODA_VERSION || wget_untar http://www.hepforge.org/archive/yoda/YODA-$YODA_VERSION.tar.gz
+    test -d YODA-$YODA_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/YODA-$YODA_VERSION.tar.gz
     cd YODA-$YODA_VERSION
     conf $YODA_CONFFLAGS
     mmi
@@ -189,7 +192,7 @@ fi
 if [[ "$INSTALL_RIVET" -eq "1" ]]; then
     echo "INSTALLING RIVET $RIVET_VERSION"
     cd $BUILD_PREFIX
-    test -d Rivet-$RIVET_VERSION || wget_untar http://www.hepforge.org/archive/rivet/Rivet-$RIVET_VERSION.tar.gz
+    test -d Rivet-$RIVET_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/Rivet-$RIVET_VERSION.tar.gz
     cd Rivet-$RIVET_VERSION
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \

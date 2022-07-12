@@ -25,7 +25,6 @@ test -z "$YODA_VERSION" && YODA_VERSION="1.9.8"
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.2.4" # 2.06.11
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.4.0"
 test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.049"
-test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.32"
 
 test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
@@ -283,13 +282,12 @@ fi
 
 
 ## Make a sh setup script
-cat <<EOF > $INSTALL_PREFIX/setup.sh
-. $INSTALL_PREFIX/activate
+cat << EOF > $INSTALL_PREFIX/setup.sh
+. $INSTALL_PREFIX/bin/activate
 . $INSTALL_PREFIX/yodaenv.sh
 . $INSTALL_PREFIX/rivetenv.sh
 EOF
 
-EOF
 
 ## Announce the build success (now bash-specific)
 echo "All done. Now set some variables in your shell with"

@@ -24,7 +24,7 @@ test -z "$YODA_VERSION" && YODA_VERSION="1.9.5"
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.2.4" # 2.06.11
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.4.0"
 test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.048"
-test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.24" # update to v3?
+test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.30"
 
 test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
@@ -33,13 +33,14 @@ test -z "$INSTALL_RIVETDEV" && INSTALL_RIVETDEV="0"  #< mostly here just for doc
 test -z "$YODA_BRANCH" && YODA_BRANCH="release-1-9-x"
 test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-3-1-x"
 
+test -z "$CXXDIALECT" && CXXDIALECT="c++14"
+
 
 ## Rivet needs C++14 now: first run a simple test for that
 test -n "$CXX" || CXX="g++"
 CXXVERSION=$($CXX -dumpfullversion -dumpversion 2> /dev/null)
 test -n "$CXXVERSION" && CXXVERSION=" $CXXVERSION" #< get spacing right in printout below
 echo "int main() { return 0; }" > cxxtest.cc
-CXXDIALECT=c++14
 GOODCXX=1
 $CXX -std=$CXXDIALECT cxxtest.cc -o cxxtest &> /dev/null || GOODCXX=0
 rm -f cxxtest cxxtest.cc

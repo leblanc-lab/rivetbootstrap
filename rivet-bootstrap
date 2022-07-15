@@ -47,6 +47,34 @@ test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
 ###############
 
 
+## Adapt config for developer mode
+if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
+    ## For rivetdev we skip the normal yoda/rivet installation
+    INSTALL_YODA="0"
+    INSTALL_RIVET="0"
+    YODA_VERSION="dev"
+    RIVET_VERSION="dev"
+
+    ## Test that necessary build tools exist or are requested for installation
+    if [[ -z "$(which git 2> /dev/null)" ]]; then
+        echo "git not found: you need a git installation to install Rivet+YODA in dev mode"
+        exit 2
+    fi
+    if [[ "$INSTALL_AUTOTOOLS" != "1" ]]; then
+        if [[ -z "$(which autoconf 2> /dev/null)" || -z "$(which autoreconf 2> /dev/null)" || -z "$(which automake 2> /dev/null)" || -z "$(which libtoolize 2> /dev/null)" ]]; then
+            echo "autotools (i.e. autoconf, automake, etc.) not found: you need these to install Rivet+YODA in dev mode. Maybe run with INSTALL_AUTOTOOLS=1?"
+            exit 2
+        fi
+    fi
+    if [[ "$INSTALL_CYTHON" != "1" ]]; then
+        if [[ -z "$(which cython 2> /dev/null)" ]]; then
+            echo "cython not found: you need a cython installation to install Rivet+YODA in dev mode. Maybe run with INSTALL_CYTHON=1?"
+            exit 1
+        fi
+    fi
+fi
+
+
 echo "Running Rivet bootstrap script"
 echo "Building Rivet $RIVET_VERSION, YODA $YODA_VERSION"
 echo
@@ -86,34 +114,6 @@ else
 fi
 ## Disable asserts for production running
 export CPPFLAGS="$CPPFLAGS -DNDEBUG"
-
-
-## Developer mode
-if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
-    ## For rivetdev we skip the normal yoda/rivet installation
-    INSTALL_YODA="0"
-    INSTALL_RIVET="0"
-    YODA_VERSION="dev"
-    RIVET_VERSION="dev"
-
-    ## Test that necessary build tools exist or are requested for installation
-    if [[ -z "$(which git 2> /dev/null)" ]]; then
-        echo "git not found: you need a git installation to install Rivet+YODA in dev mode"
-        exit 2
-    fi
-    if [[ "$INSTALL_AUTOTOOLS" != "1" ]]; then
-        if [[ -z "$(which autoconf 2> /dev/null)" || -z "$(which autoreconf 2> /dev/null)" || -z "$(which automake 2> /dev/null)" || -z "$(which libtool 2> /dev/null)" ]]; then
-            echo "autotools (i.e. autoconf, automake, etc.) not found: you need these to install Rivet+YODA in dev mode. Maybe run with INSTALL_AUTOTOOLS=1?"
-            exit 2
-        fi
-    fi
-    if [[ "$INSTALL_CYTHON" != "1" ]]; then
-        if [[ -z "$(which cython 2> /dev/null)" ]]; then
-            echo "cython not found: you need a cython installation to install Rivet+YODA in dev mode. Maybe run with INSTALL_CYTHON=1?"
-            exit 1
-        fi
-    fi
-fi
 
 
 ## Install HepMC
@@ -276,21 +276,25 @@ if [[ "$INSTALL_RIVETDEV" = 1 ]]; then
         --with-$HEPMCNAME=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH
     mmi
-    cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
+    cp rivetenv.sh $INSTALL_PREFIX/
     echo
 fi
 
-
-## Make a sh setup script
-cat << EOF > $INSTALL_PREFIX/setup.sh
-. $INSTALL_PREFIX/bin/activate
-. $INSTALL_PREFIX/yodaenv.sh
-. $INSTALL_PREFIX/rivetenv.sh
-EOF
+cd $BUILD_PREFIX
 
 
-## Announce the build success (now bash-specific)
+## Make/modify Rivet/venv setup scripts
+echo '' >> $INSTALL_PREFIX/bin/activate
+echo 'source \$VIRTUAL_ENV/yodaenv.sh' >> $INSTALL_PREFIX/bin/activate
+echo 'source \$VIRTUAL_ENV/rivetenv.sh' >> $INSTALL_PREFIX/bin/activate
+TMPFILE=tmp$$
+echo "test -n \"\$VIRTUAL_ENV\" || source $INSTALL_PREFIX/bin/activate" | \
+    cat - $INSTALL_PREFIX/rivetenv.sh > $TMPFILE && \
+    mv $TMPFILE $INSTALL_PREFIX/rivetenv.sh
+
+
+## Announce the build success (now for sh only)
 echo "All done. Now set some variables in your shell with"
-echo "  source $INSTALL_PREFIX/setup.sh"
+echo "  source $INSTALL_PREFIX/bin/activate"
 echo "  or"
 echo "  source $INSTALL_PREFIX/rivetenv.sh"

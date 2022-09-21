@@ -76,7 +76,7 @@ if [[ "$INSTALL_RIVETDEV" -eq "1" ]]; then
         exit 2
     fi
     if [[ "$INSTALL_AUTOTOOLS" != "1" ]]; then
-        if [[ -z "$(which autoconf 2> /dev/null)" || -z "$(which autoreconf 2> /dev/null)" || -z "$(which automake 2> /dev/null)" || -z "$(which libtoolize 2> /dev/null)" ]]; then
+        if [[ -z "$(which autoconf 2> /dev/null)" || -z "$(which autoreconf 2> /dev/null)" || -z "$(which automake 2> /dev/null)" || -z "$(which libtool 2> /dev/null)" ]]; then
             echo "autotools (i.e. autoconf, automake, etc.) not found: you need these to install Rivet+YODA in dev mode. Maybe run with INSTALL_AUTOTOOLS=1?"
             exit 2
         fi

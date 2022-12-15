@@ -11,6 +11,7 @@
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$MAKE" && MAKE="make -j3"
+test -z "$CMAKE" && CMAKE="cmake"
 
 test -z "$INSTALL_HEPMC" && INSTALL_HEPMC="1"
 test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
@@ -130,11 +131,11 @@ if [[ "$INSTALL_HEPMC" -eq "1" ]]; then
     if [[ $HEPMC3 = 1 ]]; then
         test -d HepMC3-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/HepMC3-$HEPMC_VERSION.tar.gz
         mkdir -p HepMC3-$HEPMC_VERSION-build && cd HepMC3-$HEPMC_VERSION-build
-        cmake ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF -DHEPMC3_ENABLE_PYTHON=OFF -Dmomentum=GEV -Dlength=MM
+        $CMAKE ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF -DHEPMC3_ENABLE_PYTHON=OFF -Dmomentum=GEV -Dlength=MM
     else
         test -d HepMC-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/hepmc$HEPMC_VERSION.tgz
         mkdir -p HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build
-        cmake ../HepMC-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -Dmomentum=GEV -Dlength=MM
+        $CMAKE ../HepMC-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -Dmomentum=GEV -Dlength=MM
     fi
     mmi
     HEPMCPATH=$INSTALL_PREFIX

@@ -286,18 +286,28 @@ fi
 cd $BUILD_PREFIX
 
 
+## Install Python runtime deps, iff in venv mode
+if [[ "$USE_VENV" == 1 ]]; then
+    pip install pyyaml
+fi
+
+
 ## Make/modify Rivet/venv setup scripts
-echo '' >> $INSTALL_PREFIX/bin/activate
-echo 'source \$VIRTUAL_ENV/yodaenv.sh' >> $INSTALL_PREFIX/bin/activate
-echo 'source \$VIRTUAL_ENV/rivetenv.sh' >> $INSTALL_PREFIX/bin/activate
-TMPFILE=tmp$$
-echo "test -n \"\$VIRTUAL_ENV\" || source $INSTALL_PREFIX/bin/activate" | \
-    cat - $INSTALL_PREFIX/rivetenv.sh > $TMPFILE && \
-    mv $TMPFILE $INSTALL_PREFIX/rivetenv.sh
+if [[ "$USE_VENV" == 1 ]]; then
+    echo '' >> $INSTALL_PREFIX/bin/activate
+    echo 'source $VIRTUAL_ENV/yodaenv.sh' >> $INSTALL_PREFIX/bin/activate
+    echo 'source $VIRTUAL_ENV/rivetenv.sh' >> $INSTALL_PREFIX/bin/activate
+    TMPFILE=tmp$$
+    echo "test -n \"\$VIRTUAL_ENV\" || source $INSTALL_PREFIX/bin/activate" | \
+        cat - $INSTALL_PREFIX/rivetenv.sh > $TMPFILE && \
+        mv $TMPFILE $INSTALL_PREFIX/rivetenv.sh
+fi
 
 
 ## Announce the build success (now for sh only)
 echo "All done. Now set some variables in your shell with"
-echo "  source $INSTALL_PREFIX/bin/activate"
-echo "  or"
+if [[ "$USE_VENV" == 1 ]]; then
+    echo "  source $INSTALL_PREFIX/bin/activate"
+    echo "  or"
+fi
 echo "  source $INSTALL_PREFIX/rivetenv.sh"

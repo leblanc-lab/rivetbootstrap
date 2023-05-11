@@ -165,8 +165,6 @@ if [[ "$INSTALL_FJCONTRIB" = 1 ]]; then
     test -d fastjet-$FJCONTRIB_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/fjcontrib-$FJCONTRIB_VERSION.tar.gz
     cd fjcontrib-$FJCONTRIB_VERSION
     ./configure --fastjet-config=$FASTJETPATH/bin/fastjet-config CXXFLAGS=-fPIC # fastjet-config already contains INSTALL_PREFIX
-    ## Patch LundPlane headers for GCC 12 (strange -i construction for Mac/FreeBSD compatibility)
-    sed -i.bak -e 's/#include <array>/#include <array>\n#include <limits>/' LundPlane/EEHelpers.hh
     mmi -j1 fragile-shared-install
     # does not need FJCONTRIBPATH because the relevant includes/libraries are merged with regular FastJet structure
     echo

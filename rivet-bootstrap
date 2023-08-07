@@ -288,6 +288,7 @@ cd $BUILD_PREFIX
 ## Install Python runtime deps, iff in venv mode
 if [[ "$USE_VENV" == 1 ]]; then
     pip install pyyaml
+    pip install requests
 fi
 
 

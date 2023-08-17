@@ -134,7 +134,7 @@ if [[ "$INSTALL_HEPMC" = 1 ]]; then
     if [[ $HEPMC3 = 1 ]]; then
         test -d HepMC3-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/HepMC3-$HEPMC_VERSION.tar.gz
         mkdir -p HepMC3-$HEPMC_VERSION-build && cd HepMC3-$HEPMC_VERSION-build
-        $CMAKE ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF -DHEPMC3_ENABLE_PYTHON=OFF -Dmomentum=GEV -Dlength=MM
+        $CMAKE ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF -DHEPMC3_ENABLE_PYTHON=OFF
     else
         test -d HepMC-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/hepmc$HEPMC_VERSION.tgz
         mkdir -p HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build

@@ -38,6 +38,7 @@ test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-3-1-x"
 test -z "$CXXDIALECT" && CXXDIALECT="c++14"
 
 ## Paths for the case of existing installations
+# TODO: shouldn't these be looking in /usr/local? ~Never system packages
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"
 test -z "$FASTJETPATH" && FASTJETPATH="/usr"
 test -z "$YODAPATH" && YODAPATH="/usr"
@@ -121,6 +122,7 @@ export CPPFLAGS="$CPPFLAGS -DNDEBUG"
 
 
 ## Install HepMC
+# TODO: remove the HepMC2 option soon... from 3.2.0 onward
 if [[ ${HEPMC_VERSION::1} = 2 ]]; then
   HEPMC3=0
   HEPMCNAME=hepmc
@@ -134,7 +136,8 @@ if [[ "$INSTALL_HEPMC" = 1 ]]; then
     if [[ $HEPMC3 = 1 ]]; then
         test -d HepMC3-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/HepMC3-$HEPMC_VERSION.tar.gz
         mkdir -p HepMC3-$HEPMC_VERSION-build && cd HepMC3-$HEPMC_VERSION-build
-        $CMAKE ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF -DHEPMC3_ENABLE_PYTHON=OFF
+        test -n "$HEPMC_CMAKE_ADD" || HEPMC_CMAKE_ADD="-DHEPMC3_ENABLE_PYTHON=OFF"
+        $CMAKE ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF $HEPMC_CMAKE_ADD
     else
         test -d HepMC-$HEPMC_VERSION || wget_untar http://hepmc.web.cern.ch/hepmc/releases/hepmc$HEPMC_VERSION.tgz
         mkdir -p HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build

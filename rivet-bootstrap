@@ -18,30 +18,36 @@ test -z "$CMAKE" && CMAKE="cmake"
 test -z "$INSTALL_HEPMC" && INSTALL_HEPMC="1"
 test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_FJCONTRIB" && INSTALL_FJCONTRIB="1"
+test -z "$INSTALL_HDF5" && INSTALL_HDF5="1"
+test -z "$INSTALL_HIGHFIVE" && INSTALL_HIGHFIVE="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="3.1.8"
-test -z "$YODA_VERSION" && YODA_VERSION="1.9.8"
+test -z "$RIVET_VERSION" && RIVET_VERSION="3.2.0alpha"
+test -z "$YODA_VERSION" && YODA_VERSION="2.0.0alpha"
 
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.2.6" # or 2.06.11
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.4.0"
 test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.051"
+test -z "$HDF5_VERSION" && HDF5_VERSION="1.14.2"
+test -z "$HIGHFIVE_VERSION" && HIGHFIVE_VERSION="2.7.1"
 #test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.32"
 
 test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
 
 test -z "$INSTALL_RIVETDEV" && INSTALL_RIVETDEV="0"  #< mostly here just for documentation!
-test -z "$YODA_BRANCH" && YODA_BRANCH="release-1-9-x"
-test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-3-1-x"
+test -z "$YODA_BRANCH" && YODA_BRANCH="release-2-0-x"
+test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-3-2-x"
 
-test -z "$CXXDIALECT" && CXXDIALECT="c++14"
+test -z "$CXXDIALECT" && CXXDIALECT="c++17"
 
 ## Paths for the case of existing installations
 # TODO: shouldn't these be looking in /usr/local? ~Never system packages
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"
 test -z "$FASTJETPATH" && FASTJETPATH="/usr"
+test -z "$HDF5PATH" && HDF5PATH="/usr"
+test -z "$HIGHFIVEPATH" && HIGHFIVEPATH="/usr"
 test -z "$YODAPATH" && YODAPATH="/usr"
 
 test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
@@ -172,6 +178,30 @@ if [[ "$INSTALL_FJCONTRIB" = 1 ]]; then
     mmi -j1 fragile-shared-install
     # does not need FJCONTRIBPATH because the relevant includes/libraries are merged with regular FastJet structure
     echo
+fi
+
+## Install HDF5
+if [[ "$INSTALL_HDF5" = 1 ]]; then
+  echo "INSTALLING HDF5 $HDF5_VERSION"
+  cd $BUILD_PREFIX
+    test -d hdf5-$HDF5_VERSION || wget_untar https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VERSION::-2}/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.gz
+    cd hdf5-$HDF5_VERSION
+    conf
+    mmi
+    HDF5PATH=$INSTALL_PREFIX
+fi
+
+## Install HighFive
+if [[ "$INSTALL_HIGHFIVE" = 1 ]]; then
+  echo "INSTALLING HIGHFIVE $HIGHFIVE_VERSION"
+  cd $BUILD_PREFIX
+    test -d HighFive-$HIGHFIVE_VERSION || wget_untar https://github.com/BlueBrain/HighFive/archive/refs/tags/v${HIGHFIVE_VERSION}.tar.gz
+    mkdir -p HighFive-$HIGHFIVE_VERSION/build
+    cd HighFive-$HIGHFIVE_VERSION/build
+    ${CMAKE} ../ -DHIGHFIVE_EXAMPLES=OFF -DHIGHFIVE_USE_BOOST=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} -DHIGHFIVE_UNIT_TESTS=OFF -B .
+    ${CMAKE} --build ./
+    ${CMAKE} --install ./
+    HIGHFIVEPATH=$INSTALL_PREFIX
 fi
 
 ## Install Cython

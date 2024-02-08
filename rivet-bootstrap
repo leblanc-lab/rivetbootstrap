@@ -88,7 +88,11 @@ set -e
 test -n "$DEBUG" && set -x
 export PATH=$INSTALL_PREFIX/bin:$PATH
 
-function wget_untar { wget --no-check-certificate --no-verbose $1 -O- | tar --no-same-owner -xz; }
+if [[ -n $(which wget 2> /dev/null) ]]; then
+    function wget_untar { wget --no-check-certificate --no-verbose $1 -O- | tar --no-same-owner -xz; }
+elif [[ -n $(which curl 2> /dev/null) ]]; then
+    function wget_untar { curl --insecure --silent --show-error $1 | tar --no-same-owner -xz; }
+fi
 function conf { ./configure --prefix=$INSTALL_PREFIX "$@"; }
 function mmi { $MAKE "$@" && $MAKE install; }
 

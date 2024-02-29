@@ -2,11 +2,7 @@
 
 # Rivet bootstrapping / installation script for version 4.0.x
 
-# On CentOS/AlmaLinux platforms, set up newer build tools first, e.g. using one of the more recent LCG "views":
-#   source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/Python/3.9.12/x86_64-el9-gcc13-opt/Python-env.sh
-#   source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/CMake/3.26.2/x86_64-el9-gcc13-opt/CMake-env.sh
-#   source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/ROOT/6.30.02/x86_64-el9-gcc13-opt/ROOT-env.sh
-
+test -z "$USE_CVMFS" && USE_CVMFS="0"
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
 test -z "$PYTHON_EXE" && PYTHON_EXE="python"
@@ -54,6 +50,14 @@ test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
 
 
 ###############
+
+if [[ "$USE_CVMFS" -eq "1" ]]; then
+  # On CentOS/AlmaLinux platforms, set up newer build tools first,
+  # e.g. using one of the more recent LCG "views":
+  source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/Python/3.9.12/x86_64-el9-gcc13-opt/Python-env.sh
+  source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/CMake/3.26.2/x86_64-el9-gcc13-opt/CMake-env.sh
+  source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/ROOT/6.30.02/x86_64-el9-gcc13-opt/ROOT-env.sh
+fi
 
 
 ## Adapt config for developer mode

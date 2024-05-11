@@ -167,7 +167,7 @@ if [[ "$INSTALL_FASTJET" = 1 ]]; then
     echo "INSTALLING FASTJET $FASTJET_VERSION"
     cd $BUILD_PREFIX
     #test -d fastjet-$FASTJET_VERSION || wget_untar http://www.fastjet.fr/repo/fastjet-$FASTJET_VERSION.tar.gz
-    test -d fastjet-$FASTJET_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/fastjet-$FASTJET.tar.gz
+    test -d fastjet-$FASTJET_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/fastjet-$FASTJET_VERSION.tar.gz
     cd fastjet-$FASTJET_VERSION
     conf --enable-shared --disable-auto-ptr --enable-allcxxplugins
     mmi

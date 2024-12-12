@@ -5,7 +5,7 @@
 test -z "$USE_CVMFS" && USE_CVMFS="0"
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
 test -z "$INSTALL_PREFIX" && INSTALL_PREFIX="$PWD/local"
-test -z "$PYTHON_EXE" && PYTHON_EXE="python"
+test -z "$PYTHON_EXE" && PYTHON_EXE="python3"
 test -z "$USE_VENV" && USE_VENV="1"
 test -z "$MAKE" && MAKE="make -j3"
 test -z "$CMAKE" && CMAKE="cmake"
@@ -108,7 +108,7 @@ function mmi { $MAKE "$@" && $MAKE install; }
 
 ## Make & activate installation directory as a Python venv, set up for bash completion scripts and multi-arch libs
 if [[ "$USE_VENV" == 1 ]]; then
-    python -m venv $INSTALL_PREFIX
+    $PYTHON_EXE -m venv $INSTALL_PREFIX
     source $INSTALL_PREFIX/bin/activate
 fi
 mkdir -p $INSTALL_PREFIX/etc/bash_completion.d

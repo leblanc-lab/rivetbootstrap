@@ -1,0 +1,30 @@
+#! /usr/bin/env bash
+
+PREFIX=${PREFIX:-$PWD/local}
+BASE=$PWD
+THEPEG_VERSION=${THEPEG_VERSION:-2.2.3}
+HERWIG_VERSION=${HERWIG_VERSION:-7.2.3}
+
+# TODO: check for rsync libgsl-dev libboost-all-dev time gengetopt cython3 python3-six mercurial
+# TODO: check for lhapdf bin, fastjet,rivet,hepmc3,lhapdf libs
+
+hg clone https://phab.hepforge.org/source/thepeghg -r $THEPEG_VERSION ThePEG
+cd ThePEG
+autoreconf -if
+./configure --prefix=/usr/local \
+  --with-{fastjet,rivet,hepmc,lhapdf}=/usr/local --with-hepmcversion=3
+make -j$(nproc --ignore=1) 
+make check && make install 
+
+cd $BASE
+for i in cteq6l1 CT10 CT14lo CT14nlo MSTW2008nlo68cl MMHT2014lo68cl NNPDF23_nlo_as_0119 NNPDF30_nlo_as_0118; do
+    lhapdf install --verbose $i
+done
+
+cd $BASE
+hg clone https://phab.hepforge.org/source/herwighg -r $HERWIG_VERSION Herwig
+cd Herwig
+autoreconf -if
+./configure --prefix=/usr/local --with-{thepeg,fastjet}=/usr/local --without-evtgen
+make -j$(nproc --ignore=1)
+make check && make install

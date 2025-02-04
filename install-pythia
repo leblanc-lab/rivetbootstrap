@@ -1,0 +1,15 @@
+#! /usr/bin/env bash
+
+PREFIX=${PREFIX:-$PWD/local}
+BASE=$PWD
+PYTHIA_VERSION=${PYTHIA_VERSION:-8213}
+
+wget --no-verbose https://pythia.org/download/pythia83/pythia${PYTHIA_VERSION}.tgz -O- | tar xz
+cd pythia*/
+./configure --{prefix,with-{hepmc3,lhapdf6,rivet}}=$PREFIX --with-gzip
+make -j $(nproc --ignore=1) && make install
+cd examples
+for i in 144 164; do
+    make main$i
+    cp main$i $PREFIX/bin/pythia8-main$i
+done

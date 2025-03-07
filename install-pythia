@@ -2,7 +2,15 @@
 
 PREFIX=${PREFIX:-$PWD/local}
 BASE=$PWD
-PYTHIA_VERSION=${PYTHIA_VERSION:-8213}
+PYTHIA_VERSION=${PYTHIA_VERSION:-8313}
+
+# TODO: check for fastjet,rivet,hepmc3? All should be installed by rivet-bootstrap, so we shouldn't have to bother
+
+## Check for LHAPDF
+if [[ -z "$(ls $PREFIX/lib/libLHAPDF.*)" ]]; then
+    echo "No libLHAPDF found in $PREFIX. Please install it either manually or by passing INSTALL_LHAPDF=1 to rivet-bootstrap. Aborting..." 1&>2
+    exit 2
+fi
 
 wget --no-verbose https://pythia.org/download/pythia83/pythia${PYTHIA_VERSION}.tgz -O- | tar xz
 cd pythia*/

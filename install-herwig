@@ -2,11 +2,18 @@
 
 PREFIX=${PREFIX:-$PWD/local}
 BASE=$PWD
-THEPEG_VERSION=${THEPEG_VERSION:-2.2.3}
-HERWIG_VERSION=${HERWIG_VERSION:-7.2.3}
+THEPEG_VERSION=${THEPEG_VERSION:-2.3.0}
+HERWIG_VERSION=${HERWIG_VERSION:-7.3.0}
 
 # TODO: check for rsync libgsl-dev libboost-all-dev time gengetopt cython3 python3-six mercurial
-# TODO: check for lhapdf bin, fastjet,rivet,hepmc3,lhapdf libs
+# TODO: check for fastjet,rivet,hepmc3? All should be installed by rivet-bootstrap, so we shouldn't have to bother
+# TODO: check for lhapdf bin?
+
+## Check for LHAPDF
+if [[ -z "$(ls $PREFIX/lib/libLHAPDF.*)" ]]; then
+    echo "No libLHAPDF found in $PREFIX. Please install it either manually or by passing INSTALL_LHAPDF=1 to rivet-bootstrap. Aborting..." 1&>2
+    exit 2
+fi
 
 hg clone https://phab.hepforge.org/source/thepeghg -r $THEPEG_VERSION ThePEG
 cd ThePEG

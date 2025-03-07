@@ -34,8 +34,8 @@ test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
 test -z "$INSTALL_AUTOTOOLS" && INSTALL_AUTOTOOLS="0"
 
 test -z "$INSTALL_RIVETDEV" && INSTALL_RIVETDEV="0"  #< mostly here just for documentation!
-test -z "$YODA_BRANCH" && YODA_BRANCH="release-2-0-x"
-test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-4-0-x"
+test -z "$YODA_BRANCH" && YODA_BRANCH="release-2-1-x"
+test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-4-1-x"
 
 test -z "$CXXDIALECT" && CXXDIALECT="c++17"
 

@@ -15,6 +15,7 @@ fi
 wget --no-verbose https://pythia.org/download/pythia83/pythia${PYTHIA_VERSION}.tgz -O- | tar xz
 cd pythia*/
 ./configure --{prefix,with-{hepmc3,lhapdf6,rivet}}=$PREFIX --with-gzip
+sed -e 's/AnalysisHandler(rname)/AnalysisHandler()/' -i include/Pythia8Plugins/Pythia8Rivet.h
 make -j $(nproc --ignore=1) && make install
 cd examples
 for i in 144 164; do

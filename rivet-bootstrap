@@ -11,11 +11,11 @@ test -z "$MAKE" && MAKE="make -j3"
 test -z "$CMAKE" && CMAKE="cmake"
 
 test -z "$INSTALL_LHAPDF" && INSTALL_LHAPDF="0"
+test -z "$INSTALL_ONNXRT" && INSTALL_ONNXRT="0"
 test -z "$INSTALL_HEPMC" && INSTALL_HEPMC="1"
 test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
 test -z "$INSTALL_FJCONTRIB" && INSTALL_FJCONTRIB="1"
 test -z "$INSTALL_HDF5" && INSTALL_HDF5="1"
-test -z "$INSTALL_HIGHFIVE" && INSTALL_HIGHFIVE="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
@@ -23,11 +23,11 @@ test -z "$RIVET_VERSION" && RIVET_VERSION="4.1.0"
 test -z "$YODA_VERSION" && YODA_VERSION="2.1.0"
 
 test -z "$LHAPDF_VERSION" && LHAPDF_VERSION="6.5.5"
+test -z "$ONNXRT_VERSION" && ONNXRT_VERSION="1.22.0"
 test -z "$HEPMC_VERSION" && HEPMC_VERSION="3.3.0"
 test -z "$FASTJET_VERSION" && FASTJET_VERSION="3.4.3"
-test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.100"
+test -z "$FJCONTRIB_VERSION" && FJCONTRIB_VERSION="1.101"
 test -z "$HDF5_VERSION" && HDF5_VERSION="1.14.2"
-test -z "$HIGHFIVE_VERSION" && HIGHFIVE_VERSION="2.10.1"
 #test -z "$CYTHON_VERSION" && CYTHON_VERSION="0.29.32"
 
 test -z "$INSTALL_CYTHON" && INSTALL_CYTHON="1"
@@ -45,7 +45,6 @@ test -z "$LHAPDFPATH" && LHAPDFPATH="/usr"
 test -z "$HEPMCPATH" && HEPMCPATH="/usr"
 test -z "$FASTJETPATH" && FASTJETPATH="/usr"
 test -z "$HDF5PATH" && HDF5PATH="/usr"
-test -z "$HIGHFIVEPATH" && HIGHFIVEPATH="/usr"
 test -z "$YODAPATH" && YODAPATH="/usr"
 
 test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
@@ -56,10 +55,9 @@ test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
 
 if [[ "$USE_CVMFS" -eq "1" ]]; then
   # On CentOS/AlmaLinux platforms, set up newer build tools first,
-  # e.g. using one of the more recent LCG "views":
-  source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/Python/3.9.12/x86_64-el9-gcc13-opt/Python-env.sh
-  source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/CMake/3.26.2/x86_64-el9-gcc13-opt/CMake-env.sh
-  source /cvmfs/sft.cern.ch/lcg/releases/LCG_105/ROOT/6.30.02/x86_64-el9-gcc13-opt/ROOT-env.sh
+  # e.g. using LCG installations:
+  source /cvmfs/sft.cern.ch/lcg/releases/LCG_107a/Python/3.11.9/x86_64-el9-gcc13-opt/Python-env.sh
+  source /cvmfs/sft.cern.ch/lcg/releases/LCG_107a/CMake/3.30.6/x86_64-el9-gcc13-opt/CMake-env.sh
 fi
 
 
@@ -116,11 +114,12 @@ if [[ "$USE_VENV" == 1 ]]; then
     pip install --upgrade pip
 fi
 mkdir -p $INSTALL_PREFIX/etc/bash_completion.d
+mkdir -p $INSTALL_PREFIX/include
 mkdir -p $INSTALL_PREFIX/lib
 if [[ ! -e $INSTALL_PREFIX/lib64 ]]; then ln -s lib $INSTALL_PREFIX/lib64; fi
 
 
-## Rivet needs C++14: first run a simple test for that
+## Rivet needs C++17: first run a simple test for that
 test -n "$CXX" || CXX="g++"
 CXXVERSION=$($CXX -dumpfullversion -dumpversion 2> /dev/null)
 test -n "$CXXVERSION" && CXXVERSION=" $CXXVERSION" #< get spacing right in printout below
@@ -140,27 +139,13 @@ export CPPFLAGS="$CPPFLAGS -DNDEBUG"
 
 
 ## Install HepMC
-# TODO: remove the HepMC2 option soon... from 3.2.0 onward
-if [[ ${HEPMC_VERSION::1} = 2 ]]; then
-  HEPMC3=0
-  HEPMCNAME=hepmc
-else
-  HEPMC3=1
-  HEPMCNAME=hepmc3
-fi
 if [[ "$INSTALL_HEPMC" = 1 ]]; then
     echo "INSTALLING HEPMC $HEPMC_VERSION"
     cd $BUILD_PREFIX
-    if [[ $HEPMC3 = 1 ]]; then
-        test -d HepMC3-$HEPMC_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/HepMC3-$HEPMC_VERSION.tar.gz
-        mkdir -p HepMC3-$HEPMC_VERSION-build && cd HepMC3-$HEPMC_VERSION-build
-        test -n "$HEPMC_CMAKE_ADD" || HEPMC_CMAKE_ADD="-DHEPMC3_ENABLE_PYTHON=OFF"
-        $CMAKE ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF $HEPMC_CMAKE_ADD
-    else
-        test -d HepMC-$HEPMC_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/hepmc$HEPMC_VERSION.tgz
-        mkdir -p HepMC-$HEPMC_VERSION-build && cd HepMC-$HEPMC_VERSION-build
-        $CMAKE ../HepMC-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -Dmomentum=GEV -Dlength=MM
-    fi
+    test -d HepMC3-$HEPMC_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/HepMC3-$HEPMC_VERSION.tar.gz
+    mkdir -p HepMC3-$HEPMC_VERSION-build && cd HepMC3-$HEPMC_VERSION-build
+    test -n "$HEPMC_CMAKE_ADD" || HEPMC_CMAKE_ADD="-DHEPMC3_ENABLE_PYTHON=OFF"
+    $CMAKE ../HepMC3-$HEPMC_VERSION/ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DHEPMC3_ENABLE_ROOTIO=OFF $HEPMC_CMAKE_ADD
     mmi
     HEPMCPATH=$INSTALL_PREFIX
     echo
@@ -194,26 +179,13 @@ fi
 
 ## Install HDF5
 if [[ "$INSTALL_HDF5" = 1 ]]; then
-  echo "INSTALLING HDF5 $HDF5_VERSION"
-  cd $BUILD_PREFIX
+    echo "INSTALLING HDF5 $HDF5_VERSION"
+    cd $BUILD_PREFIX
     test -d hdf5-$HDF5_VERSION || wget_untar https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VERSION::-2}/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.gz
     cd hdf5-$HDF5_VERSION
     conf
     mmi
     HDF5PATH=$INSTALL_PREFIX
-fi
-
-## Install HighFive
-if [[ "$INSTALL_HIGHFIVE" = 1 ]]; then
-  echo "INSTALLING HIGHFIVE $HIGHFIVE_VERSION"
-  cd $BUILD_PREFIX
-    test -d HighFive-$HIGHFIVE_VERSION || wget_untar https://github.com/BlueBrain/HighFive/archive/refs/tags/v${HIGHFIVE_VERSION}.tar.gz
-    mkdir -p HighFive-$HIGHFIVE_VERSION/build
-    cd HighFive-$HIGHFIVE_VERSION/build
-    ${CMAKE} ../ -DHIGHFIVE_EXAMPLES=OFF -DHIGHFIVE_USE_BOOST=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} -DHIGHFIVE_UNIT_TESTS=OFF -B .
-    ${CMAKE} --build ./
-    ${CMAKE} --install ./
-    HIGHFIVEPATH=$INSTALL_PREFIX
 fi
 
 ## Install Cython
@@ -260,6 +232,24 @@ if [[ "$INSTALL_LHAPDF" = 1 ]]; then
 fi
 
 
+## Install ONNXruntime
+if [[ "$INSTALL_ONNXRT" = 1 ]]; then
+    echo "INSTALLING ONNXruntime $ONNXRT_VERSION"
+    cd $BUILD_PREFIX
+    OS=linux
+    if [[ "`uname -s`" == *"Darwin"* ]]; then OS=osx; fi
+    ARCH=$(uname -m | tr -d '\n')
+    if [[ "$OS" = "linux" && "$ARCH" = "x86_64" ]]; then ARCH=x64; fi
+    ONNXNAME=onnxruntime-${OS}-${ARCH}-${ONNXRT_VERSION}
+    test -d ${ONNXNAME} || wget_untar http://cedar-tools.web.cern.ch/downloads/${ONNXNAME}.tgz
+    rm -rf ${INSTALL_PREFIX}/include/onnxruntime
+    cp -r ${ONNXNAME}/include ${INSTALL_PREFIX}/include/onnxruntime
+    find ${ONNXNAME}/lib -maxdepth 1 -type f,l | xargs -I {} cp {} ${INSTALL_PREFIX}/lib/
+    RIVET_CONFFLAGS=$RIVET_CONFFLAGS" --enable-onnxrt=${INSTALL_PREFIX}"
+    echo
+fi
+
+
 ## Install YODA from tarball (dev mode is below)
 if [[ "$INSTALL_YODA" = 1 ]]; then
     echo "INSTALLING YODA $YODA_VERSION"
@@ -281,7 +271,7 @@ if [[ "$INSTALL_RIVET" = 1 ]]; then
     cd Rivet-$RIVET_VERSION
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
-        --with-$HEPMCNAME=$HEPMCPATH \
+        --with-hepmc3=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
@@ -334,7 +324,7 @@ if [[ "$INSTALL_RIVETDEV" = 1 ]]; then
     autoreconf -i
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
-        --with-$HEPMCNAME=$HEPMCPATH \
+        --with-hepmc3=$HEPMCPATH \
         --with-fastjet=$FASTJETPATH
     mmi
     cp rivetenv.sh $INSTALL_PREFIX/

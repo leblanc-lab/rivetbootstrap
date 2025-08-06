@@ -9,6 +9,8 @@ test -z "$PYTHON_EXE" && PYTHON_EXE="python3"
 test -z "$USE_VENV" && USE_VENV="1"
 test -z "$MAKE" && MAKE="make -j3"
 test -z "$CMAKE" && CMAKE="cmake"
+test -z "$PLUGINMATCH" && PLUGINMATCH=""
+test -z "$PLUGINUNMATCH" && PLUGINUNMATCH=""
 
 test -z "$INSTALL_LHAPDF" && INSTALL_LHAPDF="0"
 test -z "$INSTALL_ONNXRT" && INSTALL_ONNXRT="0"
@@ -19,8 +21,8 @@ test -z "$INSTALL_HDF5" && INSTALL_HDF5="1"
 test -z "$INSTALL_YODA" && INSTALL_YODA="1"
 test -z "$INSTALL_RIVET" && INSTALL_RIVET="1"
 
-test -z "$RIVET_VERSION" && RIVET_VERSION="4.1.0"
-test -z "$YODA_VERSION" && YODA_VERSION="2.1.0"
+test -z "$RIVET_VERSION" && RIVET_VERSION="4.1.1"
+test -z "$YODA_VERSION" && YODA_VERSION="2.1.1"
 
 test -z "$LHAPDF_VERSION" && LHAPDF_VERSION="6.5.5"
 test -z "$ONNXRT_VERSION" && ONNXRT_VERSION="1.22.0"
@@ -269,10 +271,13 @@ if [[ "$INSTALL_RIVET" = 1 ]]; then
     cd $BUILD_PREFIX
     test -d Rivet-$RIVET_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/Rivet-$RIVET_VERSION.tar.gz
     cd Rivet-$RIVET_VERSION
+    MATCHOPTS=""
+    if [ ! -z "${PLUGINMATCH}" ]; then MATCHOPTSS="$MATCHOPTS --plugin-match=${PLUGINMATCH}"
+    if [ ! -z "${PLUGINUNMATCH}" ]; then MATCHOPTS="$MATCHOPTS --plugin-unmatch=${PLUGINUNMATCH}"
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
         --with-hepmc3=$HEPMCPATH \
-        --with-fastjet=$FASTJETPATH
+        --with-fastjet=$FASTJETPATH $MATCHOPTS
     mmi
     cp rivetenv.sh rivetenv.csh $INSTALL_PREFIX/
     echo
@@ -322,10 +327,13 @@ if [[ "$INSTALL_RIVETDEV" = 1 ]]; then
     git checkout $RIVET_BRANCH
     git pull
     autoreconf -i
+    MATCHOPTS=""
+    if [ ! -z "${PLUGINMATCH}" ]; then MATCHOPTS="$MATCHOPTS --plugin-match=${PLUGINMATCH}"
+    if [ ! -z "${PLUGINUNMATCH}" ]; then MATCHOPTS="$MATCHOPTS --plugin-unmatch=${PLUGINUNMATCH}"
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
         --with-hepmc3=$HEPMCPATH \
-        --with-fastjet=$FASTJETPATH
+        --with-fastjet=$FASTJETPATH $MATCHOPTS
     mmi
     cp rivetenv.sh $INSTALL_PREFIX/
     echo

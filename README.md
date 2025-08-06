@@ -50,6 +50,8 @@ Additional script flags and their defaults:
 * `USE_VENV="1"`: toggle to enable/disable the creation of a Python virtual environment
 * `MAKE="make -j3"`: default make command to be used
 * `CMAKE="cmake"`: name of the CMake executable to be used
+* `PLUGIN_MATCH=""`: regex to match experiment group names to be selected at build time
+* `PLUGIN_UNMATCH=""`: regex to unmatch experiment group names to be deselected at build time
 
 ### Package selection
 

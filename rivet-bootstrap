@@ -243,7 +243,7 @@ if [[ "$INSTALL_ONNXRT" = 1 ]]; then
     arch=$(uname -m | tr -d '\n')
     if [[ "$os" = "linux" && "$arch" = "x86_64" ]]; then arch=x64; fi
     onnxname=onnxruntime-${os}-${arch}-${ONNXRT_VERSION}
-    test -d ${ONNXNAME} || wget_untar http://cedar-tools.web.cern.ch/downloads/${onnxname}.tgz
+    test -d ${onnxname} || wget_untar http://cedar-tools.web.cern.ch/downloads/${onnxname}.tgz
     rm -rf ${INSTALL_PREFIX}/include/onnxruntime
     cp -r ${onnxname}/include ${INSTALL_PREFIX}/include/onnxruntime
     find ${onnxname}/lib -maxdepth 1 -type f,l | xargs -I {} cp {} ${INSTALL_PREFIX}/lib/

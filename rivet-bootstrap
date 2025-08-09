@@ -238,15 +238,15 @@ fi
 if [[ "$INSTALL_ONNXRT" = 1 ]]; then
     echo "INSTALLING ONNXruntime $ONNXRT_VERSION"
     cd $BUILD_PREFIX
-    OS=linux
-    if [[ "`uname -s`" == *"Darwin"* ]]; then OS=osx; fi
-    ARCH=$(uname -m | tr -d '\n')
-    if [[ "$OS" = "linux" && "$ARCH" = "x86_64" ]]; then ARCH=x64; fi
-    ONNXNAME=onnxruntime-${OS}-${ARCH}-${ONNXRT_VERSION}
-    test -d ${ONNXNAME} || wget_untar http://cedar-tools.web.cern.ch/downloads/${ONNXNAME}.tgz
+    os=linux
+    if [[ "`uname -s`" == *"Darwin"* ]]; then os=osx; fi
+    arch=$(uname -m | tr -d '\n')
+    if [[ "$os" = "linux" && "$arch" = "x86_64" ]]; then arch=x64; fi
+    onnxname=onnxruntime-${os}-${arch}-${ONNXRT_VERSION}
+    test -d ${ONNXNAME} || wget_untar http://cedar-tools.web.cern.ch/downloads/${onnxname}.tgz
     rm -rf ${INSTALL_PREFIX}/include/onnxruntime
-    cp -r ${ONNXNAME}/include ${INSTALL_PREFIX}/include/onnxruntime
-    find ${ONNXNAME}/lib -maxdepth 1 -type f,l | xargs -I {} cp {} ${INSTALL_PREFIX}/lib/
+    cp -r ${onnxname}/include ${INSTALL_PREFIX}/include/onnxruntime
+    find ${onnxname}/lib -maxdepth 1 -type f,l | xargs -I {} cp {} ${INSTALL_PREFIX}/lib/
     RIVET_CONFFLAGS=$RIVET_CONFFLAGS" --enable-onnxrt=${INSTALL_PREFIX}"
     echo
 fi
@@ -272,8 +272,8 @@ if [[ "$INSTALL_RIVET" = 1 ]]; then
     test -d Rivet-$RIVET_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/Rivet-$RIVET_VERSION.tar.gz
     cd Rivet-$RIVET_VERSION
     MATCHOPTS=""
-    if [ ! -z "${PLUGINMATCH}" ]; then MATCHOPTSS="$MATCHOPTS --plugin-match=${PLUGINMATCH}"
-    if [ ! -z "${PLUGINUNMATCH}" ]; then MATCHOPTS="$MATCHOPTS --plugin-unmatch=${PLUGINUNMATCH}"
+    if [[ ! -z "${PLUGINMATCH}" ]]; then MATCHOPTSS="$MATCHOPTS --plugin-match=${PLUGINMATCH}"; fi
+    if [[ ! -z "${PLUGINUNMATCH}" ]]; then MATCHOPTS="$MATCHOPTS --plugin-unmatch=${PLUGINUNMATCH}"; fi
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
         --with-hepmc3=$HEPMCPATH \
@@ -292,7 +292,7 @@ if [[ "$INSTALL_RIVETDEV" = 1 ]]; then
         cd $BUILD_PREFIX
         function _build_autotool() {
             name=$1-$2
-            if [ ! -e $name ]; then wget_untar http://ftpmirror.gnu.org/$1/$name.tar.gz; fi
+            if [[ ! -e $name ]]; then wget_untar http://ftpmirror.gnu.org/$1/$name.tar.gz; fi
             cd $name
             ./configure --prefix=$INSTALL_PREFIX
             mmi
@@ -328,8 +328,8 @@ if [[ "$INSTALL_RIVETDEV" = 1 ]]; then
     git pull
     autoreconf -i
     MATCHOPTS=""
-    if [ ! -z "${PLUGINMATCH}" ]; then MATCHOPTS="$MATCHOPTS --plugin-match=${PLUGINMATCH}"
-    if [ ! -z "${PLUGINUNMATCH}" ]; then MATCHOPTS="$MATCHOPTS --plugin-unmatch=${PLUGINUNMATCH}"
+    if [[ ! -z "${PLUGINMATCH}" ]]; then MATCHOPTS="$MATCHOPTS --plugin-match=${PLUGINMATCH}"; fi
+    if [[ ! -z "${PLUGINUNMATCH}" ]]; then MATCHOPTS="$MATCHOPTS --plugin-unmatch=${PLUGINUNMATCH}"; fi
     conf $RIVET_CONFFLAGS \
         --with-yoda=$YODAPATH \
         --with-hepmc3=$HEPMCPATH \

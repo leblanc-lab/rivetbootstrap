@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Rivet bootstrapping / installation script for version 4.0.x
+# Rivet bootstrapping / installation script
 
 test -z "$USE_CVMFS" && USE_CVMFS="0"
 test -z "$BUILD_PREFIX" && BUILD_PREFIX="$PWD"
@@ -354,11 +354,10 @@ if [[ "$USE_VENV" == 1 ]]; then
 fi
 
 
-## Make/modify Rivet/venv setup scripts
+## Modify Rivet/venv setup scripts
 if [[ "$USE_VENV" == 1 ]]; then
-    echo '' >> $INSTALL_PREFIX/bin/activate
-    echo 'source $VIRTUAL_ENV/yodaenv.sh' >> $INSTALL_PREFIX/bin/activate
-    echo 'source $VIRTUAL_ENV/rivetenv.sh' >> $INSTALL_PREFIX/bin/activate
+    echo 'source $VIRTUAL_ENV/yodaenv.sh' >> $INSTALL_PREFIX/bin/postactivate
+    echo 'source $VIRTUAL_ENV/rivetenv.sh' >> $INSTALL_PREFIX/bin/postactivate
     TMPFILE=tmp$$
     echo "test -n \"\$VIRTUAL_ENV\" || source $INSTALL_PREFIX/bin/activate" | \
         cat - $INSTALL_PREFIX/rivetenv.sh > $TMPFILE && \

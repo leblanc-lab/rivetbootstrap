@@ -183,7 +183,7 @@ fi
 if [[ "$INSTALL_HDF5" = 1 ]]; then
     echo "INSTALLING HDF5 $HDF5_VERSION"
     cd $BUILD_PREFIX
-    $HDF5_VERSION_=${HDF5_VERSION//./_}
+    HDF5_VERSION_=${HDF5_VERSION//./_}
     test -d hdf5-$HDF5_VERSION || wget_untar \
         https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_::-2}/v${HDF5_VERSION_}/downloads/hdf5-${HDF5_VERSION}.tar.gz
     # https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VERSION::-2}/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.gz

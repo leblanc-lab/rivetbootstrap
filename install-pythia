@@ -2,7 +2,7 @@
 
 PREFIX=${PREFIX:-$PWD/local}
 BASE=$PWD
-PYTHIA_VERSION=${PYTHIA_VERSION:-8313}
+PYTHIA_VERSION=${PYTHIA_VERSION:-8315}
 
 # TODO: check for fastjet,rivet,hepmc3? All should be installed by rivet-bootstrap, so we shouldn't have to bother
 

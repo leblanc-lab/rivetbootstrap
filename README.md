@@ -60,7 +60,6 @@ Additional script flags and their defaults:
 * `INSTALL_FASTJET="1"`: toggle to disable/enable the build of FastJet
 * `INSTALL_FJCONTRIB="1"`: toggle to disable/enable the build of fjcontrib
 * `INSTALL_HDF5="1"`: toggle to disable/enable the build of HDF5
-* `INSTALL_HIGHFIVE="1"`: toggle to disable/enable the build of HighFive
 * `INSTALL_YODA="1"`: toggle to disable/enable the build of YODA
 * `INSTALL_RIVET="1"`: toggle to disable/enable the build of Rivet
 * `INSTALL_CYTHON="1"`: toggle to disable/enable the build of Cython

@@ -12,7 +12,7 @@ test -z "$CMAKE" && CMAKE="cmake"
 test -z "$PLUGINMATCH" && PLUGINMATCH=""
 test -z "$PLUGINUNMATCH" && PLUGINUNMATCH=""
 
-test -z "$INSTALL_LHAPDF" && INSTALL_LHAPDF="0"
+test -z "$INSTALL_LHAPDF" && INSTALL_LHAPDF="1"
 test -z "$INSTALL_ONNXRT" && INSTALL_ONNXRT="0"
 test -z "$INSTALL_HEPMC" && INSTALL_HEPMC="1"
 test -z "$INSTALL_FASTJET" && INSTALL_FASTJET="1"
@@ -42,14 +42,13 @@ test -z "$RIVET_BRANCH" && RIVET_BRANCH="release-4-1-x"
 test -z "$CXXDIALECT" && CXXDIALECT="c++17"
 
 ## Paths for the case of existing installations
-# TODO: shouldn't these be looking in /usr/local? ~Never system packages
-test -z "$LHAPDFPATH" && LHAPDFPATH="/usr"
-test -z "$HEPMCPATH" && HEPMCPATH="/usr"
-test -z "$FASTJETPATH" && FASTJETPATH="/usr"
-test -z "$HDF5PATH" && HDF5PATH="/usr"
-test -z "$YODAPATH" && YODAPATH="/usr"
+test -z "$LHAPDFPATH" && LHAPDFPATH="$INSTALL_PREFIX"
+test -z "$HEPMCPATH" && HEPMCPATH="$INSTALL_PREFIX"
+test -z "$FASTJETPATH" && FASTJETPATH="$INSTALL_PREFIX"
+test -z "$HDF5PATH" && HDF5PATH="$INSTALL_PREFIX"
+test -z "$YODAPATH" && YODAPATH="$INSTALL_PREFIX"
 
-test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="" #--enable-unvalidated
+test -z "$RIVET_CONFFLAGS" && RIVET_CONFFLAGS="--enable-unvalidated " #--enable-unvalidated
 test -z "$YODA_CONFFLAGS" && YODA_CONFFLAGS=""
 
 
@@ -60,6 +59,14 @@ if [[ "$USE_CVMFS" -eq "1" ]]; then
   # e.g. using LCG installations:
   source /cvmfs/sft.cern.ch/lcg/releases/LCG_107a/Python/3.11.9/x86_64-el9-gcc13-opt/Python-env.sh
   source /cvmfs/sft.cern.ch/lcg/releases/LCG_107a/CMake/3.30.6/x86_64-el9-gcc13-opt/CMake-env.sh
+fi
+
+## On Oscar (Brown HPC), load a Python module with dev headers
+## (system python3-devel is not installed)
+LMOD_INIT=/oscar/rt/9.6/25/spack/x86_64_v3/lmod-8.7.55-aw4bb5ptwofllgkjr3xwpnpsqvqrrzia/lmod/8.7.55/init/bash
+if [[ -f "$LMOD_INIT" ]]; then
+  source "$LMOD_INIT"
+  module load python/3.11.11-5e66 2>/dev/null && echo "Loaded module python/3.11.11"
 fi
 
 
@@ -230,8 +237,9 @@ if [[ "$INSTALL_LHAPDF" = 1 ]]; then
     cd $BUILD_PREFIX
     test -d LHAPDF-$LHAPDF_VERSION || wget_untar http://cedar-tools.web.cern.ch/downloads/LHAPDF-$LHAPDF_VERSION.tar.gz
     cd LHAPDF-$LHAPDF_VERSION
-    conf
+    conf --disable-python
     mmi
+    cp lhapdfenv.sh $INSTALL_PREFIX/lhapdfenv.sh
     LHAPDFPATH=$INSTALL_PREFIX
     echo
 fi
@@ -361,6 +369,7 @@ fi
 if [[ "$USE_VENV" == 1 ]]; then
     echo 'source $VIRTUAL_ENV/yodaenv.sh' >> $INSTALL_PREFIX/bin/postactivate
     echo 'source $VIRTUAL_ENV/rivetenv.sh' >> $INSTALL_PREFIX/bin/postactivate
+    test -f $INSTALL_PREFIX/lhapdfenv.sh && echo 'source $VIRTUAL_ENV/lhapdfenv.sh' >> $INSTALL_PREFIX/bin/postactivate
     TMPFILE=tmp$$
     echo "test -n \"\$VIRTUAL_ENV\" || source $INSTALL_PREFIX/bin/activate" | \
         cat - $INSTALL_PREFIX/rivetenv.sh > $TMPFILE && \

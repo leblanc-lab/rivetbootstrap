@@ -1,6 +1,6 @@
 <h1>Rivet Bootstrap Script</h1>
 
-[ToC]
+**Forked from https://gitlab.com/hepcedar/rivetbootstrap**
 
 ## Introduction
 
